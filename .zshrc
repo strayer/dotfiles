@@ -65,6 +65,19 @@ if zplug check zsh-users/zsh-history-substring-search; then
   bindkey "$terminfo[kcud1]" history-substring-search-down
 fi
 
+# fzf fuzzy search
+#[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# 0 -- vanilla completion (abc => abc)
+# 1 -- smart case completion (abc => Abc)
+# 2 -- word flex completion (abc => A-big-Car)
+# 3 -- full flex completion (abc => ABraCadabra)
+# Source: https://superuser.com/a/815317/40285
+zstyle ':completion:*' matcher-list '' \
+  'm:{a-z\-}={A-Z\_}' \
+  'r:[^[:alpha:]]||[[:alpha:]]=** r:|=* m:{a-z\-}={A-Z\_}' \
+  'r:[[:ascii:]]||[[:ascii:]]=** r:|=* m:{a-z\-}={A-Z\_}'
+
 # Disable pyenv prompt handling (handled by zsh)
 export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
