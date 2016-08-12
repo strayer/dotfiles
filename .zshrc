@@ -3,7 +3,6 @@ source $ZPLUG_HOME/init.zsh
 
 zplug "zsh-users/zsh-completions"
 zplug "psprint/history-search-multi-word"
-zplug "zlsun/solarized-man"
 
 zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
 
