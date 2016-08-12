@@ -66,9 +66,6 @@ if zplug check zsh-users/zsh-history-substring-search; then
   bindkey "$terminfo[kcud1]" history-substring-search-down
 fi
 
-# fzf fuzzy search
-#[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
 # 0 -- vanilla completion (abc => abc)
 # 1 -- smart case completion (abc => Abc)
 # 2 -- word flex completion (abc => A-big-Car)
