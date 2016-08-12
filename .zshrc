@@ -101,6 +101,9 @@ alias treesize="${GNU_TOOLS_PREFIX}du -shx ./* | ${GNU_TOOLS_PREFIX}sort -rh"
 if [[ -x "/usr/local/bin/brew" ]]; then
   alias brup="brew up && brew upgrade && brew cleanup"
 fi
+if command -v tmux >/dev/null 2>/dev/null; then
+  alias tm='tmux attach || tmux new'
+fi
 
 VMWARE_VDISKMANAGER="/Applications/VMware\ Fusion.app/Contents/Library/vmware-vdiskmanager"
 if [[ -x VMWARE_VDISKMANAGER ]]; then
@@ -120,6 +123,18 @@ fi
 if [[ -d $HOME/Library/Android/sdk ]]; then
   export ANDROID_HOME=$HOME/Library/Android/sdk
   export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$PATH
+fi
+
+# Gentoo-specific stuff on valaskjalf
+if [[ "$HOST" = "valaskjalf" && "$USER" = "root" ]]; then
+  # Emerge will fail when exact package and version is given due to feature of
+  # zsh which treats "=" differently compared to bash. To make
+  # emerge =<pkg>-<version> work, (un)set:
+  unsetopt equals
+
+  alias squashmount='noglob squashmount'
+  alias esync="eix-sync && squashmount remount portage && squashmount remount layman"
+  alias equery="noglob equery"
 fi
 
 # Config
