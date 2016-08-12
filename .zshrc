@@ -104,7 +104,9 @@ export ANDROID_HOME=$HOME/Library/Android/sdk
 export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$PATH
 
 # Config
-export HOMEBREW_GITHUB_API_TOKEN=***REMOVED***
+if [[ -e "$HOME/.homebrew-github-token" ]]; then
+  export HOMEBREW_GITHUB_API_TOKEN="$(<$HOME/.homebrew-github-token)"
+fi
 
 # Local software & scripts
 export PATH=$HOME/.bin:$PATH
