@@ -38,12 +38,13 @@ export HISTFILE=~/.zsh_history
 # powerline9k theme
 
 if zplug check bhilburn/powerlevel9k; then
-  if [[ "$HOST" = "Musashi" && "$USER" = "strayer" ]]; then
-    POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir vcs)
-  else
-    POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs)
+  POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir vcs virtualenv status)
+
+  if [[ "$HOST" != "Musashi" && "$USER" != "strayer" ]]; then
+    POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context "${POWERLEVEL9K_LEFT_PROMPT_ELEMENTS[@]}")
   fi
-  POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status virtualenv time)
+
+  POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=()
 
   POWERLEVEL9K_TIME_FORMAT="%D{%H:%M:%S %d.%m.%y}"
 
@@ -52,7 +53,7 @@ if zplug check bhilburn/powerlevel9k; then
   POWERLEVEL9K_SHORTEN_STRATEGY="truncate_middle"
 
   POWERLEVEL9K_STATUS_VERBOSE=false
-  
+
   POWERLEVEL9K_PROMPT_ON_NEWLINE=true
   POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX=""
   POWERLEVEL9K_MULTILINE_SECOND_PROMPT_PREFIX="$ "
