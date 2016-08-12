@@ -76,37 +76,59 @@ zstyle ':completion:*' matcher-list '' \
   'r:[^[:alpha:]]||[[:alpha:]]=** r:|=* m:{a-z\-}={A-Z\_}' \
   'r:[[:ascii:]]||[[:ascii:]]=** r:|=* m:{a-z\-}={A-Z\_}'
 
-# Disable pyenv prompt handling (handled by zsh)
-export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+# GNU tools prefix (required for macOS with Homebrew coreutils)
+GNU_TOOLS_PREFIX=""
+if [[ -d "/usr/local/opt/coreutils/libexec/gnubin" ]]; then
+  GNU_TOOLS_PREFIX="g"
+fi
+
+# Local software installations
+if [[ -x "/usr/local/bin/nano" ]]; then
+  alias nano="/usr/local/bin/nano"
+fi
+if [[ -x "/usr/local/bin/ssh" ]]; then
+  alias ssh="/usr/local/bin/ssh"
+fi
 
 # File stuff
-alias ls="gls --color=auto"
+alias ls="${GNU_TOOLS_PREFIX}ls --color=auto"
 alias l="ls -lav --time-style=long-iso"
-alias du="du -k"
-
-# Homebrew dupes
-alias find="gfind"
-alias nano="/usr/local/bin/nano"
-alias ssh="/usr/local/bin/ssh"
+alias du="${GNU_TOOLS_PREFIX}du -k"
 
 # Helper aliases
 alias gpgcat="gpg -q -d"
-alias treesize="gdu -shx ./* | gsort -rh"
-alias brup="brew up && brew upgrade && brew cleanup"
-alias vmware-vdiskmanager="/Applications/VMware\ Fusion.app/Contents/Library/vmware-vdiskmanager"
+alias treesize="${GNU_TOOLS_PREFIX}du -shx ./* | ${GNU_TOOLS_PREFIX}sort -rh"
+if [[ -x "/usr/local/bin/brew" ]]; then
+  alias brup="brew up && brew upgrade && brew cleanup"
+fi
 
-# Python
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
+VMWARE_VDISKMANAGER="/Applications/VMware\ Fusion.app/Contents/Library/vmware-vdiskmanager"
+if [[ -x VMWARE_VDISKMANAGER ]]; then
+  alias vmware-vdiskmanager=VMWARE_VDISKMANAGER
+fi
+
+# pyenv
+if command -v pyenv >/dev/null 2>/dev/null; then
+  # Disable pyenv prompt handling (handled by zsh)
+  export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+
+  eval "$(pyenv init -)"
+  eval "$(pyenv virtualenv-init -)"
+fi
 
 # Android
-export ANDROID_HOME=$HOME/Library/Android/sdk
-export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$PATH
+if [[ -d $HOME/Library/Android/sdk ]]; then
+  export ANDROID_HOME=$HOME/Library/Android/sdk
+  export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$PATH
+fi
 
 # Config
 if [[ -e "$HOME/.homebrew-github-token" ]]; then
   export HOMEBREW_GITHUB_API_TOKEN="$(<$HOME/.homebrew-github-token)"
 fi
+export EDITOR="nano"
 
 # Local software & scripts
-export PATH=$HOME/.bin:$PATH
+if [[ -d "$HOME/.bin" ]]; then
+  export PATH=$HOME/.bin:$PATH
+fi
