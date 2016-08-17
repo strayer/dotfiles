@@ -4,7 +4,9 @@ source $ZPLUG_HOME/init.zsh
 zplug "zsh-users/zsh-completions"
 zplug "psprint/history-search-multi-word"
 
-zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
+zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme, at:removing-zle-funcs
+
+zplug "zsh-users/zsh-autosuggestions"
 
 zplug "zsh-users/zsh-syntax-highlighting", nice:18 # should be 2nd last
 zplug "zsh-users/zsh-history-substring-search", nice:19 # Should be loaded last.
