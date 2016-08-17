@@ -39,10 +39,19 @@ export HISTFILE=~/.zsh_history
 # powerline9k theme
 
 if zplug check bhilburn/powerlevel9k; then
-  POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir vcs virtualenv status)
+  POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs virtualenv status)
 
-  if [[ "$HOST" != "Musashi" && "$USER" != "strayer" ]]; then
-    POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context "${POWERLEVEL9K_LEFT_PROMPT_ELEMENTS[@]}")
+  if [[ "$HOST" == "Musashi" && "$USER" == "strayer" ]]; then
+    POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=("${POWERLEVEL9K_LEFT_PROMPT_ELEMENTS[@]:1}")
+  fi
+
+  if [[ "$HOST" == "valaskjalf" ]]; then
+    POWERLEVEL9K_CONTEXT_DEFAULT_FOREGROUND="010"
+    POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND="001"
+  fi
+
+  if [[ "$HOST" == "PC0164" ]]; then
+    POWERLEVEL9K_CONTEXT_DEFAULT_FOREGROUND="012"
   fi
 
   POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=()
