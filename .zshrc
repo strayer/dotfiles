@@ -153,6 +153,8 @@ fi
 # Config
 if [[ -e "$HOME/.homebrew-github-token" ]]; then
   export HOMEBREW_GITHUB_API_TOKEN="$(<$HOME/.homebrew-github-token)"
+  export HOMEBREW_NO_ANALYTICS=1
+  export HOMEBREW_NO_AUTO_UPDATE=1
 fi
 export EDITOR="nano"
 
