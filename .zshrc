@@ -99,6 +99,9 @@ fi
 if [[ -x "/usr/local/bin/ssh" ]]; then
   alias ssh="/usr/local/bin/ssh"
 fi
+if [[ -x "/usr/local/bin/gfind" ]]; then
+  alias find="gfind"
+fi
 
 # File stuff
 alias ls="${GNU_TOOLS_PREFIX}ls --color=auto"
