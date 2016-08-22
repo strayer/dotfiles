@@ -153,9 +153,12 @@ fi
 # Config
 if [[ -e "$HOME/.homebrew-github-token" ]]; then
   export HOMEBREW_GITHUB_API_TOKEN="$(<$HOME/.homebrew-github-token)"
+fi
+if command -v brew >/dev/null 2>/dev/null; then
   export HOMEBREW_NO_ANALYTICS=1
   export HOMEBREW_NO_AUTO_UPDATE=1
 fi
+
 export EDITOR="nano"
 
 # Local software & scripts
