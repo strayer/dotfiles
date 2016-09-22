@@ -126,9 +126,9 @@ if command -v tmux >/dev/null 2>/dev/null; then
   alias tm='tmux attach || tmux new'
 fi
 
-VMWARE_VDISKMANAGER="/Applications/VMware\ Fusion.app/Contents/Library/vmware-vdiskmanager"
-if [[ -x VMWARE_VDISKMANAGER ]]; then
-  alias vmware-vdiskmanager=VMWARE_VDISKMANAGER
+VMWARE_VDISKMANAGER=/Applications/VMware\ Fusion.app/Contents/Library/vmware-vdiskmanager
+if [[ -x "$VMWARE_VDISKMANAGER" ]]; then
+  alias vmware-vdiskmanager="$VMWARE_VDISKMANAGER"
 fi
 
 # pyenv
