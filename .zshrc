@@ -1,6 +1,14 @@
 export ZPLUG_HOME=$HOME/.zplug
 source $ZPLUG_HOME/init.zsh
 
+# Force unique values for path array ($PATH is tied to path in zsh)
+# https://unix.stackexchange.com/a/62599
+typeset -U path
+
+prependpath() {
+  path=($1 "$path[@]")
+}
+
 zplug "zsh-users/zsh-completions"
 zplug "psprint/history-search-multi-word"
 
@@ -135,7 +143,8 @@ fi
 # Android
 if [[ -d $HOME/Library/Android/sdk ]]; then
   export ANDROID_HOME=$HOME/Library/Android/sdk
-  export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$PATH
+  prependpath $ANDROID_HOME/platform-tools
+  prependpath $ANDROID_HOME/tools
 fi
 
 # Gentoo-specific stuff on valaskjalf
@@ -163,5 +172,5 @@ export EDITOR="nano"
 
 # Local software & scripts
 if [[ -d "$HOME/.bin" ]]; then
-  export PATH=$HOME/.bin:$PATH
+  prependpath $HOME/.bin
 fi
