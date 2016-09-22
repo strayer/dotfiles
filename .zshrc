@@ -128,7 +128,7 @@ fi
 
 VMWARE_VDISKMANAGER=/Applications/VMware\ Fusion.app/Contents/Library/vmware-vdiskmanager
 if [[ -x "$VMWARE_VDISKMANAGER" ]]; then
-  alias vmware-vdiskmanager="$VMWARE_VDISKMANAGER"
+  alias vmware-vdiskmanager="'$VMWARE_VDISKMANAGER'"
 fi
 
 # pyenv
