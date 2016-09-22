@@ -4,7 +4,7 @@ source $ZPLUG_HOME/init.zsh
 zplug "zsh-users/zsh-completions"
 zplug "psprint/history-search-multi-word"
 
-zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme, at:removing-zle-funcs
+zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme, at:next
 
 zplug "zsh-users/zsh-autosuggestions"
 
