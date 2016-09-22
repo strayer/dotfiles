@@ -170,6 +170,10 @@ fi
 
 export EDITOR="nano"
 
+if [[ -d "/usr/local/sbin" ]]; then
+  prependpath "/usr/local/sbin"
+fi
+
 # Local software & scripts
 if [[ -d "$HOME/.bin" ]]; then
   prependpath $HOME/.bin
