@@ -1,12 +1,8 @@
 export ZPLUG_HOME=$HOME/.zplug
 source $ZPLUG_HOME/init.zsh
 
-# Force unique values for path array ($PATH is tied to path in zsh)
-# https://unix.stackexchange.com/a/62599
-typeset -U path
-
 prependpath() {
-  path=($1 "$path[@]")
+  PATH="$1:$PATH"
 }
 
 zplug "zsh-users/zsh-completions"
@@ -178,3 +174,7 @@ fi
 if [[ -d "$HOME/.bin" ]]; then
   prependpath $HOME/.bin
 fi
+
+# Force unique values for path array ($PATH is tied to path in zsh)
+# https://unix.stackexchange.com/a/62599
+typeset -U path
