@@ -16,8 +16,8 @@ zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme, at:next
 
 zplug "zsh-users/zsh-autosuggestions"
 
-zplug "zsh-users/zsh-syntax-highlighting", nice:18 # should be 2nd last
-zplug "zsh-users/zsh-history-substring-search", nice:19 # Should be loaded last.
+zplug "zsh-users/zsh-syntax-highlighting", defer:2 # should be 2nd last
+zplug "zsh-users/zsh-history-substring-search", defer:2 # Should be loaded last.
 
 # Install plugins if there are plugins that have not been installed
 if ! zplug check --verbose; then
