@@ -5,6 +5,10 @@ prependpath() {
   PATH="$1:$PATH"
 }
 
+# Autoescape pasted URLs
+autoload -Uz bracketed-paste-url-magic
+zle -N bracketed-paste bracketed-paste-url-magic
+
 zplug "zsh-users/zsh-completions"
 zplug "psprint/history-search-multi-word"
 
