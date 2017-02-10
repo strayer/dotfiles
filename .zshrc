@@ -44,6 +44,10 @@ export HISTSIZE=11000
 export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
 
+# Keybinding overrides for iTerm hotkeys
+bindkey "^U" backward-kill-line
+bindkey "^X^_" redo
+
 # powerline9k theme
 
 if zplug check bhilburn/powerlevel9k; then
