@@ -14,9 +14,9 @@ zplug "psprint/history-search-multi-word"
 
 zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme, at:37174ea
 
-zplug "zsh-users/zsh-autosuggestions"
+zplug "zsh-users/zsh-autosuggestions", if: "[[ \"$HOST\" != rpi-sven-lab25 ]]"
 
-zplug "zsh-users/zsh-syntax-highlighting", defer:2 # should be 2nd last
+zplug "zsh-users/zsh-syntax-highlighting", defer:2, if: "[[ \"$HOST\" != rpi-sven-lab25 ]]" # should be 2nd last
 zplug "zsh-users/zsh-history-substring-search", defer:2 # Should be loaded last.
 
 # Install plugins if there are plugins that have not been installed
