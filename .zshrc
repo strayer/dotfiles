@@ -12,7 +12,7 @@ zle -N bracketed-paste bracketed-paste-url-magic
 zplug "zsh-users/zsh-completions"
 zplug "psprint/history-search-multi-word"
 
-zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme, at:next
+zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme, at:37174ea
 
 zplug "zsh-users/zsh-autosuggestions"
 
