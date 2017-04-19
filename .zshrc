@@ -192,6 +192,7 @@ fi
 
 # Neofetch
 if command -v neofetch >/dev/null 2>/dev/null; then
+	echo ""
 	neofetch
 fi
 
