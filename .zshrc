@@ -183,6 +183,11 @@ if [[ -d "$HOME/.bin" ]]; then
   prependpath $HOME/.bin
 fi
 
+# Neofetch
+if command -v neofetch >/dev/null 2>/dev/null; then
+	neofetch
+fi
+
 # Force unique values for path array ($PATH is tied to path in zsh)
 # https://unix.stackexchange.com/a/62599
 typeset -U path
