@@ -40,6 +40,9 @@ setopt hist_reduce_blanks
 setopt hist_save_no_dups
 setopt share_history
 
+# don't save commands beginning with a space to the command history
+setopt hist_ignore_space
+
 export HISTSIZE=11000
 export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
