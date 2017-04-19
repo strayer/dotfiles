@@ -147,6 +147,10 @@ if command -v pyenv >/dev/null 2>/dev/null; then
   eval "$(pyenv virtualenv-init -)"
 fi
 
+if command -v rbenv >/dev/null 2>/dev/null; then
+  eval "$(rbenv init -)"
+fi
+
 # Android
 if [[ -d $HOME/Library/Android/sdk ]]; then
   export ANDROID_HOME=$HOME/Library/Android/sdk
