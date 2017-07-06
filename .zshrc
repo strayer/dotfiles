@@ -134,7 +134,7 @@ alias du="${GNU_TOOLS_PREFIX}du -k"
 
 # Helper aliases
 alias gpgcat="gpg -q -d"
-alias treesize="${GNU_TOOLS_PREFIX}du -shx ./* | ${GNU_TOOLS_PREFIX}sort -rh"
+alias treesize="${GNU_TOOLS_PREFIX}du -shx ./* ./.* | ${GNU_TOOLS_PREFIX}sort -rh"
 if [[ -x "/usr/local/bin/brew" ]]; then
   alias brup="brew up && brew upgrade && brew cleanup"
 fi
