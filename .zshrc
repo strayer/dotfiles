@@ -136,7 +136,7 @@ alias du="${GNU_TOOLS_PREFIX}du -k"
 alias gpgcat="gpg -q -d"
 alias treesize="${GNU_TOOLS_PREFIX}du -shx ./* ./.* | ${GNU_TOOLS_PREFIX}sort -rh"
 if [[ -x "/usr/local/bin/brew" ]]; then
-  alias brup="brew up && brew upgrade && brew cleanup"
+  alias brup="brew up && brew upgrade && brew cleanup && brew cask cleanup && brew cask outdated"
 fi
 if command -v tmux >/dev/null 2>/dev/null; then
   alias tm='tmux attach || tmux new'
