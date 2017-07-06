@@ -9,6 +9,10 @@ prependpath() {
 autoload -Uz bracketed-paste-url-magic
 zle -N bracketed-paste bracketed-paste-url-magic
 
+# nvm-zsh configuration
+export NVM_AUTO_USE=true
+export NVM_LAZY_LOAD=true
+
 # powerlevel9k configuration
 POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs virtualenv status)
 POWERLEVEL9K_COLOR_SCHEME="light"
@@ -46,6 +50,8 @@ zplug "psprint/history-search-multi-word"
 zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
 
 zplug "zsh-users/zsh-autosuggestions", if: "[[ \"$HOST\" != rpi-sven-lab25 ]]"
+
+zplug "lukechilds/zsh-nvm", if: "[[ \"$HOST\" == Musashi ]]"
 
 zplug "zsh-users/zsh-syntax-highlighting", defer:2, if: "[[ \"$HOST\" != rpi-sven-lab25 ]]" # should be 2nd last
 zplug "zsh-users/zsh-history-substring-search", defer:2 # Should be loaded last.
