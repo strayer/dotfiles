@@ -46,7 +46,7 @@ POWERLEVEL9K_MULTILINE_SECOND_PROMPT_PREFIX="$ "
 
 zplug "zsh-users/zsh-completions"
 zplug "psprint/history-search-multi-word"
-
+zplug "jreese/zsh-titles"
 zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
 
 zplug "zsh-users/zsh-autosuggestions", if: "[[ \"$HOST\" != rpi-sven-lab25 ]]"
