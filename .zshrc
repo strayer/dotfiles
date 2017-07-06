@@ -121,6 +121,11 @@ fi
 if [[ -x "/usr/local/bin/gfind" ]]; then
   alias find="gfind"
 fi
+if [[ -x "/usr/local/bin/vim" ]]; then
+  alias vim="/usr/local/bin/vim"
+  alias vimtutor="/usr/local/bin/vimtutor"
+  alias vimdiff="/usr/local/bin/vimdiff"
+fi
 
 # File stuff
 alias ls="${GNU_TOOLS_PREFIX}ls --color=auto"
