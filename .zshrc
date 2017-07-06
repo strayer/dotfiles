@@ -199,12 +199,24 @@ if [[ -d "$HOME/.bin" ]]; then
   prependpath $HOME/.bin
 fi
 
+# Fastlane
+if [[ -d "$HOME/.fastlane/bin" ]]; then
+  export FASTLANE_OPT_OUT_USAGE=1
+  prependpath "$HOME/.fastlane/bin"
+fi
+
 # Neofetch
 if command -v neofetch >/dev/null 2>/dev/null; then
 	echo ""
 	neofetch
 fi
 
+# React Native
+if command -v react-native >/dev/null 2>/dev/null; then
+	alias "r-n"="react-native"
+fi
+
 # Force unique values for path array ($PATH is tied to path in zsh)
 # https://unix.stackexchange.com/a/62599
 typeset -U path
+
