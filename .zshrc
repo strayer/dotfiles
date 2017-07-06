@@ -9,6 +9,37 @@ prependpath() {
 autoload -Uz bracketed-paste-url-magic
 zle -N bracketed-paste bracketed-paste-url-magic
 
+# powerlevel9k configuration
+POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs virtualenv status)
+POWERLEVEL9K_COLOR_SCHEME="light"
+
+if [[ "$HOST" == "Musashi" && "$USER" == "strayer" ]]; then
+  POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=("${POWERLEVEL9K_LEFT_PROMPT_ELEMENTS[@]:1}")
+fi
+
+if [[ "$HOST" == "valaskjalf" ]]; then
+  POWERLEVEL9K_CONTEXT_DEFAULT_FOREGROUND="010"
+  POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND="001"
+fi
+
+if [[ "$HOST" == "PC0164" ]]; then
+  POWERLEVEL9K_CONTEXT_DEFAULT_FOREGROUND="012"
+fi
+
+POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=()
+
+POWERLEVEL9K_TIME_FORMAT="%D{%H:%M:%S %d.%m.%y}"
+
+POWERLEVEL9K_SHORTEN_DIR_LENGTH=5
+POWERLEVEL9K_SHORTEN_DELIMITER="…"
+POWERLEVEL9K_SHORTEN_STRATEGY="truncate_middle"
+
+POWERLEVEL9K_STATUS_VERBOSE=false
+
+POWERLEVEL9K_PROMPT_ON_NEWLINE=true
+POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX=""
+POWERLEVEL9K_MULTILINE_SECOND_PROMPT_PREFIX="$ "
+
 zplug "zsh-users/zsh-completions"
 zplug "psprint/history-search-multi-word"
 
@@ -50,39 +81,6 @@ export HISTFILE=~/.zsh_history
 # Keybinding overrides for iTerm hotkeys
 bindkey "^U" backward-kill-line
 bindkey "^X^_" redo
-
-# powerline9k theme
-
-if zplug check bhilburn/powerlevel9k; then
-  POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs virtualenv status)
-
-  if [[ "$HOST" == "Musashi" && "$USER" == "strayer" ]]; then
-    POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=("${POWERLEVEL9K_LEFT_PROMPT_ELEMENTS[@]:1}")
-  fi
-
-  if [[ "$HOST" == "valaskjalf" ]]; then
-    POWERLEVEL9K_CONTEXT_DEFAULT_FOREGROUND="010"
-    POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND="001"
-  fi
-
-  if [[ "$HOST" == "PC0164" ]]; then
-    POWERLEVEL9K_CONTEXT_DEFAULT_FOREGROUND="012"
-  fi
-
-  POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=()
-
-  POWERLEVEL9K_TIME_FORMAT="%D{%H:%M:%S %d.%m.%y}"
-
-  POWERLEVEL9K_SHORTEN_DIR_LENGTH=5
-  POWERLEVEL9K_SHORTEN_DELIMITER="…"
-  POWERLEVEL9K_SHORTEN_STRATEGY="truncate_middle"
-
-  POWERLEVEL9K_STATUS_VERBOSE=false
-
-  POWERLEVEL9K_PROMPT_ON_NEWLINE=true
-  POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX=""
-  POWERLEVEL9K_MULTILINE_SECOND_PROMPT_PREFIX="$ "
-fi
 
 # Bind UP and DOWN arrow keys for subsstring search.
 if zplug check zsh-users/zsh-history-substring-search; then
