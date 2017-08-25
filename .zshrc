@@ -1,3 +1,5 @@
+#zmodload zsh/zprof
+
 export ZPLUG_HOME=$HOME/.zplug
 source $ZPLUG_HOME/init.zsh
 
@@ -13,47 +15,19 @@ zle -N bracketed-paste bracketed-paste-url-magic
 export NVM_AUTO_USE=true
 export NVM_LAZY_LOAD=true
 
-# powerlevel9k configuration
-POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs virtualenv status)
-POWERLEVEL9K_COLOR_SCHEME="light"
-
-if [[ "$HOST" == "Musashi" && "$USER" == "strayer" ]]; then
-  POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=("${POWERLEVEL9K_LEFT_PROMPT_ELEMENTS[@]:1}")
-fi
-
-if [[ "$HOST" == "valaskjalf" ]]; then
-  POWERLEVEL9K_CONTEXT_DEFAULT_FOREGROUND="010"
-  POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND="001"
-fi
-
-if [[ "$HOST" == "PC0164" ]]; then
-  POWERLEVEL9K_CONTEXT_DEFAULT_FOREGROUND="012"
-fi
-
-POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=()
-
-POWERLEVEL9K_TIME_FORMAT="%D{%H:%M:%S %d.%m.%y}"
-
-POWERLEVEL9K_SHORTEN_DIR_LENGTH=5
-POWERLEVEL9K_SHORTEN_DELIMITER="…"
-POWERLEVEL9K_SHORTEN_STRATEGY="truncate_middle"
-
-POWERLEVEL9K_STATUS_VERBOSE=false
-
-POWERLEVEL9K_PROMPT_ON_NEWLINE=true
-POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX=""
-POWERLEVEL9K_MULTILINE_SECOND_PROMPT_PREFIX="$ "
-
 zplug "zsh-users/zsh-completions"
 zplug "psprint/history-search-multi-word"
 zplug "jreese/zsh-titles"
-zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
 
-zplug "zsh-users/zsh-autosuggestions", if: "[[ \"$HOST\" != rpi-sven-lab25 ]]"
+#zplug "denysdovhan/spaceship-zsh-theme", use:spaceship.zsh, from:github, as:theme
+zplug mafredri/zsh-async, from:github
+zplug sindresorhus/pure, use:pure.zsh, from:github, as:theme
 
-zplug "lukechilds/zsh-nvm", if: "[[ \"$HOST\" == Musashi ]]"
+zplug "zsh-users/zsh-autosuggestions"
 
-zplug "zsh-users/zsh-syntax-highlighting", defer:2, if: "[[ \"$HOST\" != rpi-sven-lab25 ]]" # should be 2nd last
+#zplug "lukechilds/zsh-nvm", if: "[[ \"$HOST\" == Musashi ]]"
+
+zplug "zsh-users/zsh-syntax-highlighting", defer:2 # should be 2nd last
 zplug "zsh-users/zsh-history-substring-search", defer:2 # Should be loaded last.
 
 # Install plugins if there are plugins that have not been installed
@@ -65,7 +39,7 @@ if ! zplug check --verbose; then
 fi
 
 # Then, source plugins and add commands to $PATH
-zplug load --verbose
+zplug load
 
 # ZSH history
 setopt append_history
@@ -153,12 +127,12 @@ if command -v pyenv >/dev/null 2>/dev/null; then
   export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
   eval "$(pyenv init -)"
-  eval "$(pyenv virtualenv-init -)"
+  #eval "$(pyenv virtualenv-init -)"
 fi
 
-if command -v rbenv >/dev/null 2>/dev/null; then
-  eval "$(rbenv init -)"
-fi
+#if command -v rbenv >/dev/null 2>/dev/null; then
+#  eval "$(rbenv init -)"
+#fi
 
 # Android
 if [[ -d $HOME/Library/Android/sdk ]]; then
@@ -188,7 +162,7 @@ if command -v brew >/dev/null 2>/dev/null; then
   export HOMEBREW_NO_AUTO_UPDATE=1
 fi
 
-export EDITOR="nano"
+export EDITOR="vim"
 
 if [[ -d "/usr/local/sbin" ]]; then
   prependpath "/usr/local/sbin"
