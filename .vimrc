@@ -25,6 +25,7 @@ map <C-n> :NERDTreeToggle<CR>
 
 syntax enable
 colorscheme gruvbox
+set background=dark
 
 if exists('$TMUX')
   let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
