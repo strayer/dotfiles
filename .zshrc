@@ -130,6 +130,10 @@ if command -v pyenv >/dev/null 2>/dev/null; then
   #eval "$(pyenv virtualenv-init -)"
 fi
 
+# Load NVS
+export NVS_HOME="$HOME/.nvs"
+[ -s "$NVS_HOME/nvs.sh" ] && . "$NVS_HOME/nvs.sh" && nvs auto on
+
 #if command -v rbenv >/dev/null 2>/dev/null; then
 #  eval "$(rbenv init -)"
 #fi
