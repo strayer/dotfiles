@@ -190,6 +190,9 @@ if command -v react-native >/dev/null 2>/dev/null; then
 	alias "r-n"="react-native"
 fi
 
+bindkey "^[f" forward-word
+bindkey "^[b" backward-word
+
 # Force unique values for path array ($PATH is tied to path in zsh)
 # https://unix.stackexchange.com/a/62599
 typeset -U path
