@@ -1,0 +1,6 @@
+DEV="$HOME/Documents/Entwicklung"
+LAB_REPOS="$DEV/_lab25/_repos"
+
+alias cd-onnest-native="cd $LAB_REPOS/beeline-vorsorgekonto-native-app"
+alias cd-onnest-backend="cd $LAB_REPOS/onnest-vision"
+alias cd-onnest-cockpit="cd $LAB_REPOS/onnest-vision-cockpit"
