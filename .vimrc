@@ -80,6 +80,7 @@ match Error /^\t\+/
 
 " Indentation
 filetype indent on " load filetype-specific indent files
+autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 
 " make splits open below/right
 set splitbelow
