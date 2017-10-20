@@ -183,6 +183,11 @@ if [[ -d "$HOME/.fastlane/bin" ]]; then
   prependpath "$HOME/.fastlane/bin"
 fi
 
+# mpv
+if command -v mpv >/dev/null 2>/dev/null; then
+  alias mpv-vp9="mpv --ytdl-format=\"bestvideo[ext=webm]+bestaudio\""
+fi
+
 # Neofetch
 if command -v neofetch >/dev/null 2>/dev/null; then
 	echo ""
