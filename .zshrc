@@ -199,6 +199,11 @@ if command -v react-native >/dev/null 2>/dev/null; then
 	alias "r-n"="react-native"
 fi
 
+# direnv
+if command -v direnv >/dev/null 2>/dev/null; then
+  eval "$(direnv hook zsh)"
+fi
+
 # Load all files from .shell/zshrc.d directory
 if test -n "$(find $HOME/.zshrc.d/ -maxdepth 1 -name '*.zsh' -print -quit)"; then
 	for file in $HOME/.zshrc.d/*.zsh; do
