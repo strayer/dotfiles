@@ -127,7 +127,7 @@ if command -v pyenv >/dev/null 2>/dev/null; then
   export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
   eval "$(pyenv init -)"
-  #eval "$(pyenv virtualenv-init -)"
+  eval "$(pyenv virtualenv-init -)"
 fi
 
 # Load NVS
@@ -155,6 +155,16 @@ if [[ "$HOST" = "valaskjalf" && "$USER" = "root" ]]; then
   alias squashmount='noglob squashmount'
   alias esync="eix-sync && squashmount remount portage && squashmount remount layman"
   alias equery="noglob equery"
+fi
+
+if [[ "$HOST" = "wolf359" && "$USER" = "strayer" ]]; then
+  # Make sure gpg-agent is running so SSH can use its agent
+  #if command -v gpgconf >/dev/null 2>/dev/null; then
+    #gpgconf --launch gpg-agent >/dev/null
+  #fi
+
+  # Use GPGs ssh-agent compatibility
+  #export SSH_AUTH_SOCK="${HOME}/.gnupg/S.gpg-agent.ssh"
 fi
 
 # Config
