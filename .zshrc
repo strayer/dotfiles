@@ -19,7 +19,6 @@ zplug "zsh-users/zsh-completions"
 zplug "psprint/history-search-multi-word"
 zplug "jreese/zsh-titles"
 
-#zplug "denysdovhan/spaceship-zsh-theme", use:spaceship.zsh, from:github, as:theme
 zplug mafredri/zsh-async, from:github
 zplug sindresorhus/pure, use:pure.zsh, from:github, as:theme
 

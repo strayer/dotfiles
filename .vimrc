@@ -1,3 +1,5 @@
+set nocompatible
+
 " Plug
 call plug#begin('~/.vim/plugged')
 
@@ -48,7 +50,7 @@ set modelines=5
 set tabstop=4     " number of visual spaces per TAB
 set softtabstop=4 " number of spaces in tab when editing
 set expandtab     " tabs are spaces
-
+filetype plugin indent on
 
 " UI
 set number " show line numbers
