@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+set -eu
+
+if command -v tmux >/dev/null 2>/dev/null; then
+  tmux has-session && exec tmux attach || exec tmux new
+else
+  >&2 echo "tmux not found"
+  exit 1
+fi

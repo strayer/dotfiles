@@ -111,9 +111,6 @@ alias treesize="${GNU_TOOLS_PREFIX}du -shx ./* ./.* | ${GNU_TOOLS_PREFIX}sort -r
 if [[ -x "/usr/local/bin/brew" ]]; then
   alias brup="brew up && brew upgrade && brew cleanup && brew cask cleanup && brew cask outdated"
 fi
-if command -v tmux >/dev/null 2>/dev/null; then
-  alias tm='tmux attach || tmux new'
-fi
 
 VMWARE_VDISKMANAGER=/Applications/VMware\ Fusion.app/Contents/Library/vmware-vdiskmanager
 if [[ -x "$VMWARE_VDISKMANAGER" ]]; then
