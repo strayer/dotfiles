@@ -54,6 +54,13 @@ if status --is-interactive
   # Set correct colors for bsd ls
   set -gx LSCOLORS gxfxbEaEBxxEhEhBaDaCaD
 
+  # Set editor
+  if type -q nvim
+    set -gx EDITOR nvim
+  else if type -q vim
+    set -gx EDITOR vim
+  end
+
   function ls
     if type -q gls
       gls --color=auto $argv
