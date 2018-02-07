@@ -3,6 +3,12 @@ set -l user (whoami)
 
 set -g fish_prompt_pwd_dir_length 3
 set -g theme_nerd_fonts yes
+set -g theme_color_scheme base16-light
+function fish_right_prompt; end
+
+# fish fzf
+set -g FZF_FIND_FILE_COMMAND 'rg --files --no-ignore --hidden --follow -g "!{.git,node_modules}/*" 2> /dev/null'
+set -g FZF_TMUX 1
 
 # Android
 if test -d $HOME/Library/Android/sdk
@@ -29,12 +35,25 @@ if test -d "$HOME/.bin"
   set -gx PATH "$HOME/.bin" $PATH
 end
 
+# Rust stuff
+if test -d "$HOME/.cargo/bin"
+  set -gx PATH "$HOME/.cargo/bin" $PATH
+end
+
 if test -e "$HOME/.homebrew-github-token"
   set -gx HOMEBREW_GITHUB_API_TOKEN (cat $HOME/.homebrew-github-token)
 end
 
 # Interactive shell stuff
 if status --is-interactive
+  # Source correct dircolor configuration for coreutils
+  if type -q gdircolors; and test -e "$HOME/Documents/Entwicklung/_extern/dircolors-solarized/dircolors.ansi-universal"
+    bass (gdircolors $HOME/Documents/Entwicklung/_extern/dircolors-solarized/dircolors.ansi-universal )
+  end
+
+  # Set correct colors for bsd ls
+  set -gx LSCOLORS gxfxbEaEBxxEhEhBaDaCaD
+
   function ls
     if type -q gls
       gls --color=auto $argv
