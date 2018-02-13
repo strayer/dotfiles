@@ -40,5 +40,8 @@ set hlsearch " highlight matches
 match Error /\s\+$/
 match Error /^\t\+/
 
+" Indentation configuration
+set tabstop=2 shiftwidth=2 expandtab
+
 " airline configuration
 let g:airline_powerline_fonts = 1
