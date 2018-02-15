@@ -5,6 +5,9 @@ Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 
+Plug 'slashmili/alchemist.vim'
+Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+
 " Themes
 " Plug 'chriskempson/base16-vim'
 Plug 'morhetz/gruvbox'
@@ -18,6 +21,7 @@ colorscheme gruvbox
 set background=dark
 
 let g:airline_theme='base16'
+let g:deoplete#enable_at_startup = 1
 
 if exists('$TMUX')
   let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
