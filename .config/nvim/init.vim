@@ -6,13 +6,16 @@ Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 
 " Themes
-Plug 'chriskempson/base16-vim'
+" Plug 'chriskempson/base16-vim'
+Plug 'morhetz/gruvbox'
 
 call plug#end()
 
 map <C-n> :NERDTreeToggle<CR>
 
-colorscheme base16-solarized-dark
+" colorscheme base16-solarized-dark
+colorscheme gruvbox
+set background=dark
 
 let g:airline_theme='base16'
 
