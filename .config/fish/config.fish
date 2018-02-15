@@ -1,9 +1,10 @@
 set -l host (hostname | cut -d . -f 1)
 set -l user (whoami)
 
-set -g fish_prompt_pwd_dir_length 3
+set -g fish_prompt_pwd_dir_length 2
 set -g theme_nerd_fonts yes
-set -g theme_color_scheme base16-light
+set -g theme_color_scheme gruvbox
+set -g theme_display_k8s_context no
 function fish_right_prompt; end
 
 # fish fzf
