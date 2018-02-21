@@ -41,8 +41,13 @@ if test -d "$HOME/.cargo/bin"
   set -gx PATH "$HOME/.cargo/bin" $PATH
 end
 
-if test -e "$HOME/.homebrew-github-token"
-  set -gx HOMEBREW_GITHUB_API_TOKEN (cat $HOME/.homebrew-github-token)
+if type -q brew
+  if test -e "$HOME/.homebrew-github-token"
+    set -gx HOMEBREW_GITHUB_API_TOKEN (cat $HOME/.homebrew-github-token)
+  end
+
+  set -gx HOMEBREW_NO_ANALYTICS 1
+  set -gx HOMEBREW_NO_AUTO_UPDATE 1
 end
 
 # Interactive shell stuff
