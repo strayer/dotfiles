@@ -9,6 +9,7 @@ function fish_right_prompt; end
 
 # fish fzf
 set -g FZF_FIND_FILE_COMMAND 'rg --files --no-ignore --hidden --follow -g "!{.git,node_modules}/*" 2> /dev/null'
+set -g FZF_LEGACY_KEYBINDINGS 0
 set -g FZF_TMUX 1
 
 # Android
