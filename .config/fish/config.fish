@@ -32,7 +32,7 @@ if test $host = "wolf359" -a $user = "strayer"
   end
 end
 
-if test $host = "sector001" -a $user = "strayer"
+if test -d /home/linuxbrew
   # Linuxbrew
   set -gx PATH /home/linuxbrew/.linuxbrew/bin $PATH
   set -gx MANPATH /home/linuxbrew/.linuxbrew/share/man (manpath -g)
