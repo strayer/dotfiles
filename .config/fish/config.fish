@@ -88,7 +88,7 @@ if status --is-interactive
   end
 
   function l
-    ls -lav --time-style=long-iso $argv
+    exa -lbah --git --time-style long-iso $argv
   end
 
   function du
