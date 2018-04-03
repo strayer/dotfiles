@@ -1,3 +1,7 @@
+" Setup python support
+let g:python_host_prog = $HOME.'/.pyenv/versions/neovim2/bin/python'
+let g:python3_host_prog = $HOME.'/.pyenv/versions/neovim3/bin/python'
+
 call plug#begin('~/.local/share/nvim/plugged')
 
 Plug 'sheerun/vim-polyglot'
@@ -8,6 +12,7 @@ Plug 'vim-airline/vim-airline-themes'
 
 Plug 'slashmili/alchemist.vim'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'zchee/deoplete-jedi'
 
 Plug 'airblade/vim-gitgutter'
 
@@ -55,3 +60,6 @@ set tabstop=2 shiftwidth=2 expandtab
 
 " airline configuration
 let g:airline_powerline_fonts = 1
+
+" <TAB> to navigate autocomplete popups
+inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
