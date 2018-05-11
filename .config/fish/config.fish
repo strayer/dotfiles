@@ -11,6 +11,7 @@ function fish_right_prompt; end
 set -g FZF_FIND_FILE_COMMAND 'rg --files --no-ignore --hidden --follow -g "!{.git,node_modules}/*" 2> /dev/null'
 set -g FZF_LEGACY_KEYBINDINGS 0
 set -g FZF_TMUX 1
+set -x FZF_DEFAULT_OPTS "--tiebreak=index --bind=ctrl-r:toggle-sort +m"
 
 # Android
 if test -d $HOME/Library/Android/sdk
