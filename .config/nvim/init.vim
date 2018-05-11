@@ -9,6 +9,8 @@ Plug 'scrooloose/nerdtree'
 Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
+Plug 'tpope/vim-surround'
+Plug 'hashivim/vim-terraform'
 
 Plug 'slashmili/alchemist.vim'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
@@ -16,13 +18,19 @@ Plug 'zchee/deoplete-jedi'
 
 Plug 'airblade/vim-gitgutter'
 
+Plug '/usr/local/opt/fzf'
+Plug 'junegunn/fzf.vim'
+
+Plug 'equal-l2/vim-base64'
+
 " Themes
 " Plug 'chriskempson/base16-vim'
 Plug 'morhetz/gruvbox'
 
 call plug#end()
 
-map <C-n> :NERDTreeToggle<CR>
+map <C-n> :NERDTreeFocus<CR>
+map <S-n> :NERDTreeToggle<CR>
 
 " colorscheme base16-solarized-dark
 colorscheme gruvbox
@@ -51,6 +59,9 @@ set showmatch " highlight matching [{()}]
 set incsearch " search as characters are entered
 set hlsearch " highlight matches
 
+" fzf
+let $FZF_DEFAULT_COMMAND = 'ag --hidden --ignore .git -g ""'
+
 " Whitespaces
 match Error /\s\+$/
 match Error /^\t\+/
@@ -61,5 +72,7 @@ set tabstop=2 shiftwidth=2 expandtab
 " airline configuration
 let g:airline_powerline_fonts = 1
 
+let g:terraform_fmt_on_save = 1
+
 " <TAB> to navigate autocomplete popups
-inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
+"inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
