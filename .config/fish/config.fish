@@ -136,4 +136,10 @@ if status --is-interactive
   if type -q pyenv-virtualenv
     source (pyenv virtualenv-init - | psub)
   end
+
+  if test -e $HOME/.kube/config
+    function copy-k8s-token
+      gopass lab25-personal/k8s.l25.cloud/token | jq .status.token -r - | pbcopy
+    end
+  end
 end
