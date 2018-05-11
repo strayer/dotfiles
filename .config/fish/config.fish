@@ -115,8 +115,13 @@ if status --is-interactive
   end
 
   if type -q mpv
-    function mpv-vp9
-      mpv --ytdl-format="bestvideo[ext=webm]+bestaudio" $argv
+    function mpv
+      if ioreg -rc "AppleSmartBattery" | grep -q "\"ExternalConnected\" = Yes"
+        printf "Prefering vp9 (external power source connected)\n"
+        command mpv --profile=with-vp9 $argv
+      else
+        command mpv $argv
+      end
     end
   end
 
