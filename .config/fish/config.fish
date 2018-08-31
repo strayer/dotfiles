@@ -144,4 +144,8 @@ if status --is-interactive
       gopass lab25-personal/k8s.l25.cloud/token | jq .status.token -r - | pbcopy
     end
   end
+  
+  if test -e $HOME/.emacs.d/bin/doom
+    alias doom=$HOME/.emacs.d/bin/doom
+  end
 end
