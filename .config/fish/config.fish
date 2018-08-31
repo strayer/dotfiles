@@ -59,6 +59,9 @@ if type -q brew
   set -gx HOMEBREW_NO_AUTO_UPDATE 1
 end
 
+# node and direnv
+set -gx NODE_VERSIONS "$HOME/.node-versions"
+
 # Interactive shell stuff
 if status --is-interactive
   # Source correct dircolor configuration for coreutils
@@ -102,13 +105,12 @@ if status --is-interactive
 
   if type -q brew
     function brup
-      echo "Running brew up…"
+      echo "### Running brew up…"
       brew up
       and brew upgrade
       and brew cleanup
       if test -e (brew --prefix)/Homebrew/Library/Taps/caskroom
-        echo "Running brew cask cleanup and outdated…"
-        brew cask cleanup
+        echo "### Outdated casks:"
         brew cask outdated
       end
     end
