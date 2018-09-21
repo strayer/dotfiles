@@ -1400,7 +1400,7 @@
 	<key>NSWindow Frame SharedPreferences</key>
 	<string>698 367 796 486 0 0 2560 1417 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>0 600 570 427 0 0 1680 1027 </string>
+	<string>0 0 2560 1417 0 0 2560 1417 </string>
 	<key>NSWindow Frame iTerm Window 1</key>
 	<string>1260 351 732 651 0 0 2560 1417 </string>
 	<key>New Bookmarks</key>
@@ -1881,7 +1881,7 @@
 			<key>Non-ASCII Anti Aliased</key>
 			<true/>
 			<key>Normal Font</key>
-			<string>IosevkaNerdFontC-Light 13</string>
+			<string>IosevkaNerdFontComplete-Light 13</string>
 			<key>Only The Default BG Color Uses Transparency</key>
 			<true/>
 			<key>Option Key Sends</key>
