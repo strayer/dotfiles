@@ -103,6 +103,10 @@ if status --is-interactive
     end
   end
 
+  function tm
+    exec tm
+  end
+
   if type -q brew
     function brup
       echo "### Running brew up…"
