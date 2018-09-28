@@ -50,6 +50,14 @@ if test -d "$HOME/.cargo/bin"
   set -gx PATH "$HOME/.cargo/bin" $PATH
 end
 
+# asdf
+if test -d ~/.asdf
+  source ~/.asdf/asdf.fish
+  if test ! -e ~/.config/fish/completions/asdf.fish
+    ln -s ~/.asdf/completions/asdf.fish ~/.config/fish/completions/asdf.fish
+  end
+end
+
 if type -q brew
   if test -e "$HOME/.homebrew-github-token"
     set -gx HOMEBREW_GITHUB_API_TOKEN (cat $HOME/.homebrew-github-token)
