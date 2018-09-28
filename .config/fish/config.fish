@@ -20,7 +20,7 @@ if test -d $HOME/Library/Android/sdk
   set -gx PATH "$ANDROID_HOME/tools" $PATH
 end
 
-if test $host = "wolf359" -a $user = "strayer"
+if test $host = "wolf359" -a \($user = "strayer" -o $user = "work"\)
   # Use GPGs ssh-agent compatibility
   set -gx SSH_AUTH_SOCK "$HOME/.gnupg/S.gpg-agent.ssh"
 
@@ -116,6 +116,12 @@ if status --is-interactive
       if test -e (brew --prefix)/Homebrew/Library/Taps/caskroom
         echo "### Outdated casks:"
         brew cask outdated
+      end
+    end
+
+    if test $host = "wolf359" -a $user = "work"
+      function brew
+        sudo -Hu strayer brew $argv
       end
     end
   end
