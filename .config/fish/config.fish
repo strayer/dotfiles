@@ -20,7 +20,7 @@ if test -d $HOME/Library/Android/sdk
   set -gx PATH "$ANDROID_HOME/tools" $PATH
 end
 
-if test $host = "wolf359" -a \($user = "strayer" -o $user = "work"\)
+if test $host = "wolf359" -a \( $user = "strayer" -o $user = "work" \)
   # Use GPGs ssh-agent compatibility
   set -gx SSH_AUTH_SOCK "$HOME/.gnupg/S.gpg-agent.ssh"
 
