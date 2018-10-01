@@ -1223,8 +1223,10 @@
 	<false/>
 	<key>DisableFullscreenTransparency</key>
 	<false/>
+	<key>DisableMetalWhenIdle</key>
+	<true/>
 	<key>DisableWindowSizeSnap</key>
-	<false/>
+	<true/>
 	<key>EnableProxyIcon</key>
 	<false/>
 	<key>EscapeShellCharsWithBackslash</key>
@@ -1412,9 +1414,9 @@
 	<key>NSWindow Frame SessionsPreferences</key>
 	<string>269 126 606 469 0 0 1680 1027 </string>
 	<key>NSWindow Frame SharedPreferences</key>
-	<string>350 333 958 451 0 0 1680 1027 </string>
+	<string>350 407 796 486 0 0 1680 1027 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>23 20 1634 987 0 0 1680 1027 </string>
+	<string>0 600 570 427 0 0 1680 1027 </string>
 	<key>NSWindow Frame iTerm Window 1</key>
 	<string>1260 351 732 651 0 0 2560 1417 </string>
 	<key>New Bookmarks</key>
@@ -2060,11 +2062,11 @@
 	<key>SUHasLaunchedBefore</key>
 	<true/>
 	<key>SULastCheckTime</key>
-	<date>2018-09-24T08:24:43Z</date>
+	<date>2018-10-01T09:30:52Z</date>
 	<key>SUSendProfileInfo</key>
 	<false/>
 	<key>Secure Input</key>
-	<true/>
+	<false/>
 	<key>ShowBookmarkName</key>
 	<false/>
 	<key>SplitPaneDimmingAmount</key>
@@ -2079,6 +2081,8 @@
 	<false/>
 	<key>UseMetal</key>
 	<true/>
+	<key>UseModernScrollWheelAccumulator</key>
+	<true/>
 	<key>WindowNumber</key>
 	<true/>
 	<key>WordCharacters</key>
@@ -2086,7 +2090,7 @@
 	<key>findMode_iTerm</key>
 	<integer>0</integer>
 	<key>iTerm Version</key>
-	<string>3.2.1beta5</string>
+	<string>3.2.2beta3</string>
 	<key>kCPKSelectionViewPreferredModeKey</key>
 	<integer>0</integer>
 	<key>kCPKSelectionViewShowHSBTextFieldsKey</key>
