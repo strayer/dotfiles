@@ -154,7 +154,7 @@ if status --is-interactive
 
   if test -e $HOME/.kube/config
     function copy-k8s-token
-      gopass lab25-personal/k8s.l25.cloud/token | jq .status.token -r - | pbcopy
+      gpg -d $HOME/.kube/token.asc | jq .status.token -r - | pbcopy
     end
   end
   
