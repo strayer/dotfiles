@@ -127,12 +127,6 @@ if status --is-interactive
         brew cask outdated
       end
     end
-
-    if test $host = "wolf359" -a $user = "work"
-      function brew
-        sudo -Hu strayer brew $argv
-      end
-    end
   end
 
   if type -q mpv
