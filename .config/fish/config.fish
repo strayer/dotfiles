@@ -5,6 +5,7 @@ set -g fish_prompt_pwd_dir_length 2
 set -g theme_nerd_fonts yes
 set -g theme_color_scheme gruvbox
 set -g theme_display_k8s_context no
+set -g theme_display_ruby no
 function fish_right_prompt; end
 
 # fish fzf
