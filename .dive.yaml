@@ -1,0 +1,3 @@
+filetree:
+  # The default directory-collapse state
+  collapse-dir: true
