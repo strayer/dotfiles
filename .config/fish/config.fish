@@ -121,11 +121,8 @@ if status --is-interactive
       echo "### Running brew up…"
       brew up
       and brew upgrade
+      and brew cask upgrade
       and brew cleanup
-      if test -e (brew --prefix)/Homebrew/Library/Taps/caskroom
-        echo "### Outdated casks:"
-        brew cask outdated
-      end
     end
   end
 
