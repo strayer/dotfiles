@@ -81,11 +81,7 @@ if status --is-interactive
 
   # Set editor
   if type -q nvim
-    if test -e "/home/linuxbrew/.linuxbrew/bin/nvim"
-      set -gx EDITOR /home/linuxbrew/.linuxbrew/bin/nvim
-    else
-      set -gx EDITOR nvim
-    end
+    set -gx EDITOR nvim
   else if type -q vim
     set -gx EDITOR vim
   end
