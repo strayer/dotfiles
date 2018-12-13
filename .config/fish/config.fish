@@ -34,13 +34,6 @@ if test $host = "wolf359" -a \( $user = "strayer" -o $user = "work" \)
   end
 end
 
-if test -d /home/linuxbrew
-  # Linuxbrew
-  set -gx PATH /home/linuxbrew/.linuxbrew/bin $PATH
-  set -gx MANPATH /home/linuxbrew/.linuxbrew/share/man (manpath -g)
-  set -gx INFOPATH /home/linuxbrew/.linuxbrew/share/info $INFOPATH
-end
-
 # Local software & scripts
 if test -d "$HOME/.bin"
   set -gx PATH "$HOME/.bin" $PATH
