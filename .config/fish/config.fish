@@ -94,8 +94,10 @@ if status --is-interactive
     end
   end
 
-  function l
-    exa -lbah --git --time-style long-iso $argv
+  if type -q exa
+    function l
+      exa -lbahg --git --time-style long-iso $argv
+    end
   end
 
   function du
