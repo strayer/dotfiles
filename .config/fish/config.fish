@@ -61,9 +61,6 @@ if type -q brew
   set -gx HOMEBREW_NO_AUTO_UPDATE 1
 end
 
-# node and direnv
-set -gx NODE_VERSIONS "$HOME/.node-versions"
-
 # Spacefish theme
 set SPACEFISH_BATTERY_THRESHOLD 80
 if test $host = "wolf359" -a $user = "strayer"
