@@ -119,7 +119,6 @@ if status --is-interactive
       brew up
       and brew upgrade
       and brew cask upgrade
-      and brew cleanup
     end
   end
 
