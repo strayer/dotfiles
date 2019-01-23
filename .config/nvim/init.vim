@@ -16,19 +16,18 @@ Plug 'junegunn/fzf.vim'
 Plug 'equal-l2/vim-base64'
 
 " Themes
-" Plug 'chriskempson/base16-vim'
-Plug 'morhetz/gruvbox'
+Plug 'kaicataldo/material.vim'
 
 call plug#end()
 
 map <C-n> :NERDTreeFocus<CR>
 map <S-n> :NERDTreeToggle<CR>
 
-" colorscheme base16-solarized-dark
-colorscheme gruvbox
+set termguicolors
 set background=dark
+colorscheme material 
+let g:airline_theme = 'material'
 
-let g:airline_theme='base16'
 let g:deoplete#enable_at_startup = 1
 
 if exists('$TMUX')
