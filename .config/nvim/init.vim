@@ -7,6 +7,7 @@ Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'tpope/vim-surround'
 Plug 'hashivim/vim-terraform'
+Plug 'nfnty/vim-nftables'
 
 Plug 'airblade/vim-gitgutter'
 
