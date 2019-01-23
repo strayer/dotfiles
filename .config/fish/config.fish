@@ -70,12 +70,6 @@ else if test $host = "wolf359" -a $user = "work"
   set SPACEFISH_PROMPT_ORDER time user dir host git aws kubecontext exec_time line_sep battery jobs exit_code char
 end
 
-# Base16 Shell
-set BASE16_SHELL "$HOME/.config/base16-shell/"
-if test -e "$BASE16_SHELL"; and status --is-interactive
-  source "$BASE16_SHELL/profile_helper.fish"
-end
-
 # Interactive shell stuff
 if status --is-interactive
   # Source correct dircolor configuration for coreutils
