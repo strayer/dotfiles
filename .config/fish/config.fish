@@ -67,7 +67,7 @@ set SPACEFISH_BATTERY_THRESHOLD 80
 if test $host = "wolf359" -a $user = "strayer"
   set SPACEFISH_PROMPT_ORDER time user dir host git exec_time line_sep battery jobs exit_code char
 else if test $host = "wolf359" -a $user = "work"
-  set SPACEFISH_PROMPT_ORDER time user dir host git aws kubecontext exec_time line_sep battery jobs exit_code char
+  set SPACEFISH_PROMPT_ORDER time user dir host git aws exec_time line_sep battery jobs exit_code char
 end
 
 # Interactive shell stuff
