@@ -145,6 +145,10 @@ if status --is-interactive
     source (pyenv virtualenv-init - | psub)
   end
 
+  if type -q python3
+    set -gx PATH (python3 -c "import site; print(site.USER_BASE + '/bin')") $PATH
+  end
+
   if test -e $HOME/.kube/config
     function copy-k8s-token
       gpg -d $HOME/.kube/token.asc | jq .status.token -r - | pbcopy
