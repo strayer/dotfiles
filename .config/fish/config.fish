@@ -62,6 +62,10 @@ if type -q brew
   set -gx HOMEBREW_INSTALL_CLEANUP 1
 end
 
+if type -q cowsay -a -q ansible
+  set -gx ANSIBLE_NOCOWS 1
+end
+
 # Spacefish theme
 set SPACEFISH_BATTERY_THRESHOLD 80
 if test $host = "wolf359" -a $user = "strayer"
