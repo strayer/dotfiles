@@ -146,20 +146,6 @@ if status --is-interactive
     eval (direnv hook fish)
   end
 
-  if type -q pyenv
-    source (pyenv init - | psub)
-  end
-
-  if type -q pyenv-virtualenv
-    source (pyenv virtualenv-init - | psub)
-  end
-
-  if test -e $HOME/.kube/config
-    function copy-k8s-token
-      gpg -d $HOME/.kube/token.asc | jq .status.token -r - | pbcopy
-    end
-  end
-  
   if test -e $HOME/.emacs.d/bin/doom
     alias doom=$HOME/.emacs.d/bin/doom
   end
