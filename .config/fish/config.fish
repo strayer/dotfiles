@@ -17,8 +17,8 @@ set -x FZF_DEFAULT_OPTS "--tiebreak=index --bind=ctrl-r:toggle-sort +m"
 # Android
 if test -d $HOME/Library/Android/sdk
   set -gx ANDROID_HOME "$HOME/Library/Android/sdk"
-  set -gx PATH "$ANDROID_HOME/platform-tools" $PATH
-  set -gx PATH "$ANDROID_HOME/tools" $PATH
+  set -g fish_user_paths "$ANDROID_HOME/platform-tools" $fish_user_paths
+  set -g fish_user_paths "$ANDROID_HOME/tools" $fish_user_paths
 end
 
 if test $host = "wolf359" -a \( $user = "strayer" -o $user = "work" \)
@@ -30,18 +30,18 @@ if test $host = "wolf359" -a \( $user = "strayer" -o $user = "work" \)
 
   # Add /usr/local/sbin to path if it exists
   if test -d "/usr/local/sbin"
-    set -gx PATH /usr/local/sbin $PATH
+    set -g fish_user_paths /usr/local/sbin $fish_user_paths
   end
 end
 
 # Local software & scripts
 if test -d "$HOME/.bin"
-  set -gx PATH "$HOME/.bin" $PATH
+  set -g fish_user_paths "$HOME/.bin" $fish_user_paths
 end
 
 # Rust stuff
 if test -d "$HOME/.cargo/bin"
-  set -gx PATH "$HOME/.cargo/bin" $PATH
+  set -g fish_user_paths "$HOME/.cargo/bin" $fish_user_paths
 end
 
 # asdf
@@ -54,7 +54,7 @@ end
 
 # python poetry
 if test -d "$HOME/.poetry/bin"
-  set -gx PATH "$HOME/.poetry/bin" $PATH
+  set -g fish_user_paths "$HOME/.poetry/bin" $fish_user_paths
 end
 
 if type -q brew
@@ -77,6 +77,17 @@ if test $host = "wolf359" -a $user = "strayer"
   set SPACEFISH_PROMPT_ORDER time user dir host git exec_time line_sep battery jobs exit_code char
 else if test $host = "wolf359" -a $user = "work"
   set SPACEFISH_PROMPT_ORDER time user dir host git aws kubecontext exec_time line_sep battery jobs exit_code char
+end
+
+# Predictable SSH authentication socket location.
+# https://unix.stackexchange.com/a/76256
+set SOCK "/tmp/ssh-agent-$USER-screen"
+if set -q SSH_CONNECTION; and set -q SSH_AUTH_SOCK; and test $SSH_AUTH_SOCK != $SOCK
+  if test -L $SOCK
+    rm $SOCK
+  end
+  ln -s $SSH_AUTH_SOCK $SOCK
+  set -gx SSH_AUTH_SOCK $SOCK
 end
 
 # Interactive shell stuff
