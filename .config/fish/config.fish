@@ -52,6 +52,11 @@ if test -d ~/.asdf
   end
 end
 
+# python poetry
+if test -d "$HOME/.poetry/bin"
+  set -gx PATH "$HOME/.poetry/bin" $PATH
+end
+
 if type -q brew
   if test -e "$HOME/.homebrew-github-token"
     set -gx HOMEBREW_GITHUB_API_TOKEN (cat $HOME/.homebrew-github-token)
