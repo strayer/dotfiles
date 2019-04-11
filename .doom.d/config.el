@@ -3,7 +3,7 @@
 ;; Place your private configuration here
 
 ;; Make gpg-agent for SSH work in emacs
-(set-env! "SSH_AUTH_SOCK")
+;;(set-env! "SSH_AUTH_SOCK")
 
 (setq doom-font (font-spec :family "Iosevka" :size 13))
 (setq doom-bg-font (font-spec :family "Iosevka" :size 28))
