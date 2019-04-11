@@ -76,7 +76,7 @@ set SPACEFISH_BATTERY_THRESHOLD 80
 if test $host = "wolf359" -a $user = "strayer"
   set SPACEFISH_PROMPT_ORDER time user dir host git exec_time line_sep battery jobs exit_code char
 else if test $host = "wolf359" -a $user = "work"
-  set SPACEFISH_PROMPT_ORDER time user dir host git aws kubecontext exec_time line_sep battery jobs exit_code char
+  set SPACEFISH_PROMPT_ORDER time user dir host git aws exec_time line_sep battery jobs exit_code char
 end
 
 # Predictable SSH authentication socket location.
@@ -157,6 +157,10 @@ if status --is-interactive
     eval (direnv hook fish)
   end
 
+  if type -q python3
+    set -gx PATH (python3 -c "import site; print(site.USER_BASE + '/bin')") $PATH
+  end
+  
   if test -e $HOME/.emacs.d/bin/doom
     alias doom=$HOME/.emacs.d/bin/doom
   end
