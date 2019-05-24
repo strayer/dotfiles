@@ -164,8 +164,4 @@ if status --is-interactive
   if test -e $HOME/.emacs.d/bin/doom
     alias doom=$HOME/.emacs.d/bin/doom
   end
-
-  if test -e /usr/local/Homebrew/Library/Taps/homebrew/homebrew-command-not-found/
-    brew command command-not-found-init > /dev/null 2>&1; and . (brew command-not-found-init)
-  end
 end
