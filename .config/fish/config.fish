@@ -1,13 +1,6 @@
 set -l host (hostname | cut -d . -f 1)
 set -l user (whoami)
 
-set -g fish_prompt_pwd_dir_length 2
-set -g theme_nerd_fonts yes
-set -g theme_color_scheme gruvbox
-set -g theme_display_k8s_context no
-set -g theme_display_ruby no
-function fish_right_prompt; end
-
 # fish fzf
 set -g FZF_FIND_FILE_COMMAND 'rg --files --no-ignore --hidden --follow -g "!{.git,node_modules}/*" 2> /dev/null'
 set -g FZF_LEGACY_KEYBINDINGS 0
