@@ -8,6 +8,9 @@
 (setq doom-font (font-spec :family "Iosevka" :size 13))
 (setq doom-big-font (font-spec :family "Iosevka" :size 28))
 
+;; Fastlane
+(add-to-list 'auto-mode-alist '("fastlane/.+file\\'" . enh-ruby-mode))
+
 ;; (setq doom-font (font-spec :family "Monoid" :style "Retina" :size 12))
 ;; (setq doom-big-font (font-spec :family "Monoid" :style "Retina" :size 28))
 
