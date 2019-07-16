@@ -14,7 +14,7 @@ if test -d $HOME/Library/Android/sdk
   set -g fish_user_paths "$ANDROID_HOME/tools" $fish_user_paths
 end
 
-if test $host = "wolf359" -a \( $user = "strayer" -o $user = "work" \)
+if test \( $host = "wolf359" -o $host = "khitomer" \) -a \( $user = "strayer" -o $user = "work" \)
   # Use GPGs ssh-agent compatibility
   set -gx SSH_AUTH_SOCK "$HOME/.gnupg/S.gpg-agent.ssh"
 
@@ -66,9 +66,9 @@ end
 
 # Spacefish theme
 set SPACEFISH_BATTERY_THRESHOLD 80
-if test $host = "wolf359" -a $user = "strayer"
+if test \( $host = "wolf359" -o $host = "khitomer" \) -a $user = "strayer"
   set SPACEFISH_PROMPT_ORDER time user dir host git exec_time line_sep battery jobs exit_code char
-else if test $host = "wolf359" -a $user = "work"
+else if test \( $host = "wolf359" -o $host = "khitomer" \) -a $user = "work"
   set SPACEFISH_PROMPT_ORDER time user dir host git aws exec_time line_sep battery jobs exit_code char
 end
 
