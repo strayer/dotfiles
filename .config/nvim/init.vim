@@ -14,10 +14,8 @@ Plug 'airblade/vim-gitgutter'
 Plug '/usr/local/opt/fzf'
 Plug 'junegunn/fzf.vim'
 
-Plug 'equal-l2/vim-base64'
-
 " Themes
-Plug 'kaicataldo/material.vim'
+Plug 'dracula/vim', { 'as': 'dracula' }
 
 call plug#end()
 
@@ -26,8 +24,8 @@ map <S-n> :NERDTreeToggle<CR>
 
 set termguicolors
 set background=dark
-colorscheme material 
-let g:airline_theme = 'material'
+color dracula
+let g:airline_theme = 'dracula'
 
 let g:deoplete#enable_at_startup = 1
 
