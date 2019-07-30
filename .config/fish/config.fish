@@ -1,4 +1,4 @@
-set -l host (hostname | cut -d . -f 1)
+set -l host (string match -r "^[^.]+" $hostname)
 set -l user (whoami)
 
 # fish fzf
