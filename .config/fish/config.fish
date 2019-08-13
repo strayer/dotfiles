@@ -157,4 +157,8 @@ if status --is-interactive
   if test -e $HOME/.emacs.d/bin/doom
     alias doom=$HOME/.emacs.d/bin/doom
   end
+
+  if type -q kitty
+    kitty + complete setup fish | source
+  end
 end
