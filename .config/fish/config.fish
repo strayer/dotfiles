@@ -86,8 +86,14 @@ end
 # Interactive shell stuff
 if status --is-interactive
   # Source correct dircolor configuration for coreutils
-  if type -q gdircolors; and test -e "$HOME/Documents/Entwicklung/_extern/dircolors-solarized/dircolors.ansi-universal"
-    bass (gdircolors $HOME/Documents/Entwicklung/_extern/dircolors-solarized/dircolors.ansi-universal )
+  set -l nord_dircolors_path $HOME/.nord-dircolors/src/dir_colors
+  if test -e "$nord_dircolors_path"
+    if type -q gdircolors
+      bass (gdircolors $nord_dircolors_path)
+    end
+    if type -q dircolors
+      bass (dircolors $nord_dircolors_path)
+    end
   end
 
   # Set correct colors for bsd ls
@@ -153,7 +159,7 @@ if status --is-interactive
   if type -q python3
     set -gx PATH (python3 -c "import site; print(site.USER_BASE + '/bin')") $PATH
   end
-  
+
   if test -e $HOME/.emacs.d/bin/doom
     alias doom=$HOME/.emacs.d/bin/doom
   end

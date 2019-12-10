@@ -5,3 +5,6 @@
 [submodule ".config/kitty/dracula"]
 	path = .config/kitty/dracula
 	url = https://github.com/dracula/kitty.git
+[submodule ".nord-dircolors"]
+	path = .nord-dircolors
+	url = https://github.com/arcticicestudio/nord-dircolors.git
