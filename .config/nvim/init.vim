@@ -15,7 +15,8 @@ Plug '/usr/local/opt/fzf'
 Plug 'junegunn/fzf.vim'
 
 " Themes
-Plug 'dracula/vim', { 'as': 'dracula' }
+" Plug 'dracula/vim', { 'as': 'dracula' }
+Plug 'arcticicestudio/nord-vim'
 
 call plug#end()
 
@@ -23,11 +24,12 @@ map <C-n> :NERDTreeFocus<CR>
 map <S-n> :NERDTreeToggle<CR>
 
 set termguicolors
-set background=dark
-color dracula
-let g:airline_theme = 'dracula'
+" set background=dark
+color nord
 
-let g:deoplete#enable_at_startup = 1
+
+" color dracula
+" let g:airline_theme = 'dracula'
 
 if exists('$TMUX')
   let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
