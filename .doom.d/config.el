@@ -5,8 +5,8 @@
 ;; Make gpg-agent for SSH work in emacs
 (setenv "SSH_AUTH_SOCK" (expand-file-name "~/.gnupg/S.gpg-agent.ssh"))
 
-(setq doom-font (font-spec :family "Iosevka" :size 13))
-(setq doom-big-font (font-spec :family "Iosevka" :size 28))
+(setq doom-font (font-spec :family "PragmataPro Mono" :size 13))
+(setq doom-big-font (font-spec :family "PragmataPro Mono" :size 28))
 
 ;; Fastlane
 (add-to-list 'auto-mode-alist '("fastlane/.+file\\'" . enh-ruby-mode))
