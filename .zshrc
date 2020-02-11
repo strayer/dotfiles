@@ -53,6 +53,8 @@ if [ -d "$HOME/.asdf" ]; then
   function load_asdf_completions() {
     . $HOME/.asdf/completions/asdf.bash
   }
+else
+  function load_asdf_completions() {}
 fi
 
 # fzf
