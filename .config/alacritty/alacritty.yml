@@ -79,10 +79,6 @@ schemes:
 
 colors: *nord_dark
 
-shell:
-  program: login
-  args: ["-fp", "strayer"]
-
 key_bindings:
   - { key: V,      mods: Command,         action: Paste            }
   - { key: C,      mods: Command,         action: Copy             }
