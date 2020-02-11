@@ -1,15 +1,16 @@
 [user]
-{%- if YADM_USER == 'work' and YADM_HOSTNAME == 'wolf359' %}
+{% if YADM_USER == 'work' and YADM_HOSTNAME == 'wolf359' %}
 	email = sven.grunewaldt@lab25.de
-{%- else %}
+{% else %}
 	email = strayer@olle-orks.org
-{%- endif %}
+{% endif %}
 	name = Sven Grunewaldt
 	signingkey = 5F42398FF62148AD53B15B4C9008BCAFDBB19046
 [commit]
 	gpgsign = true
 [alias]
 	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
+  pushhead = push -u origin head
 [github]
 	user = Strayer
 [tag]
