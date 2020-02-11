@@ -9,7 +9,8 @@ window:
 font:
   normal:
     # family: Iosevka Nerd Font
-    family: PragmataPro Mono
+    # family: PragmataPro Mono
+    family: PragmataProMono Nerd Font
     style: Regular
   size: 13.0
 
