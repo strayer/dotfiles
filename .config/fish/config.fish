@@ -141,17 +141,6 @@ if status --is-interactive
     end
   end
 
-  if type -q mpv
-    function mpv
-      if ioreg -rc "AppleSmartBattery" | grep -q "\"ExternalConnected\" = Yes"
-        printf "Prefering vp9 (external power source connected)\n"
-        command mpv --profile=with-vp9 $argv
-      else
-        command mpv $argv
-      end
-    end
-  end
-
   if type -q direnv
     eval (direnv hook fish)
   end
