@@ -48,10 +48,12 @@ if [ -d "$HOME/.bin" ]; then
 fi
 
 # asdf
-. $HOME/.asdf/asdf.sh
-function load_asdf_completions() {
-  . $HOME/.asdf/completions/asdf.bash
-}
+if [ -d "$HOME/.asdf" ]; then
+  . $HOME/.asdf/asdf.sh
+  function load_asdf_completions() {
+    . $HOME/.asdf/completions/asdf.bash
+  }
+fi
 
 # fzf
 if [ -f ~/.fzf.zsh ]; then
