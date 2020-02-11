@@ -62,6 +62,10 @@ if [ -f ~/.fzf.zsh ]; then
   export FZF_TMUX=1
   source ~/.fzf.zsh
 fi
+if [ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]; then
+  export FZF_TMUX=1
+  source /usr/share/doc/fzf/examples/key-bindings.zsh
+fi
 
 # Android SDK
 if [ -d "$HOME/Library/Android/sdk" ]; then
