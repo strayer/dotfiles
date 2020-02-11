@@ -89,3 +89,7 @@ key_bindings:
   - { key: Q,      mods: Command,         action: Quit             }
   - { key: N,      mods: Command,         action: SpawnNewInstance }
   - { key: F,      mods: Command,         action: ToggleFullscreen }
+  - { key: Left,     mods: Alt,     chars: "\x1bb"                       }
+  - { key: Right,    mods: Alt,     chars: "\x1bf"                       }
+  - { key: Left,     mods: Command, chars: "\x1bOH",   mode: AppCursor   } # Home
+  - { key: Right,    mods: Command, chars: "\x1bOF",   mode: AppCursor   } # End
