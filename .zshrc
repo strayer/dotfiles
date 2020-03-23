@@ -60,13 +60,10 @@ if [ -d "$HOME/.bin" ]; then
 fi
 
 # asdf
-if [ -d "$HOME/.asdf" ]; then
-  . $HOME/.asdf/asdf.sh
-  function load_asdf_completions() {
-    . $HOME/.asdf/completions/asdf.bash
-  }
-else
-  function load_asdf_completions() {}
+ASDF_DIR="$HOME/.asdf"
+if [ -d "$ASDF_DIR" ]; then
+  . $ASDF_DIR/asdf.sh
+  fpath=(${ASDF_DIR}/completions $fpath)
 fi
 
 # fzf
@@ -174,5 +171,5 @@ zinit light andrewferrier/fzf-z
 zinit ice pick"async.zsh" src"pure.zsh"
 zinit light sindresorhus/pure
 
-zinit ice wait"0" atinit"zpcompinit; zpcdreplay; load_asdf_completions"
+zinit ice wait"0" atinit"zpcompinit; zpcdreplay"
 zinit light zdharma/fast-syntax-highlighting
