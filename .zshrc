@@ -64,6 +64,15 @@ ASDF_DIR="$HOME/.asdf"
 if [ -d "$ASDF_DIR" ]; then
   . $ASDF_DIR/asdf.sh
   fpath=(${ASDF_DIR}/completions $fpath)
+
+  # Configure ruby-build to use Homebrew openssl
+  if [ -d "/usr/local/opt/openssl@1.1" ]; then
+    export RUBY_CONFIGURE_OPTS="--with-openssl-dir=/usr/local/opt/openssl@1.1"
+  fi
+
+  if cmd_exists aria2c; then
+    export RUBY_BUILD_HTTP_CLIENT="aria2c"
+  fi
 fi
 
 # fzf
