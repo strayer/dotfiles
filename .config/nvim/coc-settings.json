@@ -1,0 +1,82 @@
+{
+  "explorer.icon.enableNerdfont": true,
+  "explorer.icon.enableVimDevicons": true,
+  "coc.preferences.formatOnSaveFiletypes": [
+    "scss",
+    "ruby",
+    "typescript",
+    "python"
+  ],
+  "diagnostic-languageserver.debug": true,
+  "diagnostic-languageserver.linters": {
+    "hadolint": {
+      "command": "hadolint",
+      "sourceName": "hadolint",
+      "args": ["-f", "json", "-"],
+      "parseJson": {
+        "line": "line",
+        "column": "column",
+        "security": "level",
+        "message": "${message} [${code}]"
+      },
+      "securities": {
+        "error": "error",
+        "warning": "warning",
+        "info": "info",
+        "style": "hint"
+      }
+    },
+    "slimlint": {
+      "command": "slim-lint",
+      "sourceName": "slim-lint",
+      "args": ["-r", "json", "%file"],
+      "parseJson": {
+        "errorsRoot": "files.[0].offenses",
+        "line": "location.line",
+        "security": "severity",
+        "message": "${code}: ${message}"
+      }
+    }
+  },
+  "diagnostic-languageserver.filetypes": {
+    "sh": "shellcheck",
+    "Dockerfile": "hadolint",
+    "slim": "slimlint"
+  },
+  "python.jediEnabled": false,
+  "python.formatting.provider": "black",
+  "python.linting.pylintEnabled": true,
+  "python.venvPath": "/Users/strayer/Library/Caches/pypoetry/virtualenvs/",
+  "diagnostic-languageserver.formatFiletypes": {
+    // format `sh` (includes `bash`) files using formatter defined below
+    "sh": "shfmt"
+  },
+  "diagnostic-languageserver.formatters": {
+    // define our formatter so that we can reference it from
+    // `diagnostic-languageserver.formatFiletypes`
+    "shfmt": {
+      "command": "shfmt",
+      // all the below args are entirely optional
+      // primarily listed here to call out that flags which take an
+      // argument (such as `-i <num-spaces>` for specifying indentation)
+      // should be split into two strings, the flag and then the value
+      "args": ["-i", "2", "-bn", "-ci", "-sr"]
+    },
+    "terraform": {
+      "command": "terraform",
+      "args": ["fmt", "-"]
+    }
+  },
+  "solargraph.diagnostics": true,
+  "solargraph.completion": true,
+  "solargraph.formatting": true,
+  "languageserver": {
+    "terraform": {
+      "command": "terraform-ls",
+      "args": ["serve"],
+      "filetypes": ["terraform", "tf"],
+      "initializationOptions": {},
+      "settings": {}
+    }
+  }
+}
