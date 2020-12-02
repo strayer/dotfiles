@@ -13,8 +13,6 @@
 	forceSignAnnotated = false
 [gpg]
 	program = gpg
-[mergetool "vimdiff"]
-  cmd = nvim -d $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
 [difftool]
   prompt = false
 [merge]
