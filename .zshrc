@@ -70,9 +70,13 @@ if [ -d "$ASDF_DIR" ]; then
   . $ASDF_DIR/asdf.sh
   fpath=(${ASDF_DIR}/completions $fpath)
 
-  # Configure ruby-build to use Homebrew openssl
+  # Configure ruby-build to use Homebrew openssl and readline
+  typeset -UT RUBY_CONFIGURE_OPTS ruby_configure_opts ' '
   if [ -d "/usr/local/opt/openssl@1.1" ]; then
-    export RUBY_CONFIGURE_OPTS="--with-openssl-dir=/usr/local/opt/openssl@1.1"
+    ruby_configure_opts+=('--with-openssl-dir=/usr/local/opt/openssl@1.1')
+  fi
+  if [ -d "/usr/local/opt/readline" ]; then
+    ruby_configure_opts+=('--with-readline-dir=/usr/local/opt/readline')
   fi
 
   if cmd_exists aria2c; then
