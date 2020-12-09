@@ -225,8 +225,8 @@ zinit light zsh-users/zsh-autosuggestions
 zinit ice wait
 zinit light skywind3000/z.lua
 
-zinit ice compile"(pure|async).zsh" pick"async.zsh" src"pure.zsh"
-zinit light sindresorhus/pure
+# zinit ice compile"(pure|async).zsh" pick"async.zsh" src"pure.zsh"
+# zinit light sindresorhus/pure
 
 zinit light-mode lucid wait has"rustup" for \
   id-as"rustup_completion" \
@@ -238,3 +238,5 @@ zinit light-mode lucid wait has"rustup" for \
 
 zinit ice wait"0" atinit"zpcompinit; zpcdreplay"
 zinit light zdharma/fast-syntax-highlighting
+
+eval "$(starship init zsh)"
