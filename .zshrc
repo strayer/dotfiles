@@ -231,6 +231,15 @@ zinit light changyuheng/fz
 # zinit ice compile"(pure|async).zsh" pick"async.zsh" src"pure.zsh"
 # zinit light sindresorhus/pure
 
+# https://github.com/zdharma/zinit/issues/260#issuecomment-618274313
+zinit light-mode lucid wait has"kubectl" for \
+  id-as"kubectl_completion" \
+  as"completion" \
+  atclone"kubectl completion zsh > _kubectl" \
+  atpull"%atclone" \
+  run-atpull \
+    zdharma/null
+
 zinit light-mode lucid wait has"rustup" for \
   id-as"rustup_completion" \
   as"completion" \
@@ -238,6 +247,8 @@ zinit light-mode lucid wait has"rustup" for \
   atpull"%atclone" \
   run-atpull \
     zdharma/null
+
+zinit snippet OMZ::plugins/gcloud/gcloud.plugin.zsh
 
 zinit ice wait"0" atinit"zpcompinit; zpcdreplay"
 zinit light zdharma/fast-syntax-highlighting
