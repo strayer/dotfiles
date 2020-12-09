@@ -117,6 +117,11 @@ if cmd_exists direnv; then
   eval "$(direnv hook zsh)"
 fi
 
+# rust
+if [ -d "$HOME/.cargo/bin" ]; then
+  path=("$HOME/.cargo/bin" $path)
+fi
+
 # fasd
 cmd_exists fasd && eval "$(fasd --init auto)"
 
@@ -179,6 +184,14 @@ zinit light andrewferrier/fzf-z
 
 zinit ice compile"(pure|async).zsh" pick"async.zsh" src"pure.zsh"
 zinit light sindresorhus/pure
+
+zinit light-mode lucid wait has"rustup" for \
+  id-as"rustup_completion" \
+  as"completion" \
+  atclone"rustup completions zsh > _rustup" \
+  atpull"%atclone" \
+  run-atpull \
+    zdharma/null
 
 zinit ice wait"0" atinit"zpcompinit; zpcdreplay"
 zinit light zdharma/fast-syntax-highlighting

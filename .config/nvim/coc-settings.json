@@ -78,5 +78,6 @@
       "initializationOptions": {},
       "settings": {}
     }
-  }
+  },
+  "rust-analyzer.serverPath": "/usr/local/bin/rust-analyzer"
 }

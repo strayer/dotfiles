@@ -63,6 +63,7 @@ if s:should_install_coc
   Plug 'elixir-lsp/coc-elixir', {'do': 'yarn install && yarn prepack'}
   Plug 'iamcco/coc-vimlsp', { 'do': 'yarn install --frozen-lockfile' }
   Plug 'iamcco/coc-diagnostic', { 'do': 'yarn install --frozen-lockfile' }
+  Plug 'fannheyward/coc-rust-analyzer', { 'do': 'yarn install --frozen-lockfile' }
 endif
 
 " Treesitter
