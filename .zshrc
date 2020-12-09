@@ -205,13 +205,25 @@ function cht() {
   curl https://cheat.sh/awk
 }
 
+# z.lua
+export _ZL_MATCH_MODE=1
+alias zz='z -c'      # restrict matches to subdirs of $PWD
+alias zi='z -i'      # cd with interactive selection
+alias zf='z -I'      # use fzf to select in multiple matches
+alias zb='z -b'      # quickly cd to the parent directory
+FZ_HISTORY_CD_CMD="_zlua" # integrate with fz
+
 zinit light zsh-users/zsh-completions
 
 zinit ice wait"0" atload"_zsh_autosuggest_start"
 zinit light zsh-users/zsh-autosuggestions
 
+# unmaintained/archived
+# zinit ice wait
+# zinit light andrewferrier/fzf-z
+
 zinit ice wait
-zinit light andrewferrier/fzf-z
+zinit light skywind3000/z.lua
 
 zinit ice compile"(pure|async).zsh" pick"async.zsh" src"pure.zsh"
 zinit light sindresorhus/pure
