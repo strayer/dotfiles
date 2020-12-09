@@ -213,6 +213,12 @@ alias zf='z -I'      # use fzf to select in multiple matches
 alias zb='z -b'      # quickly cd to the parent directory
 FZ_HISTORY_CD_CMD="_zlua" # integrate with fz
 
+# fzf-tab
+zstyle ":completion:*:git-checkout:*" sort false
+zstyle ':completion:*:descriptions' format '[%d]'
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
+
 zinit light zsh-users/zsh-completions
 
 zinit ice wait"0" atload"_zsh_autosuggest_start"
@@ -249,6 +255,8 @@ zinit light-mode lucid wait has"rustup" for \
     zdharma/null
 
 zinit snippet OMZ::plugins/gcloud/gcloud.plugin.zsh
+
+zinit light Aloxaf/fzf-tab
 
 zinit ice wait"0" atinit"zpcompinit; zpcdreplay"
 zinit light zdharma/fast-syntax-highlighting
