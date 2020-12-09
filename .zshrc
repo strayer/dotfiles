@@ -19,6 +19,10 @@ setopt hist_verify            # show command with history expansion to user befo
 setopt inc_append_history     # add commands to HISTFILE in order of execution
 setopt share_history          # share command history data
 
+# Color for zsh-autosuggestions
+# palenight
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#68709B"
+
 # load Nord dircolors
 function () {
   local nord_dircolors_path=$HOME/.nord-dircolors/src/dir_colors
@@ -122,6 +126,23 @@ if [ -d "$HOME/.cargo/bin" ]; then
   path=("$HOME/.cargo/bin" $path)
 fi
 
+# Aliases for Git
+if cmd_exists git; then
+  alias gnb="git checkout -b strayer/"
+  alias gs="git stash"
+
+  gnbm() {
+    branch="strayer/$1"
+    # sed removes whitespace to fix macOS wc output with tabs
+    if [ "$(git branch --list $branch | wc -l | sed 's/^ *//')" != "0" ]; then
+      echo "Branch $branch already exists"
+      return
+    fi
+    git fetch
+    git checkout --no-track -b $branch origin/master
+  }
+fi
+
 # fasd
 cmd_exists fasd && eval "$(fasd --init auto)"
 
@@ -139,6 +160,11 @@ function () {
   fi
 }
 
+# Aliases for Docker
+if cmd_exists docker-compose; then
+  alias compose="docker-compose"
+fi
+
 cmd_exists exa && alias l="exa -lbahg --git --time-style long-iso"
 cmd_exists gls && alias ls="gls --color=auto"
 
@@ -152,7 +178,7 @@ if cmd_exists brew; then
     echo "### Running brew up…"
     brew up \
     && brew upgrade \
-    && brew cask upgrade
+    && brew upgrade --cask
   }
 fi
 
