@@ -6,7 +6,12 @@
 	gpgsign = true
 [alias]
 	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
-  pushhead = push -u origin head
+  ph = push -u origin head
+  co = checkout
+  c = commit
+  pl = pull
+  pu = push
+  f = fetch
 [github]
 	user = Strayer
 [tag]
