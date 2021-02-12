@@ -8,15 +8,15 @@ window:
 
 font:
   normal:
-    family: PragmataProMono Nerd Font
-    style: Regular
+    # family: PragmataProMono Nerd Font
+    # style: Regular
     # family: FiraCode Nerd Font
     # style: Retina
     # family: PragmataPro
     # style: Regular
 
     # Broken?
-    # family: Iosevka Nerd Font
+    family: Iosevka Nerd Font
     # family: Iosevka
   size: 14
 
