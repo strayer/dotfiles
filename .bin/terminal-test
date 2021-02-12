@@ -51,6 +51,20 @@ heading "Emojis"
 echo "🥯 🦆 🦉 🥓 🦄 🦀 🖕 🍣 🍤 🍥 🍡 🥃 🥞 🤯 🤪 🤬 🤮 🤫 🤭 🧐 🐕 🦖 👾 🐉 🐓 🐋 🐌 🐢"
 echo "⚠️ 100%"
 
+heading "NERD Fonts"
+
+echo "nf-custom   "
+echo "nf-dev         "
+echo "nf-fa         "
+echo "nf-fae   "
+echo "nf-mdi   "
+echo "nf-weather   "
+echo "nf-oct   "
+echo "nf-ple     "
+echo "nf-iec  ⏾  "
+echo "nf-linux   "
+echo "nf-pom    "
+
 heading "Ligatures"
 
 echo "i == 1"
