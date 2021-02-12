@@ -52,6 +52,7 @@ export LSCOLORS=gxfxbEaEBxxEhEhBaDaCaD
 if cmd_exists nvim; then
   export EDITOR=nvim
   export MANPAGER='nvim +Man!'
+  export MANWIDTH=999
 elif cmd_exists vim; then
   export EDITOR=vim
 fi
