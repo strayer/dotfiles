@@ -60,6 +60,11 @@ fi
 # force emacs key bindings
 set -o emacs
 
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey '^xe' edit-command-line
+bindkey '^x^e' edit-command-line
+
 # Local software and scripts
 if [ -d "$HOME/.bin" ]; then
   path=("$HOME/.bin" $path)
