@@ -262,6 +262,14 @@ zinit light-mode lucid wait has"rustup" for \
   run-atpull \
     zdharma/null
 
+zinit light-mode lucid wait has"poetry" for \
+  id-as"poetry_completion" \
+  as"completion" \
+  atclone"poetry completions zsh > _poetry" \
+  atpull"%atclone" \
+  run-atpull \
+    zdharma/null
+
 zinit snippet OMZ::plugins/gcloud/gcloud.plugin.zsh
 
 zinit light Aloxaf/fzf-tab
