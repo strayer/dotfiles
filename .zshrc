@@ -243,6 +243,8 @@ zinit light changyuheng/fz
 # zinit ice compile"(pure|async).zsh" pick"async.zsh" src"pure.zsh"
 # zinit light sindresorhus/pure
 
+zinit ice depth=1; zinit light romkatv/powerlevel10k
+
 # https://github.com/zdharma/zinit/issues/260#issuecomment-618274313
 zinit light-mode lucid wait has"kubectl" for \
   id-as"kubectl_completion" \
@@ -267,4 +269,4 @@ zinit light Aloxaf/fzf-tab
 zinit ice wait"0" atinit"zpcompinit; zpcdreplay"
 zinit light zdharma/fast-syntax-highlighting
 
-eval "$(starship init zsh)"
+# eval "$(starship init zsh)"
