@@ -1,2 +1,11 @@
 neovim
 svgexport
+bash-language-server
+dockerfile-language-server-nodejs
+pyright
+diagnostic-languageserver
+vscode-css-languageserver-bin
+yaml-language-server
+vscode-json-languageserver
+vim-language-server
+emmet-ls
