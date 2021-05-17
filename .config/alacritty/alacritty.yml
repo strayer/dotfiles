@@ -16,9 +16,13 @@ font:
     # style: Regular
 
     # Broken?
-    family: Iosevka Nerd Font
-    # family: Iosevka
+    # family: Iosevka Nerd Font
+    # family: Iosevka Term
+    family: Iosevka Dynamo
+    style: Regular
   size: 14
+
+use_thin_strokes: true
 
 schemes:
   # https://github.com/arcticicestudio/nord-alacritty/blob/develop/src/nord.yml
