@@ -94,9 +94,11 @@ fi
 if [ -f ~/.fzf.zsh ]; then
   export FZF_TMUX=1
   source ~/.fzf.zsh
+
+  # Enable popup functionality for fzf
+  export FZF_TMUX_OPTS="-p"
 fi
 if [ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]; then
-  export FZF_TMUX=1
   source /usr/share/doc/fzf/examples/key-bindings.zsh
 fi
 
@@ -172,8 +174,8 @@ function () {
 }
 
 # Aliases for Docker
-if cmd_exists docker-compose; then
-  alias compose="docker-compose"
+if cmd_exists docker; then
+  alias compose="docker compose"
 fi
 
 cmd_exists exa && alias l="exa -lbahg --git --time-style long-iso"
@@ -211,6 +213,16 @@ function cht() {
   curl https://cheat.sh/awk
 }
 
+# Disable eternal terminal telemetry
+export ET_NO_TELEMETRY=1
+
+# Show the current working directory in the terminal window titlebar
+function set-title-precmd () { printf "\033]2;${PWD/$HOME/~}\007" }
+function set-title-preexec() { printf "\e]2;%s\a" "$1" }
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd set-title-precmd
+add-zsh-hook preexec set-title-preexec
+
 # z.lua
 export _ZL_MATCH_MODE=1
 alias zz='z -c'      # restrict matches to subdirs of $PWD
@@ -224,12 +236,18 @@ zstyle ":completion:*:git-checkout:*" sort false
 zstyle ':completion:*:descriptions' format '[%d]'
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
+# Enable popup functionality, requires tmux > 3.2
+zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
 
 zinit light zsh-users/zsh-completions
 
 zinit ice wait"0" atload"_zsh_autosuggest_start"
 zinit light zsh-users/zsh-autosuggestions
 
+# gcloud
+if [[ -d /usr/local/Caskroom/google-cloud-sdk/ ]]; then
+  source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
+fi
 # unmaintained/archived
 # zinit ice wait
 # zinit light andrewferrier/fzf-z
@@ -270,7 +288,8 @@ zinit light-mode lucid wait has"poetry" for \
   run-atpull \
     zdharma/null
 
-zinit snippet OMZ::plugins/gcloud/gcloud.plugin.zsh
+zplugin ice blockf if'[[ "$(uname)" == "Darwin" &&  -d /usr/local/Caskroom/google-cloud-sdk/ ]]'
+zplugin snippet /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc
 
 zinit light Aloxaf/fzf-tab
 
@@ -278,3 +297,8 @@ zinit ice wait"0" atinit"zpcompinit; zpcdreplay"
 zinit light zdharma/fast-syntax-highlighting
 
 # eval "$(starship init zsh)"
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+alias luamake=/Users/strayer/.config/nvim/lua-language-server/3rd/luamake/luamake
