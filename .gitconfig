@@ -12,6 +12,7 @@
   pl = pull
   pu = push
   f = fetch
+  root = rev-parse --show-toplevel
 [github]
 	user = Strayer
 [tag]
