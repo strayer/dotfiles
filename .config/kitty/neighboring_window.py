@@ -1,0 +1,1 @@
+../../.local/share/nvim/site/pack/packer/start/vim-kitty-navigator/neighboring_window.py
