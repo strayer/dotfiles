@@ -40,6 +40,7 @@
     kubecontext             # current kubernetes context (https://kubernetes.io/)
     terraform               # terraform workspace (https://www.terraform.io)
     aws                     # aws profile (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html)
+    # gcloud                  # google cloud cli account and project (https://cloud.google.com/)
     # =========================[ Line #2 ]=========================
     newline                 # \n
     context                 # user@hostname
