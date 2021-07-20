@@ -84,10 +84,16 @@ if [ -d "$ASDF_DIR" ]; then
   if [ -d "/usr/local/opt/readline" ]; then
     ruby_configure_opts+=('--with-readline-dir=/usr/local/opt/readline')
   fi
+  export RUBY_CONFIGURE_OPTS
 
   if cmd_exists aria2c; then
     export RUBY_BUILD_HTTP_CLIENT="aria2c"
   fi
+fi
+
+# bundle
+if cmd_exists bundle; then
+  alias be="bundle exec"
 fi
 
 # fzf
