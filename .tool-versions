@@ -1,5 +1,4 @@
 nodejs 14.17.1
 python 3.9.1 2.7.18
-ruby 3.0.1
-helm 3.4.1
-terraform 0.15.3
+ruby 3.0.2
+terraform 1.0.3
