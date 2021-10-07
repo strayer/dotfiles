@@ -1,1 +1,1 @@
--f 'bestvideo[ext=mp4][height>=1080][fps=60]+bestaudio[ext=m4a]/bestvideo[ext=mp4][height>=1080]+bestaudio[ext=m4a]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio'
+-f 'bestvideo[ext=webm][height>=1080][fps=60]+bestaudio/bestvideo[ext=mp4][height>=1080][fps=60]+bestaudio/bestvideo[ext=webm][height>=1080]+bestaudio/bestvideo[ext=mp4]+bestaudio/bestvideo+bestaudio/best'
