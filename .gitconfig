@@ -1,7 +1,7 @@
 [user]
 	email = strayer@olle-orks.org
 	name = Sven Grunewaldt
-	signingkey = 5F42398FF62148AD53B15B4C9008BCAFDBB19046
+	signingkey = FC2801BD367400EE08A8D139FCD8A59876BC46ED
 [commit]
 	gpgsign = true
 [alias]
