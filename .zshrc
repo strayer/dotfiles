@@ -197,7 +197,8 @@ if cmd_exists brew; then
     echo "### Running brew up…"
     brew up \
     && brew upgrade \
-    && brew upgrade --cask
+    && brew upgrade --cask \
+    && brew cleanup
   }
 fi
 
