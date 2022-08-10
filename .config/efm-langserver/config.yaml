@@ -58,7 +58,8 @@ tools:
       - "%f(%l,%c): %rror %m"
 
   javascript-prettier: &javascript-prettier
-    format-command: "prettier_d_slim"
+    format-command: "prettier_d_slim --stdin --stdin-filepath ${INPUT}"
+    format-stdin: true
 
   lua-lua-format: &lua-lua-format
     format-command: 'lua-format -i --no-keep-simple-function-one-line --no-break-after-operator --column-limit=100 --no-use-tab --single-quote-to-double-quote --indent-width=2'
