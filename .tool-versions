@@ -1,4 +1,7 @@
-nodejs 14.17.4
-python 3.9.1 2.7.18
-ruby 3.0.2
-terraform 1.0.3
+nodejs lts
+python 3.10.4
+ruby system
+terraform system
+helm 3.7.2
+direnv system
+yarn system

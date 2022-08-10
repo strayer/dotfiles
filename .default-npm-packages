@@ -1,5 +1,5 @@
 neovim
 svgexport
 emmet-ls
-prettier_d_slim
 eslint_d
+@fsouza/prettierd
