@@ -1,37 +1,75 @@
 [user]
-	email = strayer@olle-orks.org
-	name = Sven Grunewaldt
-	signingkey = FC2801BD367400EE08A8D139FCD8A59876BC46ED
+  email = strayer@olle-orks.org
+  name = Sven Grunewaldt
+  signingkey = FC2801BD367400EE08A8D139FCD8A59876BC46ED
+
 [commit]
-	gpgsign = true
+  gpgsign = true
+
 [alias]
-	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
-  ph = push -u origin head
-  co = checkout
+  a = add
+  br = branch --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(contents:subject) %(color:green)(%(committerdate:relative)) [%(authorname)]' --sort=-committerdate
   c = commit
+  co = checkout
+  f = fetch
+  lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
+  ph = push -u origin head
   pl = pull
   pu = push
-  f = fetch
   root = rev-parse --show-toplevel
+  s = status
+
 [github]
-	user = Strayer
+  user = Strayer
+
 [tag]
-	forceSignAnnotated = false
+  forceSignAnnotated = false
+
 [gpg]
-	program = gpg
+  program = gpg
+
 [difftool]
   prompt = false
+
 [merge]
-	tool = p4merge
+  tool = bc3
+
 [diff]
   tool = nvimdiff
+
 [core]
   excludesfile = ~/.gitignore
+  pager = delta
+
 [mergetool]
   prompt = false
+
 [mergetool "nvimdiff"]
   cmd = nvim -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
+
 [pull]
-	rebase = false
+  rebase = false
+
 [init]
-	defaultBranch = main
+  defaultBranch = main
+
+[mergetool "bc3"]
+  trustExitCode = true
+
+[interactive]
+  diffFilter = delta --color-only --features=interactive
+
+[delta]
+  features = decorations
+
+[delta "interactive"]
+  keep-plus-minus-markers = false
+
+[delta "decorations"]
+  commit-decoration-style = blue ol
+  commit-style = raw
+  file-style = omit
+  hunk-header-decoration-style = blue box
+  hunk-header-file-style = red
+  hunk-header-line-number-style = "#067a00"
+  hunk-header-style = file line-number syntax
