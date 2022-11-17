@@ -1,6 +1,6 @@
 function configure-dark-theme
   set -l nightfox $HOME/.local/share/nvim/site/pack/packer/start/nightfox.nvim/extra/nightfox/nightfox_fish.fish
-  set -l tokyonight $HOME/.local/share/nvim/site/pack/packer/start/tokyonight.nvim/extras/fish_tokyonight_storm.fish
+  set -l tokyonight $HOME/.local/share/nvim/site/pack/packer/start/tokyonight.nvim/extras/fish/tokyonight_storm.fish
 
   # cat $nightfox | sed 's/set -g/set -U/' | source
   # kitty +kitten themes --reload-in=all nightfox
