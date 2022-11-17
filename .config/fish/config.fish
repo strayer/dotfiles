@@ -32,6 +32,7 @@ end
 
 # Local software & scripts
 fish_add_path "$HOME/.bin"
+fish_add_path "$HOME/.local/bin"
 
 # asdf
 if test -d ~/.asdf
