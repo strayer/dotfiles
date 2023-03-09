@@ -1,4 +1,11 @@
 set -l host (string match -r "^[^.]+" $hostname)
+set -l os (uname)
+
+if type -q _pure_prompt
+  # fix pure mute color for tokyonight
+  # TODO: not sure this is actually correct?
+  set pure_color_mute magenta
+end
 
 if test $hostname = "khitomer" -a $USER = "strayer"
   # Make sure Homebrew is in PATH
@@ -13,6 +20,14 @@ if test $hostname = "khitomer" -a $USER = "strayer"
   #   echo "Starting gpg-agent"
   #   gpgconf --launch gpg-agent >/dev/null
   # end
+end
+
+# Make sure Homebrew is in PATH
+if test -d /home/linuxbrew/.linuxbrew/bin
+  fish_add_path /home/linuxbrew/.linuxbrew/bin
+end
+if test -d /home/linuxbrew/.linuxbrew/sbin
+  fish_add_path /home/linuxbrew/.linuxbrew/sbin
 end
 
 # Android
@@ -131,10 +146,10 @@ if status --is-interactive
   if type -q brew
     function brup
       echo "### Running brew up…"
-      brew up
-      and brew upgrade
-      and brew upgrade --cask
-      and brew cleanup
+      brew up; or return
+      brew upgrade; or return
+      test "$os" = "Darwin"; and brew upgrade --cask
+      brew cleanup
     end
   end
 
