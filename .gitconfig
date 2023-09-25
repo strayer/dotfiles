@@ -7,9 +7,18 @@
   gpgsign = true
 
 [alias]
+  recommit = "!f() { \
+      msg_file="$(git rev-parse --git-dir)/COMMIT_EDITMSG"; \
+      if [ -e "$msg_file" ]; then \
+          cat $msg_file | git commit --edit -F-; \
+      else \
+          git commit; \
+      fi; \
+    }; f"
   a = add
   br = branch --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(contents:subject) %(color:green)(%(committerdate:relative)) [%(authorname)]' --sort=-committerdate
   c = commit
+  rc = recommit
   co = checkout
   f = fetch
   lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
