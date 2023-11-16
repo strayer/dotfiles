@@ -161,6 +161,10 @@ if status --is-interactive
     abbr --add --global compose docker compose
     abbr --add --global dr docker run
     abbr --add --global de docker exec
+
+    if type -q op
+      abbr --add --global opcompose op run --no-masking -- docker compose
+    end
   end
 
   if type -q bundle
