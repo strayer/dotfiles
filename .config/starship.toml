@@ -1,0 +1,13 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+[docker_context]
+detect_files = [
+  'compose.yml',
+  'compose.yaml',
+  'docker-compose.yml',
+  'docker-compose.yaml',
+  'Dockerfile',
+]
+
+[directory]
+fish_style_pwd_dir_length = 3
