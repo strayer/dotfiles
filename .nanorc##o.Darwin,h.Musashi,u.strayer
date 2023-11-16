@@ -1,5 +1,0 @@
-include /usr/local/share/nano/*.nanorc
-
-include "~/.nano/zsh.nanorc"
-include "~/.nano/Dockerfile.nanorc"
-#include "~/.nano/git.nanorc"
