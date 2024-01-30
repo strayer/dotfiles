@@ -32,9 +32,11 @@ cask "font-symbols-only-nerd-font"
 brew "yamllint"
 brew "ansible-lint"
 brew "hadolint"
+brew "tflint"
 
 # various tools (I should split this into sections...)
 brew "aria2"
+brew "atuin"
 brew "bat"
 brew "bgpq3"
 brew "bind" # for dig, nslookup and host
@@ -52,6 +54,7 @@ brew "findutils"
 brew "fish"
 brew "fzf"
 brew "gnu-tar"
+brew "gnu-sed"
 brew "go"
 brew "gopass"
 brew "gotop"
@@ -104,6 +107,7 @@ brew "taglib"
 brew "tealdeer"
 brew "telnet"
 brew "testssl"
+brew "trivy"
 brew "watch"
 brew "wget"
 brew "yadm"
@@ -117,6 +121,9 @@ brew "zoxide"
 # neovim-related
 brew "luarocks"
 brew "neovim"
+
+# language servers
+brew "ruff-lsp"
 
 # better git
 brew "diff-so-fancy"
@@ -135,11 +142,13 @@ brew "dfu-util"
 
 # casks
 cask "alfred"
+cask "android-studio"
 cask "avidemux"
 cask "bartender"
 cask "betterdisplay"
 cask "bettertouchtool"
 cask "contexts"
+cask "coteditor"
 cask "daisydisk"
 cask "dbeaver-community"
 cask "firefox-developer-edition"
@@ -151,7 +160,10 @@ cask "karabiner-elements"
 cask "keka"
 cask "kekaexternalhelper"
 cask "mediainfo"
+cask "mitmproxy"
 cask "obsidian"
+cask "orbstack"
+cask "p4v"
 cask "pgadmin4"
 cask "powershell"
 cask "spotify"
@@ -171,6 +183,23 @@ mas "Discovery", id: 1381004916
 mas "Microsoft Remote Desktop", id: 1295203466
 mas "Moom", id: 419330170
 mas "Negative", id: 1378123825 # Dark mode for PDFs
+
+if is_work then
+  tap "heroku/brew"
+  brew "heroku/brew/heroku"
+
+  tap "minamijoyo/tfupdate"
+  brew "minamijoyo/tfupdate/tfupdate"
+
+  brew "azure-cli"
+  brew "step"
+
+  cask "jabra-direct"
+  cask "google-chrome"
+  cask "microsoft-edge"
+  cask "anypointstudio"
+  cask "flameshot"
+end
 
 if is_home then
   tap "cloudflare/cloudflare"
