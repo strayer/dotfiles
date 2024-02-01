@@ -2,6 +2,7 @@
 {% if yadm.hostname == "CO-MBP-KC9KQV64V3" %}
   email = s.grunewaldt@westfalen.com
   name = Sven Grunewaldt
+  signingkey = key::ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBA+D0pXmFqtUvuGdiqVXvw4EvSqfANnjD9BIXx0SOHpf9l87p53ZmOqxrMJPhxPDq13cVntjIE+YbgbUyzTwN+Q=
 {% else %}
   email = strayer@olle-orks.org
   name = Sven Grunewaldt
@@ -10,8 +11,7 @@
 
 [commit]
 {% if yadm.hostname == "CO-MBP-KC9KQV64V3" %}
-  # todo
-  # gpgsign = true
+  gpgsign = true
 {% endif %}
 {% if yadm.hostname == "yobuko" %}
   gpgsign = true
@@ -46,7 +46,15 @@
   forceSignAnnotated = false
 
 [gpg]
+{% if yadm.hostname == "yobuko" %}
   program = gpg
+{% endif %}
+{% if yadm.hostname == "CO-MBP-KC9KQV64V3" %}
+  format = ssh
+
+[gpg "ssh"]
+  program = {{ env.HOME }}/.bin/secretive-ssh-keygen
+{% endif %}
 
 [difftool]
   prompt = false
