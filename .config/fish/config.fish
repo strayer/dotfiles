@@ -7,10 +7,12 @@ if type -q _pure_prompt
   set pure_color_mute magenta
 end
 
-if test $hostname = "yobuko" -a $USER = "strayer"
+if test -e /opt/homebrew/bin/brew
   # Make sure Homebrew is in PATH
   eval (/opt/homebrew/bin/brew shellenv)
+end
 
+if test $hostname = "yobuko" -a $USER = "strayer"
   # Use GPGs ssh-agent compatibility
   set -gx SSH_AUTH_SOCK "$HOME/.gnupg/S.gpg-agent.ssh"
 
