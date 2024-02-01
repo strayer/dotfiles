@@ -1,10 +1,21 @@
 [user]
+{% if yadm.hostname == "CO-MBP-KC9KQV64V3" %}
+  email = s.grunewaldt@westfalen.com
+  name = Sven Grunewaldt
+{% else %}
   email = strayer@olle-orks.org
   name = Sven Grunewaldt
   signingkey = FC2801BD367400EE08A8D139FCD8A59876BC46ED
+{% endif %}
 
 [commit]
+{% if yadm.hostname == "CO-MBP-KC9KQV64V3" %}
+  # todo
+  # gpgsign = true
+{% endif %}
+{% if yadm.hostname == "yobuko" %}
   gpgsign = true
+{% endif %}
 
 [alias]
   recommit = "!f() { \
@@ -41,7 +52,7 @@
   prompt = false
 
 [merge]
-  tool = bc3
+  tool = p4merge
 
 [diff]
   tool = nvimdiff
@@ -53,17 +64,11 @@
 [mergetool]
   prompt = false
 
-[mergetool "nvimdiff"]
-  cmd = nvim -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
-
 [pull]
   rebase = false
 
 [init]
   defaultBranch = main
-
-[mergetool "bc3"]
-  trustExitCode = true
 
 [interactive]
   diffFilter = delta --color-only --features=interactive
