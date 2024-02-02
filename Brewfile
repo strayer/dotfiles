@@ -21,6 +21,10 @@ brew "rs/tap/curlie"
 tap "homeport/tap"
 brew "homeport/tap/dyff"
 
+# litra cli
+tap "timrogers/tap"
+brew "litra"
+
 # fonts
 tap "homebrew/cask-fonts"
 cask "font-iosevka"
