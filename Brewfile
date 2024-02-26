@@ -32,11 +32,12 @@ cask "font-iosevka-nerd-font"
 cask "font-monocraft"
 cask "font-symbols-only-nerd-font"
 
-# linters
+# linters, formatters
 brew "yamllint"
 brew "ansible-lint"
 brew "hadolint"
 brew "tflint"
+brew "shfmt"
 
 # various tools (I should split this into sections...)
 brew "aria2"
