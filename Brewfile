@@ -4,6 +4,7 @@ is_home = (hostname == "yobuko")
 
 # base taps
 tap "homebrew/bundle"
+tap "homebrew/cask"
 tap "homebrew/cask-versions"
 
 # mas
@@ -159,6 +160,7 @@ cask "firefox-developer-edition"
 cask "gimp"
 cask "hex-fiend"
 cask "iina"
+cask "iterm2"
 cask "inkscape"
 cask "karabiner-elements"
 cask "keka"
