@@ -4,7 +4,6 @@ is_home = (hostname == "yobuko")
 
 # base taps
 tap "homebrew/bundle"
-tap "homebrew/cask"
 tap "homebrew/cask-versions"
 
 # mas
