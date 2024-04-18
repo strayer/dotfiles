@@ -45,8 +45,8 @@ if wezterm.config_builder then
 end
 
 config.color_scheme = "Tokyo Night Storm (Gogh)"
-config.font = wezterm.font("Iosevka")
-config.font_size = 14
+config.font = wezterm.font("Iosevka Term")
+config.font_size = 16
 
 config.term = "wezterm"
 
