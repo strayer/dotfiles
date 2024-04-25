@@ -173,7 +173,6 @@ cask "obsidian"
 cask "orbstack"
 cask "p4v"
 cask "pgadmin4"
-cask "postman"
 cask "powershell"
 cask "raycast"
 cask "secretive"
@@ -213,6 +212,7 @@ if is_work then
   cask "jabra-direct"
   cask "microsoft-azure-storage-explorer"
   cask "microsoft-edge"
+  cask "postman"
   cask "slack"
 end
 
