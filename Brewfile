@@ -31,6 +31,9 @@ tap "homebrew/cask-fonts"
 cask "font-iosevka"
 cask "font-iosevka-nerd-font"
 cask "font-monocraft"
+cask "font-roboto"
+cask "font-roboto-mono"
+cask "font-roboto-serif"
 cask "font-symbols-only-nerd-font"
 
 # linters, formatters
