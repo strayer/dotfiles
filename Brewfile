@@ -4,7 +4,6 @@ is_home = (hostname == "yobuko")
 
 # base taps
 tap "homebrew/bundle"
-tap "homebrew/cask-versions"
 tap "homebrew/services"
 
 # mas
@@ -159,7 +158,7 @@ cask "contexts"
 cask "coteditor"
 cask "daisydisk"
 cask "dbeaver-community"
-cask "firefox-developer-edition"
+cask "firefox@developer-edition"
 cask "gimp"
 cask "hex-fiend"
 cask "iina"
@@ -229,7 +228,7 @@ if is_home then
   cask "1password"
   cask "1password-cli"
   cask "balenaetcher"
-  cask "brave-browser-beta"
+  cask "brave-browser@beta"
   cask "calibre"
   cask "discord"
   cask "itsycal"
@@ -245,7 +244,7 @@ if is_home then
   cask "signal"
   cask "steam"
   cask "syncthing"
-  cask "thunderbird-beta"
+  cask "thunderbird@beta"
   cask "todoist"
   cask "tor-browser"
   cask "veracrypt"
