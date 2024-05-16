@@ -27,7 +27,6 @@ tap "timrogers/tap"
 brew "litra"
 
 # fonts
-tap "homebrew/cask-fonts"
 cask "font-iosevka"
 cask "font-iosevka-nerd-font"
 cask "font-monocraft"
