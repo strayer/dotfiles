@@ -168,6 +168,7 @@ cask "iterm2"
 cask "karabiner-elements"
 cask "keka"
 cask "kekaexternalhelper"
+cask "lm-studio"
 cask "mediainfo"
 cask "mitmproxy"
 cask "neovide"
@@ -223,6 +224,7 @@ if is_home then
 
   brew "hcloud"
   brew "wireguard-tools"
+  brew "esptool"
 
   cask "1password"
   cask "1password-cli"
@@ -249,6 +251,8 @@ if is_home then
   cask "veracrypt"
   cask "vmware-fusion"
   cask "yubico-yubikey-manager"
+  cask "betterzip"
+  cask "diffusionbee"
 
   mas "1Password for Safari", id: 1569813296
   mas "Brother P-touch Editor", id: 1453365242
