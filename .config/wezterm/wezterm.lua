@@ -22,6 +22,31 @@ local function conditionalActivatePane(window, pane, pane_direction, vim_directi
 	end
 end
 
+local function scheme_for_appearance(appearance)
+  if appearance:find 'Dark' then
+    return 'Tokyo Night Storm'
+  else
+    return 'Tokyo Night Day'
+  end
+end
+
+local function get_appearance()
+  if wezterm.gui then
+    return wezterm.gui.get_appearance()
+  end
+  return 'Dark'
+end
+
+wezterm.on('window-config-reloaded', function(window, pane)
+  local overrides = window:get_config_overrides() or {}
+  local appearance = get_appearance()
+  local scheme = scheme_for_appearance(appearance)
+  if overrides.color_scheme ~= scheme then
+    overrides.color_scheme = scheme
+    window:set_config_overrides(overrides)
+  end
+end)
+
 wezterm.on("ActivatePaneDirection-right", function(window, pane)
 	conditionalActivatePane(window, pane, "Right", "l")
 end)
@@ -44,7 +69,8 @@ if wezterm.config_builder then
 	config = wezterm.config_builder()
 end
 
-config.color_scheme = "Tokyo Night Storm (Gogh)"
+-- config.color_scheme = "Tokyo Night Storm (Gogh)"
+config.color_scheme = scheme_for_appearance(get_appearance())
 config.font = wezterm.font("Iosevka Term")
 config.font_size = 16
 
