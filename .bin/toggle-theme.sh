@@ -30,9 +30,11 @@ exec > >(tee -a "$LOG_FILE") 2>&1
 
 # Check DARKMODE environment variable set by dark-mode-notify service
 if [ "$DARKMODE" = "1" ]; then
-  fish_theme="tokyonight_storm"
+  # fish_theme="tokyonight_storm"
+  fish_theme="cyberdream"
 else
-  fish_theme="tokyonight_day"
+  # fish_theme="tokyonight_day"
+  fish_theme="cyberdream-light"
 fi
 
 # Collect all neovim PIDs
