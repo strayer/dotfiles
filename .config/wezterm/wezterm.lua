@@ -39,21 +39,7 @@ local function get_appearance()
   else
     return "Light"
   end
-  -- if wezterm.gui then
-  --   return wezterm.gui.get_appearance()
-  -- end
-  -- return "Dark"
 end
-
-wezterm.on("window-config-reloaded", function(window, pane)
-  local overrides = window:get_config_overrides() or {}
-  local appearance = get_appearance()
-  local scheme = scheme_for_appearance(appearance)
-  if overrides.color_scheme ~= scheme then
-    overrides.color_scheme = scheme
-    window:set_config_overrides(overrides)
-  end
-end)
 
 wezterm.on("ActivatePaneDirection-right", function(window, pane)
   conditionalActivatePane(window, pane, "Right", "l")
@@ -85,7 +71,6 @@ config.color_schemes = {
 -- config.color_scheme = "Tokyo Night Storm (Gogh)"
 config.color_scheme = scheme_for_appearance(get_appearance())
 config.font = wezterm.font("Iosevka Term")
--- config.font = wezterm.font("Iosevka Term", { weight = "Light" })
 config.font_size = 16
 
 config.term = "wezterm"
