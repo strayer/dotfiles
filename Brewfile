@@ -224,6 +224,7 @@ if is_work then
   cask "jabra-direct"
   cask "microsoft-azure-storage-explorer"
   cask "microsoft-edge"
+  cask "mongodb-compass"
   cask "postman"
   cask "slack"
 end
