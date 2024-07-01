@@ -1,5 +1,6 @@
 -- Pull in the wezterm API
 local wezterm = require("wezterm")
+local current_system_theme = require("current-system-theme")
 local act = wezterm.action
 
 local function isViProcess(pane)
@@ -24,19 +25,24 @@ end
 
 local function scheme_for_appearance(appearance)
   if appearance:find("Dark") then
-    -- return 'Tokyo Night Storm'
-    return "Cyberdream"
+    return 'Tokyo Night Storm'
+    -- return "Cyberdream"
   else
-    -- return 'Tokyo Night Day'
-    return "Cyberdream Light"
+    return 'Tokyo Night Day'
+    -- return "Cyberdream Light"
   end
 end
 
 local function get_appearance()
-  if wezterm.gui then
-    return wezterm.gui.get_appearance()
+  if current_system_theme == "dark" then
+    return "Dark"
+  else
+    return "Light"
   end
-  return "Dark"
+  -- if wezterm.gui then
+  --   return wezterm.gui.get_appearance()
+  -- end
+  -- return "Dark"
 end
 
 wezterm.on("window-config-reloaded", function(window, pane)
@@ -79,6 +85,7 @@ config.color_schemes = {
 -- config.color_scheme = "Tokyo Night Storm (Gogh)"
 config.color_scheme = scheme_for_appearance(get_appearance())
 config.font = wezterm.font("Iosevka Term")
+-- config.font = wezterm.font("Iosevka Term", { weight = "Light" })
 config.font_size = 16
 
 config.term = "wezterm"

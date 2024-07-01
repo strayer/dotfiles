@@ -5,6 +5,8 @@ export PATH="$PATH:/opt/homebrew/bin"
 
 LOG_FILE="$HOME/toggle-theme.log"
 ROTATED_LOG_FILE="$LOG_FILE.1.zst"
+SYSTEM_THEME_FILE="$HOME/.cache/system-theme.txt"
+WEZTERM_SYSTEM_THEME_FILE="$HOME/.config/wezterm/current-system-theme.lua"
 
 # Function to perform log rotation
 if [ -f "$LOG_FILE" ]; then
@@ -30,11 +32,15 @@ exec > >(tee -a "$LOG_FILE") 2>&1
 
 # Check DARKMODE environment variable set by dark-mode-notify service
 if [ "$DARKMODE" = "1" ]; then
-  # fish_theme="tokyonight_storm"
-  fish_theme="cyberdream"
+  fish_theme="tokyonight_storm"
+  # fish_theme="cyberdream"
+  echo -n "dark" > "$SYSTEM_THEME_FILE"
+  echo 'return "dark"' > "$WEZTERM_SYSTEM_THEME_FILE"
 else
-  # fish_theme="tokyonight_day"
-  fish_theme="cyberdream-light"
+  fish_theme="tokyonight_day"
+  # fish_theme="cyberdream-light"
+  echo -n "light" > "$SYSTEM_THEME_FILE"
+  echo 'return "light"' > "$WEZTERM_SYSTEM_THEME_FILE"
 fi
 
 # Collect all neovim PIDs
