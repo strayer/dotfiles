@@ -12,24 +12,16 @@ if test -e /opt/homebrew/bin/brew
   eval (/opt/homebrew/bin/brew shellenv)
 end
 
-if test $hostname = "yobuko" -a $USER = "strayer"
-  # Use GPGs ssh-agent compatibility
-  set -gx SSH_AUTH_SOCK "$HOME/.gnupg/S.gpg-agent.ssh"
-
-  # Make sure gpg-agent is running so SSH can use its agent
-  # set -l gpg_agent_pid (pgrep gpg-agent)
-  # if test "$gpg_agent_pid" = ""
-  #   echo "Starting gpg-agent"
-  #   gpgconf --launch gpg-agent >/dev/null
-  # end
-end
-
 # Make sure Homebrew is in PATH
 if test -d /home/linuxbrew/.linuxbrew/bin
   fish_add_path /home/linuxbrew/.linuxbrew/bin
 end
 if test -d /home/linuxbrew/.linuxbrew/sbin
   fish_add_path /home/linuxbrew/.linuxbrew/sbin
+end
+
+if test -e "$HOME/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh"
+  set -gx SSH_AUTH_SOCK $HOME/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh
 end
 
 # Android
