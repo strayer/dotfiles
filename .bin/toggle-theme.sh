@@ -30,27 +30,66 @@ log_message() {
 # Send all output to logfile
 exec > >(tee -a "$LOG_FILE") 2>&1
 
-# Check DARKMODE environment variable set by dark-mode-notify service
-if [ "$DARKMODE" = "1" ]; then
+log_message "Starting..."
+
+# Determine current theme and toggle if necessary
+theme=""
+theme_source=""
+
+if [ -z "${DARKMODE+x}" ]; then
+  if [ $# -gt 0 ]; then
+    if [ "$1" == "dark" ]; then
+      theme="dark"
+      theme_source="parameter"
+    elif [ "$1" == "light" ]; then
+      theme="light"
+      theme_source="parameter"
+    else
+      echo "Invalid argument. Use 'dark' or 'light'."
+      exit 1
+    fi
+  else
+    if [ -f "$SYSTEM_THEME_FILE" ]; then
+      current_theme=$(cat "$SYSTEM_THEME_FILE")
+      if [ "$current_theme" == "dark" ]; then
+        theme="light"
+      else
+        theme="dark"
+      fi
+      theme_source="auto-toggle"
+    else
+      # Default to dark mode if no file exists
+      theme="dark"
+      theme_source="auto-toggle"
+    fi
+  fi
+else
+  if [ "$DARKMODE" = "1" ]; then
+    theme="dark"
+  else
+    theme="light"
+  fi
+  theme_source="environment variable"
+fi
+
+if [ "$theme" == "dark" ]; then
   fish_theme="tokyonight_storm"
   # fish_theme="cyberdream"
-  echo -n "dark" > "$SYSTEM_THEME_FILE"
-  echo 'return "dark"' > "$WEZTERM_SYSTEM_THEME_FILE"
 else
   fish_theme="tokyonight_day"
   # fish_theme="cyberdream-light"
-  echo -n "light" > "$SYSTEM_THEME_FILE"
-  echo 'return "light"' > "$WEZTERM_SYSTEM_THEME_FILE"
 fi
 
 # Collect all neovim PIDs
 neovim_pids=$(pgrep -d ' ' nvim || true)
 
-log_message "Starting..."
-
-log_message "DARKMODE=$DARKMODE"
+log_message "Selected theme=$theme from $theme_source"
 log_message "fish_theme=$fish_theme"
 log_message "neovim_pids=$neovim_pids"
+
+log_message "Setting system and wezterm theme"
+echo -n "$theme" > "$SYSTEM_THEME_FILE"
+echo "return \"$theme\"" > "$WEZTERM_SYSTEM_THEME_FILE"
 
 log_message "Setting fish theme"
 fish -c "yes | fish_config theme save $fish_theme"
