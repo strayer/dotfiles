@@ -43,6 +43,7 @@ brew "tflint"
 brew "yamllint"
 
 # various tools (I should split this into sections...)
+brew "aichat"
 brew "aria2"
 brew "asciinema"
 brew "atuin"
