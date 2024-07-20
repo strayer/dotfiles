@@ -20,8 +20,10 @@ if test -d /home/linuxbrew/.linuxbrew/sbin
   fish_add_path /home/linuxbrew/.linuxbrew/sbin
 end
 
-if test -e "$HOME/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh"
-  set -gx SSH_AUTH_SOCK $HOME/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh
+if test $hostname = "yobuko" -a $USER = "strayer"
+  if test -e "$HOME/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh"
+    set -gx SSH_AUTH_SOCK $HOME/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh
+  end
 end
 
 # Android
