@@ -45,31 +45,6 @@ end
 fish_add_path "$HOME/.bin"
 fish_add_path "$HOME/.local/bin"
 
-# asdf
-if test -d ~/.asdf
-  source ~/.asdf/asdf.fish
-
-  # Make sure asdf paths are in front
-  fish_add_path -m "$HOME/.asdf/bin" "$HOME/.asdf/shims"
-
-  # Check if the asdf completions are installed at the correct location
-  if status --is-interactive; and test ! -e ~/.config/fish/completions/asdf.fish
-    echo -e "\033[0;33mWARNING: asdf completions not found at ~/.config/fish/completions/asdf.fish\033[0m" >&2
-  end
-
-  set -gx RUBY_CONFIGURE_OPTS
-  if test -d "/usr/local/opt/openssl@1.1"
-    set -a RUBY_CONFIGURE_OPTS  "--with-openssl-dir=/usr/local/opt/openssl@1.1"
-  end
-  if test -d "/usr/local/opt/readline"
-    set -a RUBY_CONFIGURE_OPTS  "--with-readline-dir=/usr/local/opt/readline"
-  end
-
-  if type -q aria2c
-    set -gx RUBY_BUILD_HTTP_CLIENT aria2c
-  end
-end
-
 # python poetry
 fish_add_path "$HOME/.poetry/bin"
 
