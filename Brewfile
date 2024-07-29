@@ -37,6 +37,7 @@ cask "font-symbols-only-nerd-font"
 # linters, formatters
 brew "ansible-lint"
 brew "hadolint"
+brew "ruff"
 brew "shfmt"
 brew "stylua"
 brew "tflint"
@@ -137,9 +138,6 @@ brew "zoxide"
 # neovim-related
 brew "luarocks"
 brew "neovim"
-
-# language servers
-brew "ruff-lsp"
 
 # better git
 brew "diff-so-fancy"
