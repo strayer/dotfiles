@@ -76,10 +76,12 @@ if [ "$theme" == "dark" ]; then
   fish_theme="tokyonight_storm"
   # fish_theme="cyberdream"
   fish -c "set -Ue AICHAT_LIGHT_THEME"
+  fish -c "set -Ux BAT_THEME 'tokyonight_storm'"
 else
   fish_theme="tokyonight_day"
   # fish_theme="cyberdream-light"
   fish -c "set -Ux AICHAT_LIGHT_THEME true"
+  fish -c "set -Ux BAT_THEME 'tokyonight_day'"
 fi
 
 # Collect all neovim PIDs
@@ -94,7 +96,7 @@ echo -n "$theme" > "$SYSTEM_THEME_FILE"
 echo "return \"$theme\"" > "$WEZTERM_SYSTEM_THEME_FILE"
 
 log_message "Setting fish theme"
-fish -c "yes | fish_config theme save $fish_theme"
+fish -c "yes | fish_config theme save '$fish_theme'"
 
 for neovim_pid in $neovim_pids; do
   log_message "Sending SIGUSR1 to Neovim process with PID $neovim_pid"
