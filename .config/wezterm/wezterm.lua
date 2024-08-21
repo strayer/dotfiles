@@ -135,6 +135,23 @@ config.font_size = 16
 
 config.term = "wezterm"
 
+-- Slightly transparent and blurred background
+config.window_background_opacity = 0.95
+config.macos_window_background_blur = 50
+-- Removes the title bar, leaving only the tab bar. Keeps
+-- the ability to resize by dragging the window's edges.
+-- On macOS, 'RESIZE|INTEGRATED_BUTTONS' also looks nice if
+-- you want to keep the window controls visible and integrate
+-- them into the tab bar.
+config.window_decorations = 'RESIZE|INTEGRATED_BUTTONS'
+-- Sets the font for the window frame (tab bar)
+config.window_frame = {
+  -- Berkeley Mono for me again, though an idea could be to try a
+  -- serif font here instead of monospace for a nicer look?
+  font = wezterm.font({ family = 'Berkeley Mono', weight = 'Bold' }),
+  font_size = 12,
+}
+
 config.send_composed_key_when_left_alt_is_pressed = false
 
 config.keys = {
