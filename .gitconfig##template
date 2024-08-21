@@ -6,7 +6,7 @@
 {% else %}
   email = strayer@olle-orks.org
   name = Sven Grunewaldt
-  signingkey = FC2801BD367400EE08A8D139FCD8A59876BC46ED
+  signingkey = key::ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAVF4SCCpZtP7M3y2fVyw7y3VlehamxzSk5dI2CTuZ/FBfuClGKaKr3BV4BfxAC0RXsm78etHaChbQAUi91N0ds=
 {% endif %}
 
 [commit]
@@ -47,7 +47,7 @@
 
 [gpg]
 {% if yadm.hostname == "yobuko" %}
-  program = gpg
+  format = ssh
 {% endif %}
 {% if yadm.hostname == "CO-MBP-KC9KQV64V3" %}
   format = ssh
