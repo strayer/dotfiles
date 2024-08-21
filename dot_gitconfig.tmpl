@@ -1,21 +1,21 @@
 [user]
-{% if yadm.hostname == "CO-MBP-KC9KQV64V3" %}
+{{- if eq .chezmoi.hostname "CO-MBP-KC9KQV64V3" }}
   email = s.grunewaldt@westfalen.com
   name = Sven Grunewaldt
   signingkey = key::ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBA+D0pXmFqtUvuGdiqVXvw4EvSqfANnjD9BIXx0SOHpf9l87p53ZmOqxrMJPhxPDq13cVntjIE+YbgbUyzTwN+Q=
-{% else %}
+{{- else }}
   email = strayer@olle-orks.org
   name = Sven Grunewaldt
   signingkey = key::ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAVF4SCCpZtP7M3y2fVyw7y3VlehamxzSk5dI2CTuZ/FBfuClGKaKr3BV4BfxAC0RXsm78etHaChbQAUi91N0ds=
-{% endif %}
+{{- end }}
 
 [commit]
-{% if yadm.hostname == "CO-MBP-KC9KQV64V3" %}
+{{- if eq .chezmoi.hostname "CO-MBP-KC9KQV64V3" }}
   gpgsign = true
-{% endif %}
-{% if yadm.hostname == "yobuko" %}
+{{- end }}
+{{- if eq .chezmoi.hostname "yobuko" }}
   gpgsign = true
-{% endif %}
+{{- end }}
 
 [alias]
   recommit = "!f() { \
@@ -46,15 +46,15 @@
   forceSignAnnotated = false
 
 [gpg]
-{% if yadm.hostname == "yobuko" %}
+{{- if eq .chezmoi.hostname "yobuko" }}
   format = ssh
-{% endif %}
-{% if yadm.hostname == "CO-MBP-KC9KQV64V3" %}
+{{- end }}
+{{- if eq .chezmoi.hostname "CO-MBP-KC9KQV64V3" }}
   format = ssh
 
 [gpg "ssh"]
-  program = {{ env.HOME }}/.bin/secretive-ssh-keygen
-{% endif %}
+  program = {{ env "HOME" }}/.bin/secretive-ssh-keygen
+{{- end }}
 
 [difftool]
   prompt = false
