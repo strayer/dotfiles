@@ -235,6 +235,7 @@ if is_home then
   tap "cloudflare/cloudflare"
   cask "cf-terraforming"
 
+  brew "ansible"
   brew "esptool"
   brew "hcloud"
   brew "rclone"
