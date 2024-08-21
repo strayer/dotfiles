@@ -7,19 +7,6 @@ if type -q _pure_prompt
   set pure_color_mute magenta
 end
 
-if test -e /opt/homebrew/bin/brew
-  # Make sure Homebrew is in PATH
-  eval (/opt/homebrew/bin/brew shellenv)
-end
-
-# Make sure Homebrew is in PATH
-if test -d /home/linuxbrew/.linuxbrew/bin
-  fish_add_path /home/linuxbrew/.linuxbrew/bin
-end
-if test -d /home/linuxbrew/.linuxbrew/sbin
-  fish_add_path /home/linuxbrew/.linuxbrew/sbin
-end
-
 if test $hostname = "yobuko" -a $USER = "strayer"
   if test -e "$HOME/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh"
     set -gx SSH_AUTH_SOCK $HOME/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh
