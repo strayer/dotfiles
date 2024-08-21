@@ -77,11 +77,13 @@ if [ "$theme" == "dark" ]; then
   # fish_theme="cyberdream"
   fish -c "set -Ue AICHAT_LIGHT_THEME"
   fish -c "set -Ux BAT_THEME 'tokyonight_storm'"
+  fish -c "set -Ux DELTA_FEATURES '+tokyonight-storm'"
 else
   fish_theme="tokyonight_day"
   # fish_theme="cyberdream-light"
   fish -c "set -Ux AICHAT_LIGHT_THEME true"
   fish -c "set -Ux BAT_THEME 'tokyonight_day'"
+  fish -c "set -Ux DELTA_FEATURES '+tokyonight-day'"
 fi
 
 # Collect all neovim PIDs

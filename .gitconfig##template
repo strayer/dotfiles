@@ -95,3 +95,29 @@
   hunk-header-file-style = red
   hunk-header-line-number-style = "#067a00"
   hunk-header-style = file line-number syntax
+
+[delta "tokyonight-day"]
+  minus-style                   = syntax "#ddcace"
+  minus-non-emph-style          = syntax "#ddcace"
+  minus-emph-style              = syntax "#d59a9d"
+  minus-empty-line-marker-style = syntax "#ddcace"
+  line-numbers-minus-style      = "#c47981"
+  plus-style                    = syntax "#c8d6dc"
+  plus-non-emph-style           = syntax "#c8d6dc"
+  plus-emph-style               = syntax "#95bec7"
+  plus-empty-line-marker-style  = syntax "#c8d6dc"
+  line-numbers-plus-style       = "#4197a4"
+  line-numbers-zero-style       = "#a8aecb"
+
+[delta "tokyonight-storm"]
+  minus-style                   = syntax "#3f2d3d"
+  minus-non-emph-style          = syntax "#3f2d3d"
+  minus-emph-style              = syntax "#763842"
+  minus-empty-line-marker-style = syntax "#3f2d3d"
+  line-numbers-minus-style      = "#914c54"
+  plus-style                    = syntax "#283b4d"
+  plus-non-emph-style           = syntax "#283b4d"
+  plus-emph-style               = syntax "#316172"
+  plus-empty-line-marker-style  = syntax "#283b4d"
+  line-numbers-plus-style       = "#449dab"
+  line-numbers-zero-style       = "#3b4261"
