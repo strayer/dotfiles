@@ -67,7 +67,9 @@ else
   if [ "$DARKMODE" = "1" ]; then
     theme="dark"
   else
-    theme="light"
+    # Do not auto-switch to light theme
+    log_message "System environment indicates light theme. Exiting without changes."
+    exit 0
   fi
   theme_source="environment variable"
 fi
@@ -94,8 +96,8 @@ log_message "fish_theme=$fish_theme"
 log_message "neovim_pids=$neovim_pids"
 
 log_message "Setting system and wezterm theme"
-echo -n "$theme" > "$SYSTEM_THEME_FILE"
-echo "return \"$theme\"" > "$WEZTERM_SYSTEM_THEME_FILE"
+echo -n "$theme" >"$SYSTEM_THEME_FILE"
+echo "return \"$theme\"" >"$WEZTERM_SYSTEM_THEME_FILE"
 
 log_message "Setting fish theme"
 fish -c "yes | fish_config theme save '$fish_theme'"
