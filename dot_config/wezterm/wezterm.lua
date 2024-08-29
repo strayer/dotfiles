@@ -25,10 +25,10 @@ end
 
 local function scheme_for_appearance(appearance)
   if appearance:find("Dark") then
-    return 'Tokyo Night Storm'
+    return "Tokyo Night Storm"
     -- return "Cyberdream"
   else
-    return 'Tokyo Night Day'
+    return "Tokyo Night Day"
     -- return "Cyberdream Light"
   end
 end
@@ -56,12 +56,12 @@ end)
 
 local function segments_for_right_status(window)
   return {
-    wezterm.strftime('%F %H:%M'),
+    wezterm.strftime("%F %H:%M"),
     wezterm.hostname(),
   }
 end
 
-wezterm.on('update-status', function(window, _)
+wezterm.on("update-status", function(window, _)
   local SOLID_LEFT_ARROW = utf8.char(0xe0b2)
   local segments = segments_for_right_status(window)
 
@@ -88,7 +88,7 @@ wezterm.on('update-status', function(window, _)
   -- colours we need.
   local gradient = wezterm.color.gradient(
     {
-      orientation = 'Horizontal',
+      orientation = "Horizontal",
       colors = { gradient_from, gradient_to },
     },
     #segments -- only gives us as many colours as we have segments.
@@ -101,14 +101,14 @@ wezterm.on('update-status', function(window, _)
     local is_first = i == 1
 
     if is_first then
-      table.insert(elements, { Background = { Color = 'none' } })
+      table.insert(elements, { Background = { Color = "none" } })
     end
     table.insert(elements, { Foreground = { Color = gradient[i] } })
     table.insert(elements, { Text = SOLID_LEFT_ARROW })
 
     table.insert(elements, { Foreground = { Color = fg } })
     table.insert(elements, { Background = { Color = gradient[i] } })
-    table.insert(elements, { Text = ' ' .. seg .. ' ' })
+    table.insert(elements, { Text = " " .. seg .. " " })
   end
 
   window:set_right_status(wezterm.format(elements))
@@ -143,12 +143,12 @@ config.macos_window_background_blur = 50
 -- On macOS, 'RESIZE|INTEGRATED_BUTTONS' also looks nice if
 -- you want to keep the window controls visible and integrate
 -- them into the tab bar.
-config.window_decorations = 'RESIZE|INTEGRATED_BUTTONS'
+config.window_decorations = "RESIZE|INTEGRATED_BUTTONS"
 -- Sets the font for the window frame (tab bar)
 config.window_frame = {
   -- Berkeley Mono for me again, though an idea could be to try a
   -- serif font here instead of monospace for a nicer look?
-  font = wezterm.font({ family = 'Berkeley Mono', weight = 'Bold' }),
+  font = wezterm.font({ family = "Berkeley Mono", weight = "Bold" }),
   font_size = 12,
 }
 
