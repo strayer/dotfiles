@@ -1,0 +1,6 @@
+{{- $email := promptStringOnce . "email" "Email address" -}}
+{{- $atuin_sync_server := promptStringOnce . "atuin_sync_server" "Atuin Sync Server (https://...)" -}}
+
+[data]
+    email = {{ $email | quote }}
+    atuin_sync_server = {{ $atuin_sync_server | quote }}
