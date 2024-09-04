@@ -123,11 +123,6 @@ if wezterm.config_builder then
   config = wezterm.config_builder()
 end
 
-config.color_schemes = {
-  ["Cyberdream"] = require("cyberdream"),
-  ["Cyberdream Light"] = require("cyberdream-light"),
-}
-
 -- config.color_scheme = "Tokyo Night Storm (Gogh)"
 config.color_scheme = scheme_for_appearance(get_appearance())
 -- config.font = wezterm.font("Iosevka Term")
