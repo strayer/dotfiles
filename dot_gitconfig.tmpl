@@ -27,6 +27,7 @@
       fi; \
     }; f"
   a = add
+  amend = commit --amend --no-edit
   br = branch --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(contents:subject) %(color:green)(%(committerdate:relative)) [%(authorname)]' --sort=-committerdate
   c = commit
   co = checkout
