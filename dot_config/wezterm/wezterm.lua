@@ -127,7 +127,7 @@ end
 config.color_scheme = scheme_for_appearance(get_appearance())
 -- config.font = wezterm.font("Iosevka Term")
 config.font = wezterm.font_with_fallback({
-  "Iosevka Term",
+  "PragmataPro",
   { family = "Symbols Nerd Font Mono", scale = 0.8 },
 })
 config.font_size = 16
