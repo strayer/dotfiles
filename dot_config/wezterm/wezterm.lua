@@ -151,6 +151,8 @@ config.window_frame = {
   font_size = 12,
 }
 
+config.front_end = "WebGpu"
+
 config.send_composed_key_when_left_alt_is_pressed = false
 
 config.keys = {
