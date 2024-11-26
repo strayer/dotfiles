@@ -5,3 +5,6 @@ legacy_version_file_disable_tools = ["terraform"]
 [tools]
 usage = "latest"
 terraform = "latest"
+{{- if eq .chezmoi.hostname "CO-MBP-KC9KQV64V3" }}
+maven = "latest"
+{{- end }}
