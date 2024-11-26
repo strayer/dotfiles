@@ -57,6 +57,9 @@
   program = {{ env "HOME" }}/.bin/secretive-ssh-keygen
 {{- end }}
 
+[diff "gron"]
+  textconv=gron --no-sort
+
 [difftool]
   prompt = false
 
