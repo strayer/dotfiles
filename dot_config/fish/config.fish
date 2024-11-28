@@ -29,8 +29,8 @@ else if type -q vim
 end
 
 # Local software & scripts
-fish_add_path "$HOME/.bin"
 fish_add_path "$HOME/.local/bin"
+fish_add_path --move --prepend "$HOME/.bin"
 
 # python poetry
 fish_add_path "$HOME/.poetry/bin"
