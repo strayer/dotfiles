@@ -235,6 +235,7 @@ if is_work then
   tap "garethgeorge/backrest-tap"
   brew "garethgeorge/backrest-tap/backrest"
 
+  brew "azcopy"
   brew "azure-cli"
   brew "bitwarden-cli"
   brew "pandoc"
