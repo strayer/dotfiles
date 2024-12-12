@@ -139,6 +139,10 @@ if status --is-interactive
     abbr --add --global g git
   end
 
+  if type -q terraform
+    abbr --add --global tf terraform
+  end
+
   if type -q zoxide
     zoxide init fish | source
   end
