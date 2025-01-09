@@ -26,7 +26,7 @@ end
 local function scheme_for_appearance(appearance)
   if appearance:find("Dark") then
     return "Tokyo Night Storm"
-    -- return "Cyberdream"
+  -- return "Cyberdream"
   else
     return "Tokyo Night Day"
     -- return "Cyberdream Light"
@@ -134,9 +134,8 @@ config.font_size = 16
 
 config.term = "wezterm"
 
--- Slightly transparent and blurred background
-config.window_background_opacity = 0.95
-config.macos_window_background_blur = 50
+config.max_fps = 120
+
 -- Removes the title bar, leaving only the tab bar. Keeps
 -- the ability to resize by dragging the window's edges.
 -- On macOS, 'RESIZE|INTEGRATED_BUTTONS' also looks nice if
