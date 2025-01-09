@@ -150,4 +150,9 @@ if status --is-interactive
   if type -q starship
     starship init fish | source
   end
+
+  if type -q gh
+    abbr --add --global ai gh copilot explain
+    abbr --add --global aie gh copilot suggest
+  end
 end
