@@ -224,7 +224,6 @@ mas "Bitwarden", id: 1352778147
 mas "Color Picker", id: 1545870783
 mas "Discovery", id: 1381004916
 mas "Microsoft Remote Desktop", id: 1295203466
-mas "Moom", id: 419330170
 mas "Negative", id: 1378123825 # Dark mode for PDFs
 
 if is_work then
@@ -308,7 +307,6 @@ if is_home then
   mas "Home Assistant", id: 1099568401
   mas "OneDrive", id: 823766827
   mas "Prime Video", id: 545519333
-  mas "Tailscale", id: 1475387142
   mas "Telegram", id: 747648890
   mas "WireGuard", id: 1451685025
 end
