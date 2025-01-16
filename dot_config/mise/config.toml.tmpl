@@ -1,10 +1,9 @@
 [settings]
 experimental = true
-idiomatic_version_file_disable_tools = ["terraform"]
 
 [tools]
 usage = "latest"
-terraform = "latest"
+"aqua:hashicorp/terraform" = "latest"
 {{- if eq .chezmoi.hostname "CO-MBP-KC9KQV64V3" }}
 maven = "latest"
 {{- end }}
