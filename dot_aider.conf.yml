@@ -1,0 +1,12 @@
+dark-mode: true
+code-theme: one-dark
+auto-commits: false
+vim: true
+
+attribute-author: false
+attribute-committer: false
+
+analytics-disable: true
+
+check-update: false
+show-release-notes: false
