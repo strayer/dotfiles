@@ -1,0 +1,4 @@
+.aider.*/
+.aider.*.history*
+
+# vim: ft=gitignore
