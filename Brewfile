@@ -66,6 +66,7 @@ brew "chezmoi"
 brew "cmake"
 brew "colordiff"
 brew "coreutils"
+brew "cosign" # used by mise
 brew "csvkit"
 brew "direnv"
 brew "doggo"
