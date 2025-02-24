@@ -36,12 +36,14 @@ cask "font-symbols-only-nerd-font"
 
 # linters, formatters, LSPs
 brew "ansible-lint"
+brew "basedpyright"
 brew "bash-language-server"
 brew "dockerfile-language-server"
 brew "hadolint"
 brew "lua-language-server"
 brew "markdownlint-cli"
 brew "markdownlint-cli2"
+brew "prettierd"
 brew "ruff"
 brew "ruff-lsp"
 brew "shfmt"
@@ -49,6 +51,7 @@ brew "stylua"
 brew "taplo"
 brew "terraform-ls"
 brew "tflint"
+brew "yaml-language-server"
 brew "yamllint"
 
 # various tools (I should split this into sections...)
