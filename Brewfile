@@ -71,6 +71,7 @@ brew "colordiff"
 brew "coreutils"
 brew "cosign" # used by mise
 brew "csvkit"
+brew "curl"
 brew "direnv"
 brew "doggo"
 brew "dos2unix"
@@ -229,6 +230,7 @@ cask "vlc"
 cask "vnc-viewer"
 cask "wezterm@nightly"
 cask "wireshark"
+cask "zen-browser"
 
 mas "Amphetamine", id: 937984704
 mas "Bitwarden", id: 1352778147
@@ -259,6 +261,7 @@ if is_work then
   cask "anypointstudio"
   cask "deepl"
   cask "flameshot"
+  cask "firefox@nightly"
   cask "google-chrome"
   cask "jabra-direct"
   cask "keepassxc"
