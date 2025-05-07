@@ -681,7 +681,7 @@ function __icon_map() {
   "Microsoft To Do" | "Things")
     icon_result=":things:"
     ;;
-  "Thunderbird")
+  "Thunderbird" | "Thunderbird Beta")
     icon_result=":thunderbird:"
     ;;
   "TickTick")
