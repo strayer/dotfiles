@@ -3,6 +3,10 @@
 export WHITE=0xffffffff
 export TRANSPARENT=0x00000000
 
+# Status Colors
+export WARNING_COLOR=0xfff7d75c
+export CRITICAL_COLOR=0xffff3b30
+
 # -- Gruv Box --
 # export BAR_COLOR=0x70282828
 # export ITEM_BG_COLOR=0xff1d2021
