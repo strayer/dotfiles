@@ -19,9 +19,16 @@ if [ "$SENDER" = "volume_change" ]; then
   [1-9] | [1-2][0-9])
     ICON="󰕿"
     ;;
+  0)
+    ICON="󰖁"
+    ;;
   esac
 
-  bar_label=$(generate_unicode_bar "$VOLUME")
+  if [ "$VOLUME" -eq 0 ]; then
+    bar_label=""
+  else
+    bar_label=$(generate_unicode_bar "$VOLUME")
+  fi
 
   sketchybar --set "$NAME" icon="$ICON" label="$bar_label"
 fi
