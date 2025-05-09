@@ -765,7 +765,7 @@ function __icon_map() {
   "Yuque" | "语雀")
     icon_result=":yuque:"
     ;;
-  "Zed")
+  "Zed" | "Zed Preview")
     icon_result=":zed:"
     ;;
   "Zen Browser")
