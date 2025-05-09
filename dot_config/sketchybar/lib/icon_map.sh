@@ -681,7 +681,7 @@ function __icon_map() {
   "Microsoft To Do" | "Things")
     icon_result=":things:"
     ;;
-  "Thunderbird")
+  "Thunderbird" | "Thunderbird Beta")
     icon_result=":thunderbird:"
     ;;
   "TickTick")
@@ -765,7 +765,7 @@ function __icon_map() {
   "Yuque" | "语雀")
     icon_result=":yuque:"
     ;;
-  "Zed" | "Zed Preview")
+  "Zed")
     icon_result=":zed:"
     ;;
   "Zen Browser")
