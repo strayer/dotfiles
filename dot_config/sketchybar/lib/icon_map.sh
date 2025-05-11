@@ -99,7 +99,7 @@ function __icon_map() {
   "Calibre")
     icon_result=":book:"
     ;;
-  "Brave Browser")
+  "Brave Browser" | "Brave Browser Beta")
     icon_result=":brave_browser:"
     ;;
   "BusyCal")
