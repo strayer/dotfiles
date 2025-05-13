@@ -13,11 +13,13 @@ source "$CONFIG_DIR/lib/colors.sh"
 bar=(
   position=top
   height=37
-  margin=10
-  y_offset=10
-  corner_radius=16
-  blur_radius=30
-  color="$BAR_COLOR"
+  margin=5
+  y_offset=5
+  corner_radius=0
+  blur_radius=0
+  color="$TRANSPARENT"
+  padding_left=0
+  padding_right=0
 )
 
 sketchybar --bar "${bar[@]}"
@@ -34,14 +36,15 @@ default=(
   label.font="PragmataPro:Bold:14.0"
   icon.color="$ACCENT_COLOR"
   label.color="$ACCENT_COLOR"
-  icon.padding_left=4
+  icon.padding_left=7
   icon.padding_right=4
   label.padding_left=4
-  label.padding_right=4
-  background.color="$ITEM_BG_COLOR"
+  label.padding_right=7
+  background.color="$BAR_COLOR"
+  blur_radius=30
   background.corner_radius=5
-  background.height=24
-  background.drawing=off
+  background.height=25
+  background.drawing=on
 )
 sketchybar --default "${default[@]}"
 
