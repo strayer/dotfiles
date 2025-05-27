@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+# Set strict mode
+set -euo pipefail
+
+# Function to display usage information
+usage() {
+  echo "Usage: $0 <domain_or_ip>"
+  echo "Performs a single ping and outputs the result in 'Xms' format."
+  exit 1
+}
+
+# Check if an argument is provided
+if [ $# -ne 1 ]; then
+  usage
+fi
+
+# Assign the argument to a variable
+target="$1"
+
+# Perform a single ping and extract the time
+if ping_output=$(ping -c 1 "$target" 2>&1); then
+  # Extract time using awk, focusing on the "time=X.XXX ms" part
+  ping_result=$(echo "$ping_output" | awk '/time=/ {gsub(/.*time=|ms.*/, "", $0); print $0}')
+else
+  echo "Error: Unable to ping $target"
+  exit 1
+fi
+
+# Check if ping_result is empty
+if [ -z "$ping_result" ]; then
+  echo "Error: Invalid ping result"
+  echo "Ping output:"
+  echo "$ping_output"
+  exit 1
+fi
+
+# Round the result to the nearest integer and output in the desired format
+rounded_result=$(LC_NUMERIC=C awk -v n="$ping_result" 'BEGIN {printf "%.0f", n}')
+echo "${rounded_result}ms"
