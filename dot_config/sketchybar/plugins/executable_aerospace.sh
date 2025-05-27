@@ -47,14 +47,14 @@ sketchybar_options+=(label="$icons")
 
 if [ "$1" = "$FOCUSED_WORKSPACE" ]; then
   # Focused workspace
-  sketchybar_options+=(label.color="$BACKGROUND")
-  sketchybar_options+=(icon.color="$BACKGROUND")
-  sketchybar_options+=(background.color="$ACCENT_COLOR")
+  sketchybar_options+=(label.color="$HIGHLIGHTED_ITEM_PRIMARY")
+  sketchybar_options+=(icon.color="$HIGHLIGHTED_ITEM_PRIMARY")
+  sketchybar_options+=(background.color="$HIGHTLIGHTED_ITEM_BACKGROUND")
 else
   # Not focused, and icons is NOT empty (due to the early exit)
-  sketchybar_options+=(label.color="$ACCENT_COLOR")
-  sketchybar_options+=(icon.color="$ACCENT_COLOR")
-  sketchybar_options+=(background.color="$BAR_COLOR")
+  sketchybar_options+=(label.color="$ITEM_PRIMARY")
+  sketchybar_options+=(icon.color="$ITEM_PRIMARY")
+  sketchybar_options+=(background.color="$ITEM_BACKGROUND")
 fi
 
 # Call sketchybar with all options

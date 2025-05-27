@@ -30,5 +30,13 @@ if [ "$SENDER" = "volume_change" ]; then
     bar_label=$(generate_unicode_bar "$VOLUME")
   fi
 
-  sketchybar --set "$NAME" icon="$ICON" label="$bar_label"
+  extra_args=""
+  if [ -z "$bar_label" ]; then
+    extra_args="label.drawing=off icon.padding_right=7"
+  else
+    extra_args="label.drawing=on icon.padding_right=4"
+  fi
+
+  sketchybar --set "$NAME" \
+    icon="$ICON" label="$bar_label" $extra_args
 fi

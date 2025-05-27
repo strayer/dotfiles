@@ -17,7 +17,7 @@ if [ "$PERCENTAGE" -gt 95 ]; then
   exit 0
 fi
 
-COLOR="$WHITE"
+COLOR="$ITEM_PRIMARY"
 
 if [ "$PERCENTAGE" -le 15 ]; then
   COLOR="$CRITICAL_COLOR"
@@ -26,26 +26,26 @@ elif [ "$PERCENTAGE" -le 45 ]; then
 fi
 
 case "${PERCENTAGE}" in
-  9[0-9]|100) # 90-100%
-    ICON=""
-    ;;
-  [6-8][0-9]) # 60-89%
-    ICON=""
-    ;;
-  [3-5][0-9]) # 30-59%
-    ICON=""
-    ;;
-  [1-2][0-9]) # 10-29%
-    ICON=""
-    ;;
-  *) # 0-9%
-    ICON=""
-    ;;
+9[0-9] | 100) # 90-100%
+  ICON=""
+  ;;
+[6-8][0-9]) # 60-89%
+  ICON=""
+  ;;
+[3-5][0-9]) # 30-59%
+  ICON=""
+  ;;
+[1-2][0-9]) # 10-29%
+  ICON=""
+  ;;
+*) # 0-9%
+  ICON=""
+  ;;
 esac
 
 if [[ "$CHARGING" != "" ]]; then
   ICON=""
-  COLOR="$WHITE"
+  COLOR="$ITEM_PRIMARY"
 fi
 
 bar_label=$(generate_unicode_bar "$PERCENTAGE")
