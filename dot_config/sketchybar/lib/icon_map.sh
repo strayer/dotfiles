@@ -201,7 +201,7 @@ function __icon_map() {
   "Dropbox")
     icon_result=":dropbox:"
     ;;
-  "Element")
+  "Element" | "Element X")
     icon_result=":element:"
     ;;
   "Emacs")
