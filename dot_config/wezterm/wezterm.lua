@@ -175,6 +175,7 @@ config.keys = {
       size = { Percent = 50 },
     }),
   },
+  { key = "Enter", mods = "SHIFT", action = wezterm.action.SendString("\n") },
 }
 
 -- and finally, return the configuration to wezterm
