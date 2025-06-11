@@ -78,3 +78,34 @@ When editing `.tmpl` files, common patterns include:
 - `{{ .vertex_ai.base_url }}` - Claude Code Vertex AI configuration
 
 Always test template changes with `chezmoi diff` before applying to avoid syntax errors in generated configurations.
+
+## Conventional Commit Guidelines
+
+- Use conventional commit message format for all commits
+- Common scopes based on repository files:
+  - `Brewfile`: Package management updates
+  - `fish`: Fish shell configurations
+  - `kitty`, `alacritty`, `wezterm`, `ghostty`: Terminal emulator configs
+  - `sketchybar`: Status bar configuration
+  - `mise`: Runtime version management
+  - `git`, `gitconfig`: Git configuration
+  - `claude`: Claude Code settings
+  - `karabiner`: Keyboard customization
+  - `terminal`: Cross-terminal features
+  - `atuin`: Command history settings
+  - `chezmoi`: Dotfiles management
+  - `bin`: Custom scripts in ~/.bin/
+- Type usage patterns:
+  - `feat`: New features or additions (most common)
+  - `fix`: Bug fixes or corrections
+  - `chore`: Maintenance, updates without functional changes
+  - `refactor`: Code restructuring without behavior changes
+  - `docs`: Documentation updates
+  - `style`: Formatting, cosmetic changes
+  - `perf`: Performance improvements
+  - `test`: Testing-related changes
+  - `ci`: CI/CD configurations
+- Format: `<type>(<scope>): <description>`
+  - Scope is optional for general changes (e.g., `chore: add CLAUDE.md`)
+  - Use present tense, imperative mood
+  - Keep descriptions concise and specific
