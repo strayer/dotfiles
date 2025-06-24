@@ -3,10 +3,11 @@ set -euo pipefail
 
 export PATH="$PATH:/opt/homebrew/bin"
 
-LOG_FILE="$HOME/toggle-theme.log"
-ROTATED_LOG_FILE="$LOG_FILE.1.zst"
-SYSTEM_THEME_FILE="$HOME/.cache/system-theme.txt"
-WEZTERM_SYSTEM_THEME_FILE="$HOME/.config/wezterm/current-system-theme.lua"
+readonly LOG_SIZE_LIMIT=1048576  # 1MB
+readonly LOG_FILE="$HOME/toggle-theme.log"
+readonly ROTATED_LOG_FILE="$LOG_FILE.1.zst"
+readonly SYSTEM_THEME_FILE="$HOME/.cache/system-theme.txt"
+readonly WEZTERM_SYSTEM_THEME_FILE="$HOME/.config/wezterm/current-system-theme.lua"
 
 # Function to perform log rotation
 if [ -f "$LOG_FILE" ]; then
@@ -15,7 +16,7 @@ if [ -f "$LOG_FILE" ]; then
   else
     log_size=$(stat -c%s "$LOG_FILE") # Linux-specific
   fi
-  if ((log_size > 1048576)); then
+  if ((log_size > LOG_SIZE_LIMIT)); then
     # Rotate the log file
     zstd -f --rm "$LOG_FILE" -o "$ROTATED_LOG_FILE" 2>/dev/null
   fi
@@ -25,6 +26,16 @@ fi
 log_message() {
   local message="$1"
   echo "$(date '+%Y-%m-%d %H:%M:%S') - $message"
+}
+
+# Function to validate theme names for security
+validate_theme_name() {
+  local theme="$1"
+  # Allow only alphanumeric, spaces, hyphens, and underscores
+  if [[ ! "$theme" =~ ^[a-zA-Z0-9[:space:]_-]+$ ]]; then
+    log_message "Error: Invalid theme name contains unsafe characters: $theme"
+    exit 1
+  fi
 }
 
 # Send all output to logfile
@@ -76,16 +87,14 @@ fi
 
 if [ "$theme" == "dark" ]; then
   fish_theme="tokyonight_storm"
-  # fish_theme="cyberdream"
   fish -c "set -Ue AICHAT_LIGHT_THEME"
   fish -c "set -Ux BAT_THEME 'tokyonight_storm'"
   fish -c "set -Ux DELTA_FEATURES '+tokyonight-storm'"
 else
-  fish_theme="tokyonight_day"
-  # fish_theme="cyberdream-light"
+  fish_theme="Catppuccin Latte"
   fish -c "set -Ux AICHAT_LIGHT_THEME true"
-  fish -c "set -Ux BAT_THEME 'tokyonight_day'"
-  fish -c "set -Ux DELTA_FEATURES '+tokyonight-day'"
+  fish -c "set -Ux BAT_THEME 'Catppuccin Latte'"
+  fish -c "set -Ux DELTA_FEATURES '+Catppuccin Latte'"
 fi
 
 # Collect all neovim PIDs
@@ -100,11 +109,14 @@ echo -n "$theme" >"$SYSTEM_THEME_FILE"
 echo "return \"$theme\"" >"$WEZTERM_SYSTEM_THEME_FILE"
 
 log_message "Setting fish theme"
-fish -c "yes | fish_config theme save '$fish_theme'"
+validate_theme_name "$fish_theme"
+fish -c "yes | fish_config theme save $(printf '%q' "$fish_theme")"
 
-for neovim_pid in $neovim_pids; do
-  log_message "Sending SIGUSR1 to Neovim process with PID $neovim_pid"
-  kill -SIGUSR1 "$neovim_pid"
-done
+if [[ -n "${neovim_pids}" ]]; then
+  for neovim_pid in ${neovim_pids}; do
+    log_message "Sending SIGUSR1 to Neovim process with PID $neovim_pid"
+    kill -SIGUSR1 "$neovim_pid"
+  done
+fi
 
 log_message "Done"
