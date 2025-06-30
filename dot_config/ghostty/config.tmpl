@@ -5,4 +5,20 @@ font-family = PragmataPro
 
 theme = "/Users/{{ .chezmoi.username }}/.local/share/nvim/lazy/tokyonight.nvim/extras/ghostty/tokyonight_storm"
 
+custom-shader = shaders/cursor_blaze.glsl
+
+keybind = super+r=reload_config
 keybind = shift+enter=text:\n
+
+keybind = super+enter=new_split:right
+keybind = super+shift+enter=new_split:down
+
+keybind = ctrl+h=goto_split:left
+keybind = ctrl+j=goto_split:down
+keybind = ctrl+k=goto_split:up
+keybind = ctrl+l=goto_split:right
+
+macos-titlebar-style = hidden
+
+background-opacity = 0.9
+background-blur = true
