@@ -119,12 +119,5 @@ if [[ -n "${neovim_pids}" ]]; then
   done
 fi
 
-# Reload SketchyBar if it's running
-if pgrep -x sketchybar >/dev/null 2>&1; then
-  log_message "Reloading SketchyBar"
-  sketchybar --reload
-else
-  log_message "SketchyBar is not running, skipping reload"
-fi
 
 log_message "Done"

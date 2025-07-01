@@ -1,0 +1,239 @@
+-- items/mealplan.lua - Modern mealplan module with lua-http and lua-cjson
+--
+-- This module requires the following Lua modules to be installed:
+-- - lua-http (for making HTTP requests)
+-- - lua-cjson (for parsing JSON)
+
+local colors = require("lib.colors")
+local settings = require("lib.settings")
+
+-- Only load on work machine
+if not settings.is_work_machine then
+  return
+end
+
+local http_request = require("http.request")
+local cjson = require("cjson")
+
+-- Configuration constants
+local CONFIG = {
+  api_url = "{{ .mealplan_url }}",
+  min_price_filter = 1.0, -- Minimum price in euros to show meals
+  request_timeout = 10, -- HTTP request timeout in seconds
+}
+
+-- Create main mealplan item first
+local mealplan = sbar.add("item", "mealplan", {
+  position = "right",
+  icon = {
+    padding_left = 5,
+  },
+  update_freq = 60,
+})
+
+-- Module state
+local M = {
+  popup_items = {},
+  meals = nil, -- In-memory store for meal data
+  last_fetch_date = nil, -- The date of the last successful fetch
+}
+
+-- HTTP client with lua-http
+local function fetch_mealplan_data(date_str)
+  local url = CONFIG.api_url .. "?start_date=" .. date_str .. "&end_date=" .. date_str
+
+  -- Create request with timeout
+  local request = http_request.new_from_uri(url)
+  request.headers:upsert("user-agent", "SketchyBar-Mealplan/1.0")
+
+  local headers, stream = request:go(CONFIG.request_timeout)
+
+  if not headers then
+    return nil, "Connection failed"
+  end
+
+  local status = headers:get(":status")
+  if status == "404" then
+    -- 404 means no meal plans available for this date - return empty data
+    return {}
+  elseif status ~= "200" then
+    return nil, "HTTP error: " .. status
+  end
+
+  local body = stream:get_body_as_string()
+
+  -- Parse JSON with lua-cjson
+  local success, data = pcall(cjson.decode, body)
+  if not success then
+    return nil, "JSON parse error: " .. tostring(data)
+  end
+
+  return data
+end
+
+-- Data processing
+local function filter_and_process_meals(api_data)
+  local today_items = {}
+  local today_str = os.date("%Y-%m-%d")
+
+  -- Handle empty API response (no meals available)
+  if not api_data or #api_data == 0 then
+    return {}
+  end
+
+  -- Find today's data in API response (array of day objects)
+  for _, day_data in ipairs(api_data) do
+    if day_data.date == today_str then
+      today_items = day_data.items or {}
+      break
+    end
+  end
+
+  -- Filter meals with price >= 1€ and format them
+  local filtered_meals = {}
+  for _, meal in ipairs(today_items) do
+    local price = tonumber(meal.price) or 0
+    if price >= CONFIG.min_price_filter then
+      table.insert(filtered_meals, {
+        name = meal.name or "Unknown",
+        price = string.format("%.2f", price),
+      })
+    end
+  end
+
+  return filtered_meals
+end
+
+-- Invalidation strategy
+local function should_fetch_new_data()
+  local today_str = os.date("%Y-%m-%d")
+
+  -- Always fetch if we have no data or if the data is for a previous day
+  if not M.meals or M.last_fetch_date ~= today_str then
+    return true
+  end
+
+  -- If we have an empty list of meals, check if it's a weekend
+  if #M.meals == 0 then
+    local weekday = tonumber(os.date("%w")) -- 0=Sunday, ..., 6=Saturday
+    if weekday == 0 or weekday == 6 then
+      -- It's the weekend and we have no meals, don't refetch
+      return false
+    end
+    -- It's a weekday and we have no meals, keep trying
+    return true
+  end
+
+  -- We have data for today, no need to refetch
+  return false
+end
+
+-- Display system
+local function clear_popup_items()
+  for _, item in ipairs(M.popup_items) do
+    sbar.remove(item.name)
+  end
+  M.popup_items = {}
+end
+
+local function update_display(meals)
+  local theme_colors = colors.get_colors()
+  clear_popup_items()
+
+  if #meals == 0 then
+    -- No meals available
+    mealplan:set({
+      icon = { string = "󰗳", color = theme_colors.item_primary, padding_right = 7 },
+      label = { drawing = false },
+      background = { color = theme_colors.item_background },
+      popup = { drawing = false },
+    })
+  else
+    -- Meals available
+    mealplan:set({
+      icon = { string = "󱤖", color = theme_colors.item_primary, padding_right = 4 },
+      label = { string = tostring(#meals), color = theme_colors.item_primary, drawing = true },
+      background = { color = theme_colors.item_background },
+    })
+
+    -- Create popup items for each meal
+    for i, meal in ipairs(meals) do
+      local item_name = "meal_item." .. i
+      local popup_item = sbar.add("item", item_name, {
+        position = "popup." .. mealplan.name,
+        icon = { string = "🍽️", color = theme_colors.item_primary },
+        label = { string = meal.name .. " (" .. meal.price .. "€)", color = theme_colors.item_primary },
+        background = { color = theme_colors.item_background },
+      })
+      table.insert(M.popup_items, popup_item)
+    end
+  end
+end
+
+-- Error handling
+local function show_error_state()
+  local theme_colors = colors.get_colors()
+  mealplan:set({
+    icon = { string = "󰅖", color = theme_colors.critical, padding_right = 7 },
+    label = { drawing = false },
+    background = { color = theme_colors.item_background },
+    popup = { drawing = false },
+  })
+end
+
+-- Main update function
+local function update_mealplan()
+  if not should_fetch_new_data() then
+    update_display(M.meals)
+    return
+  end
+
+  local today_str = os.date("%Y-%m-%d")
+  local api_data, _ = fetch_mealplan_data(today_str)
+
+  if api_data then
+    M.meals = filter_and_process_meals(api_data)
+    M.last_fetch_date = today_str
+    update_display(M.meals)
+  else
+    -- API failed - use stale data if available, otherwise show error
+    if M.meals then
+      update_display(M.meals)
+    else
+      show_error_state()
+    end
+  end
+end
+
+-- Mouse events for popup control
+mealplan:subscribe({ "mouse.entered", "mouse.exited", "mouse.exited.global" }, function(env)
+  if env.SENDER == "mouse.entered" and M.meals and #M.meals > 0 then
+    mealplan:set({ popup = { drawing = true } })
+  else
+    mealplan:set({ popup = { drawing = false } })
+  end
+end)
+
+-- Periodic and system events
+mealplan:subscribe("routine", update_mealplan)
+mealplan:subscribe("system_woke", update_mealplan)
+mealplan:subscribe("forced", update_mealplan)
+mealplan:subscribe("theme_change", function()
+  -- Refresh display with new theme colors using current data
+  if M.meals then
+    update_display(M.meals)
+  else
+    -- No data, just update the icon color
+    local theme_colors = colors.get_colors()
+    mealplan:set({
+      icon = { color = theme_colors.warning },
+      background = { color = theme_colors.item_background },
+    })
+  end
+end)
+
+-- Initial update
+update_mealplan()
+
+-- vim: ft=lua
+

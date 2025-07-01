@@ -60,7 +60,7 @@ Centralized theme switching affects multiple applications simultaneously:
 - **Git**: Environment-specific signing keys and configurations
 
 ### System Integration
-- **SketchyBar**: Custom status bar with aerospace window manager integration
+- **SketchyBar**: Custom status bar with aerospace window manager integration. Coding agents can use the deepwiki mcp to retrieve information about [SketchyBar](https://deepwiki.com/FelixKratz/SketchyBar) and [SbarLua](https://deepwiki.com/FelixKratz/SbarLua).
 - **Package management**: Comprehensive Brewfile with environment-specific sections
 - **Karabiner**: Custom keyboard modifications in `private_karabiner/`
 

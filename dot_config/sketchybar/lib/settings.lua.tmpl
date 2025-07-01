@@ -1,0 +1,35 @@
+-- settings.lua - Global configuration and font settings
+
+local M = {}
+
+-- Font configuration
+M.font = {
+  text = "PragmataPro", -- Main font family
+  numbers = "PragmataPro", -- Numbers font family
+  app_icons = "sketchybar-app-font", -- App icons font family
+}
+
+-- Padding and spacing
+M.paddings = {
+  item_left = 5,
+  item_right = 5,
+  icon_left = 7,
+  icon_right = 4,
+  label_left = 4,
+  label_right = 7,
+}
+
+-- Update frequencies (in seconds)
+M.update_freq = {
+  clock = 10,
+  battery = 120,
+  network = 60,
+  mealplan = 120,
+}
+
+-- System detection
+M.hostname = "{{ .chezmoi.hostname }}"
+M.is_work_machine = M.hostname == "CO-MBP-KC9KQV64V3"
+
+return M
+
