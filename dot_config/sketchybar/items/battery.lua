@@ -9,6 +9,7 @@ local settings = require("lib.settings")
 local battery = sbar.add("item", "battery", {
   position = "right",
   update_freq = settings.update_freq.battery,
+  updates = true,
 })
 
 -- Update battery display

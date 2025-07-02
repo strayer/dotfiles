@@ -15,6 +15,7 @@ local package_updates = sbar.add("item", "package_updates", {
     padding_left = 4,
   },
   update_freq = settings.update_freq.package_updates,
+  updates = true,
 })
 
 -- Update package updates display
