@@ -9,6 +9,7 @@ require("items.system_theme")
 require("items.clock")
 require("items.volume")
 require("items.battery")
+require("items.package_updates")
 require("items.network")
 
 -- Work-specific items (loaded conditionally)

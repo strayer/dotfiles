@@ -429,6 +429,7 @@ M.system = {
     critical = "󰁺",
   },
   network = "󰖩",
+  package_updates = "󰏔",
   warning = "󰀪",
   error = "󰅖",
 }
