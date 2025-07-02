@@ -27,8 +27,12 @@ chezmoi update         # Pull and apply changes from remote repository
 
 ### Custom Scripts (in ~/.bin/)
 ```bash
-tm <session>           # tmux session manager
-toggle-theme.sh        # System-wide theme switching (tokyonight variants, cyberdream)
+tm <session>                         # tmux session manager (attach or create)
+toggle-theme.sh [theme]              # System-wide theme switching with automation
+install-dark-mode-notify.sh          # Setup automated theme switching via LaunchAgent
+install-sbarlua.sh                   # Install SbarLua for SketchyBar configuration
+secretive-ssh-keygen [args]          # SSH key generation using Secretive app
+restart-gpg-agent.fish               # GPG agent management for multi-user conflicts
 ```
 
 ## Architecture & Environment Detection
@@ -45,11 +49,13 @@ The repository prompts for sensitive configuration during initial setup:
 - Claude Code Vertex AI settings (base URL, project ID, location)
 
 ### Theme Management System
-Centralized theme switching affects multiple applications simultaneously:
+Sophisticated automated theme switching with cross-application coordination:
 - **Supported themes**: tokyonight (day/storm/night), cyberdream variants
-- **Applications**: bat, fish, kitty, alacritty, sketchybar
-- **Implementation**: Symlinks managed by toggle-theme.sh script
-- **Auto-detection**: Responds to system dark mode changes
+- **Applications**: bat, fish, kitty, alacritty, sketchybar, git-delta, aichat, neovim, wezterm
+- **Implementation**: Symlinks managed by toggle-theme.sh with validation and logging
+- **Automation**: LaunchAgent integration with dark-mode-notify binary for system detection
+- **State management**: Theme persistence in `~/.cache/system-theme.txt`
+- **Logging**: Comprehensive logging with rotation in `~/toggle-theme.log`
 
 ## Key Configuration Areas
 
@@ -60,14 +66,16 @@ Centralized theme switching affects multiple applications simultaneously:
 - **Git**: Environment-specific signing keys and configurations
 
 ### System Integration
-- **SketchyBar**: Custom status bar with aerospace window manager integration. Coding agents can use the deepwiki mcp to retrieve information about [SketchyBar](https://deepwiki.com/FelixKratz/SketchyBar) and [SbarLua](https://deepwiki.com/FelixKratz/SbarLua).
-- **Package management**: Comprehensive Brewfile with environment-specific sections
+- **SketchyBar**: Complete SbarLua configuration with modular architecture (`init.lua`, `bar.lua`, `default.lua`, items/*). Includes aerospace integration, custom items (battery, network, clock, volume, meal planning), and theme coordination. Coding agents can use the deepwiki mcp to retrieve information about [SketchyBar](https://deepwiki.com/FelixKratz/SketchyBar) and [SbarLua](https://deepwiki.com/FelixKratz/SbarLua).
+- **Package management**: Comprehensive Brewfile (260+ work packages, 290+ home packages) with custom taps, MAS automation, and environment-specific tool sets
 - **Karabiner**: Custom keyboard modifications in `private_karabiner/`
+- **LaunchAgent automation**: Automated theme switching and system integration services
 
 ### Security & Privacy
-- **GPG configuration**: Agent settings and smart card support
-- **SSH**: Separate configurations for different services
-- **Private files**: Use `private_` prefix for sensitive configurations
+- **GPG configuration**: Agent settings with multi-user conflict resolution and smart card support
+- **SSH**: Separate configurations for different services with Secretive app integration (home machine)
+- **Authentication**: SSH agent socket management for tmux/screen sessions
+- **Private files**: Use `private_` prefix for sensitive configurations (Karabiner, SSH keys)
 
 ## Working with Templates
 
@@ -76,8 +84,24 @@ When editing `.tmpl` files, common patterns include:
 - `{{ .email }}` - User-provided email address
 - `{{ .atuin_sync_server }}` - Atuin sync server URL
 - `{{ .vertex_ai.base_url }}` - Claude Code Vertex AI configuration
+- `{{ env "HOME" }}` - Environment variable access
+- `{{- if eq .chezmoi.hostname "work" }}` - Conditional blocks with whitespace control
 
 Always test template changes with `chezmoi diff` before applying to avoid syntax errors in generated configurations.
+
+## Automation & Integration
+
+### LaunchAgent Setup
+```bash
+install-dark-mode-notify.sh         # Install automated theme switching
+launchctl load ~/Library/LaunchAgents/com.user.darkmode.plist
+```
+
+### Development Workflows
+- **Environment bootstrapping**: Use `chezmoi init` with template variable prompts
+- **Theme automation**: LaunchAgent responds to system dark mode changes automatically
+- **GPG agent conflicts**: Use `restart-gpg-agent.fish` when multiple users conflict
+- **SSH key management**: Use `secretive-ssh-keygen` for Secretive app integration
 
 ## Conventional Commit Guidelines
 
