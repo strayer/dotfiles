@@ -22,6 +22,18 @@ local CONFIG = {
   request_timeout = 10, -- HTTP request timeout in seconds
 }
 
+-- Food type icon mapping
+local FOOD_TYPE_ICONS = {
+  MEAT = "", -- nf-fae-meat
+  BEEF = "", -- nf-fa-cow
+  PORK = "󱀆", -- nf-md-pig_variant
+  POULTRY = "󱗆", -- nf-md-bird
+  FISH = "󰈺", -- nf-md-fish
+  VEGGIE = "", -- nf-fae-plant
+  STEW = "󰙚", -- nf-md-pot_steam
+  GRAND_DESSERT = "󰦌", -- nf-md-muffin
+}
+
 -- Create main mealplan item first
 local mealplan = sbar.add("item", "mealplan", {
   position = "right",
@@ -95,8 +107,9 @@ local function filter_and_process_meals(api_data)
     local price = tonumber(meal.price) or 0
     if price >= CONFIG.min_price_filter then
       table.insert(filtered_meals, {
-        name = meal.name or "Unknown",
+        name = meal.short_name or meal.name or "Unknown",
         price = string.format("%.2f", price),
+        food_type = meal.food_type,
       })
     end
   end
@@ -159,9 +172,10 @@ local function update_display(meals)
     -- Create popup items for each meal
     for i, meal in ipairs(meals) do
       local item_name = "meal_item." .. i
+      local food_icon = FOOD_TYPE_ICONS[meal.food_type] or "🍽️"
       local popup_item = sbar.add("item", item_name, {
         position = "popup." .. mealplan.name,
-        icon = { string = "🍽️", color = theme_colors.item_primary },
+        icon = { string = food_icon, color = theme_colors.item_primary },
         label = { string = meal.name .. " (" .. meal.price .. "€)", color = theme_colors.item_primary },
         background = { color = theme_colors.item_background },
       })
@@ -236,4 +250,3 @@ end)
 update_mealplan()
 
 -- vim: ft=lua
-
