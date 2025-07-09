@@ -93,7 +93,7 @@ local function update_package_updates()
   end
 
   -- Execute brew and mise commands in parallel
-  sbar.exec("brew update >/dev/null 2>&1 && brew outdated --json", function(brew_result, brew_exit_code)
+  sbar.exec("brew outdated --json", function(brew_result, brew_exit_code)
     results.brew = { result = brew_result, exit_code = brew_exit_code }
     pending = pending - 1
     process_results()
