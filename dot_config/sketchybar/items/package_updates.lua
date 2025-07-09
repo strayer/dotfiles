@@ -18,8 +18,15 @@ local package_updates = sbar.add("item", "package_updates", {
   updates = true,
 })
 
+local update_in_progress = false
+
 -- Update package updates display
 local function update_package_updates()
+  if update_in_progress then
+    return
+  end
+  update_in_progress = true
+
   local results = {}
   local pending = 2
 
@@ -27,6 +34,9 @@ local function update_package_updates()
     if pending > 0 then
       return
     end
+
+    -- Both commands have finished, release the lock
+    update_in_progress = false
 
     local theme_colors = colors.get_colors()
     local mise_count = 0
