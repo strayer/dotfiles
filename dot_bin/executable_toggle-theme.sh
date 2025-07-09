@@ -87,11 +87,13 @@ fi
 
 if [ "$theme" == "dark" ]; then
   fish_theme="tokyonight_storm"
+  kitty_theme="Tokyo Night Storm"
   fish -c "set -Ue AICHAT_LIGHT_THEME"
   fish -c "set -Ux BAT_THEME 'tokyonight_storm'"
   fish -c "set -Ux DELTA_FEATURES '+tokyonight-storm'"
 else
   fish_theme="Catppuccin Latte"
+  kitty_theme="Catppuccin-Latte"
   fish -c "set -Ux AICHAT_LIGHT_THEME true"
   fish -c "set -Ux BAT_THEME 'Catppuccin Latte'"
   fish -c "set -Ux DELTA_FEATURES '+Catppuccin Latte'"
@@ -102,6 +104,7 @@ neovim_pids=$(pgrep -d ' ' nvim || true)
 
 log_message "Selected theme=$theme from $theme_source"
 log_message "fish_theme=$fish_theme"
+log_message "kitty_theme=$kitty_theme"
 log_message "neovim_pids=$neovim_pids"
 
 log_message "Setting system and wezterm theme"
@@ -112,12 +115,19 @@ log_message "Setting fish theme"
 validate_theme_name "$fish_theme"
 fish -c "yes | fish_config theme save $(printf '%q' "$fish_theme")"
 
+log_message "Setting kitty theme"
+if command -v kitten &>/dev/null; then
+  validate_theme_name "$kitty_theme"
+  kitten themes --reload-in=all "$kitty_theme"
+else
+  log_message "kitty command not found, skipping theme change."
+fi
+
 if [[ -n "${neovim_pids}" ]]; then
   for neovim_pid in ${neovim_pids}; do
     log_message "Sending SIGUSR1 to Neovim process with PID $neovim_pid"
     kill -SIGUSR1 "$neovim_pid"
   done
 fi
-
 
 log_message "Done"
