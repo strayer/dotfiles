@@ -107,9 +107,9 @@ local function filter_and_process_meals(api_data)
     local price = tonumber(meal.price) or 0
     if price >= CONFIG.min_price_filter then
       table.insert(filtered_meals, {
-        name = meal.short_name or meal.name or "Unknown",
+        name = (meal.short_name ~= cjson.null and meal.short_name) or meal.name or "Unknown",
         price = string.format("%.2f", price),
-        food_type = meal.food_type,
+        food_type = meal.food_type ~= cjson.null and meal.food_type or "",
       })
     end
   end
@@ -173,6 +173,7 @@ local function update_display(meals)
     for i, meal in ipairs(meals) do
       local item_name = "meal_item." .. i
       local food_icon = FOOD_TYPE_ICONS[meal.food_type] or "🍽️"
+
       local popup_item = sbar.add("item", item_name, {
         position = "popup." .. mealplan.name,
         icon = { string = food_icon, color = theme_colors.item_primary },
