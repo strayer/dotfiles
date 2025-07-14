@@ -88,12 +88,14 @@ fi
 if [ "$theme" == "dark" ]; then
   fish_theme="tokyonight_storm"
   kitty_theme="Tokyo Night Storm"
+  lsd_theme="colors-tokyonight.yaml"
   fish -c "set -Ue AICHAT_LIGHT_THEME"
   fish -c "set -Ux BAT_THEME 'tokyonight_storm'"
   fish -c "set -Ux DELTA_FEATURES '+tokyonight-storm'"
 else
   fish_theme="Catppuccin Latte"
   kitty_theme="Catppuccin-Latte"
+  lsd_theme="colors-cattpuccin-latte.yaml"
   fish -c "set -Ux AICHAT_LIGHT_THEME true"
   fish -c "set -Ux BAT_THEME 'Catppuccin Latte'"
   fish -c "set -Ux DELTA_FEATURES '+Catppuccin Latte'"
@@ -105,6 +107,7 @@ neovim_pids=$(pgrep -d ' ' nvim || true)
 log_message "Selected theme=$theme from $theme_source"
 log_message "fish_theme=$fish_theme"
 log_message "kitty_theme=$kitty_theme"
+log_message "lsd_theme=$lsd_theme"
 log_message "neovim_pids=$neovim_pids"
 
 log_message "Setting system and wezterm theme"
@@ -121,6 +124,18 @@ if command -v kitten &>/dev/null; then
   kitten themes --reload-in=all "$kitty_theme"
 else
   log_message "kitty command not found, skipping theme change."
+fi
+
+log_message "Setting lsd theme"
+lsd_config_dir="$HOME/.config/lsd"
+lsd_colors_file="$lsd_config_dir/colors.yaml"
+lsd_target_file="$lsd_config_dir/$lsd_theme"
+
+if [ -f "$lsd_target_file" ]; then
+  ln -sf "$lsd_target_file" "$lsd_colors_file"
+  log_message "LSD theme symlink created: $lsd_colors_file -> $lsd_target_file"
+else
+  log_message "Warning: LSD theme file not found: $lsd_target_file"
 fi
 
 if [[ -n "${neovim_pids}" ]]; then
