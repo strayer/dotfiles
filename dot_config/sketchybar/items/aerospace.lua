@@ -11,6 +11,27 @@ sbar.add("event", "aerospace_workspace_change", "aerospace_workspace_change_even
 -- Module state
 local workspace_items = {} -- Stores {item = sbar_item, monitor = monitor_id}
 
+-- Creates a new workspace item in SketchyBar
+-- Handles shell escaping for workspace names with special characters
+local function create_workspace_item(workspace_name, monitor_id)
+  local item_name = "space." .. workspace_name
+  -- Escape single quotes for bash: ' becomes '"'"'
+  local escaped_workspace_name = string.gsub(workspace_name, "'", "'\"'\"'")
+
+  local workspace_item = sbar.add("item", item_name, {
+    position = "left",
+    icon = { string = workspace_name },
+    label = {
+      font = { family = settings.font.app_icons, style = "Regular", size = 16.0 },
+      drawing = true,
+    },
+    click_script = "aerospace workspace '" .. escaped_workspace_name .. "'",
+  })
+
+  workspace_items[workspace_name] = { item = workspace_item, monitor = monitor_id }
+  return workspace_item
+end
+
 -- The single source of truth for updating all workspaces
 local function update_all_workspaces()
   -- Single call to get ALL current workspace state including focus
@@ -42,20 +63,7 @@ local function update_all_workspaces()
 
             -- Create missing workspace items dynamically
             if not workspace_items[ws_name] then
-              local item_name = "space." .. ws_name
-              local escaped_ws_name = string.gsub(ws_name, "'", "'\"'\"'")
-
-              local workspace_item = sbar.add("item", item_name, {
-                position = "left",
-                icon = { string = ws_name },
-                label = {
-                  font = { family = settings.font.app_icons, style = "Regular", size = 16.0 },
-                  drawing = true,
-                },
-                click_script = "aerospace workspace '" .. escaped_ws_name .. "'",
-              })
-
-              workspace_items[ws_name] = { item = workspace_item, monitor = monitor_id }
+              create_workspace_item(ws_name, monitor_id)
             end
 
             -- Update monitor assignment if changed
@@ -148,20 +156,7 @@ sbar.exec(
       local monitor_id = (parts[2] and utils.trim(parts[2]):match("^%d+$")) or "1"
 
       if ws_name and ws_name ~= "" then
-        local item_name = "space." .. ws_name
-        local escaped_ws_name = string.gsub(ws_name, "'", "'\"'\"'")
-
-        local workspace_item = sbar.add("item", item_name, {
-          position = "left",
-          icon = { string = ws_name },
-          label = {
-            font = { family = settings.font.app_icons, style = "Regular", size = 16.0 },
-            drawing = true,
-          },
-          click_script = "aerospace workspace '" .. escaped_ws_name .. "'",
-        })
-
-        workspace_items[ws_name] = { item = workspace_item, monitor = monitor_id }
+        create_workspace_item(ws_name, monitor_id)
       end
     end
 
