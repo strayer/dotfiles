@@ -32,9 +32,7 @@ local function create_workspace_item(workspace_name, monitor_id)
   return workspace_item
 end
 
--- The single source of truth for updating all workspaces
 local function update_all_workspaces()
-  -- Single call to get ALL current workspace state including focus
   sbar.exec(
     'aerospace list-workspaces --all --format "%{workspace},%{monitor-appkit-nsscreen-screens-id},%{workspace-is-focused}"',
     function(workspaces_result)
@@ -46,12 +44,12 @@ local function update_all_workspaces()
       local current_workspaces = {}
       local focused_ws_name = nil
 
-      -- Parse workspace state and discover new/changed workspaces
       local lines = utils.split(utils.trim(workspaces_result), "\n")
       for _, line in ipairs(lines) do
         if line and line ~= "" then
           local parts = utils.split(line, ",")
           local ws_name = utils.trim(parts[1])
+          -- Parse monitor ID as number, fallback to "1" if invalid/missing
           local monitor_id = (parts[2] and utils.trim(parts[2]):match("^%d+$")) or "1"
           local is_focused = parts[3] and utils.trim(parts[3]) == "true"
 
@@ -61,12 +59,9 @@ local function update_all_workspaces()
               focused_ws_name = ws_name
             end
 
-            -- Create missing workspace items dynamically
             if not workspace_items[ws_name] then
               create_workspace_item(ws_name, monitor_id)
             end
-
-            -- Update monitor assignment if changed
             if workspace_items[ws_name] and workspace_items[ws_name].monitor ~= monitor_id then
               workspace_items[ws_name].monitor = monitor_id
             end
@@ -74,15 +69,12 @@ local function update_all_workspaces()
         end
       end
 
-      -- Remove workspace items that no longer exist
       for ws_name in pairs(workspace_items) do
         if not current_workspaces[ws_name] then
           workspace_items[ws_name].item:remove()
           workspace_items[ws_name] = nil
         end
       end
-
-      -- Now fetch all windows with the necessary data points
       sbar.exec(
         "aerospace list-windows --all --json --format '%{app-name}%{workspace}%{monitor-appkit-nsscreen-screens-id}'",
         function(windows_json)
@@ -92,8 +84,6 @@ local function update_all_workspaces()
           end
 
           local theme_colors = colors.get_colors()
-
-          -- Process windows data to group icons by workspace
           local windows_by_workspace = {}
           if type(windows_json) == "table" then
             for _, window in ipairs(windows_json) do
@@ -107,7 +97,6 @@ local function update_all_workspaces()
             end
           end
 
-          -- Iterate through all current workspace items and update them
           for ws_name, ws_data in pairs(workspace_items) do
             local has_windows = windows_by_workspace[ws_name] and #windows_by_workspace[ws_name].icons > 0
             local is_focused = (ws_name == focused_ws_name)
@@ -140,7 +129,6 @@ local function update_all_workspaces()
   )
 end
 
--- Initialize all workspace items once at the start
 sbar.exec(
   'aerospace list-workspaces --all --format "%{workspace},%{monitor-appkit-nsscreen-screens-id}"',
   function(result)
@@ -160,8 +148,7 @@ sbar.exec(
       end
     end
 
-    -- Create a single, invisible item to handle events centrally
-    -- Always create the event handler regardless of initial workspace state
+    -- Always create event handler regardless of initial workspace state to fix startup race conditions
     local event_handler = sbar.add("item", "aerospace_event_handler", { drawing = false, updates = "on" })
     event_handler:subscribe({
       "aerospace_workspace_change",
@@ -172,7 +159,6 @@ sbar.exec(
       "theme_change",
     }, update_all_workspaces)
 
-    -- Perform the initial full update
     update_all_workspaces()
   end
 )
