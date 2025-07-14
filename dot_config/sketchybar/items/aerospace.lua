@@ -32,6 +32,79 @@ local function create_workspace_item(workspace_name, monitor_id)
   return workspace_item
 end
 
+-- Synchronizes workspace items with current aerospace state
+local function sync_workspace_items(workspaces_result)
+  local current_workspaces = {}
+  local focused_workspace_name = nil
+
+  local lines = utils.split(utils.trim(workspaces_result), "\n")
+  for _, line in ipairs(lines) do
+    if line and line ~= "" then
+      local parts = utils.split(line, ",")
+      local workspace_name = utils.trim(parts[1])
+      -- Parse monitor ID as number, fallback to "1" if invalid/missing
+      local monitor_id = (parts[2] and utils.trim(parts[2]):match("^%d+$")) or "1"
+      local is_focused = parts[3] and utils.trim(parts[3]) == "true"
+
+      if workspace_name and workspace_name ~= "" then
+        current_workspaces[workspace_name] = { monitor = monitor_id }
+        if is_focused then
+          focused_workspace_name = workspace_name
+        end
+
+        if not workspace_items[workspace_name] then
+          create_workspace_item(workspace_name, monitor_id)
+        end
+        if workspace_items[workspace_name] and workspace_items[workspace_name].monitor ~= monitor_id then
+          workspace_items[workspace_name].monitor = monitor_id
+        end
+      end
+    end
+  end
+
+  -- Remove workspace items that no longer exist
+  for workspace_name in pairs(workspace_items) do
+    if not current_workspaces[workspace_name] then
+      workspace_items[workspace_name].item:remove()
+      workspace_items[workspace_name] = nil
+    end
+  end
+
+  return focused_workspace_name
+end
+
+-- Updates workspace styling based on focus state and app icons
+local function update_workspace_styling(focused_workspace_name, windows_by_workspace)
+  local theme_colors = colors.get_colors()
+
+  for workspace_name, workspace_data in pairs(workspace_items) do
+    local has_windows = windows_by_workspace[workspace_name] and #windows_by_workspace[workspace_name].icons > 0
+    local is_focused = (workspace_name == focused_workspace_name)
+
+    if not is_focused and not has_windows then
+      workspace_data.item:set({ drawing = false })
+    else
+      local item_config = {
+        drawing = true,
+        display = workspace_data.monitor,
+      }
+      local app_icons_str = (has_windows and table.concat(windows_by_workspace[workspace_name].icons, " ")) or ""
+
+      if is_focused then
+        item_config.background = { color = theme_colors.highlighted_item_background }
+        item_config.icon = { color = theme_colors.highlighted_item_primary }
+        item_config.label = { string = app_icons_str, color = theme_colors.highlighted_item_primary }
+      else
+        item_config.background = { color = theme_colors.item_background }
+        item_config.icon = { color = theme_colors.item_primary }
+        item_config.label = { string = app_icons_str, color = theme_colors.item_primary }
+      end
+
+      workspace_data.item:set(item_config)
+    end
+  end
+end
+
 local function update_all_workspaces()
   sbar.exec(
     'aerospace list-workspaces --all --format "%{workspace},%{monitor-appkit-nsscreen-screens-id},%{workspace-is-focused}"',
@@ -41,40 +114,8 @@ local function update_all_workspaces()
         return
       end
 
-      local current_workspaces = {}
-      local focused_ws_name = nil
+      local focused_workspace_name = sync_workspace_items(workspaces_result)
 
-      local lines = utils.split(utils.trim(workspaces_result), "\n")
-      for _, line in ipairs(lines) do
-        if line and line ~= "" then
-          local parts = utils.split(line, ",")
-          local ws_name = utils.trim(parts[1])
-          -- Parse monitor ID as number, fallback to "1" if invalid/missing
-          local monitor_id = (parts[2] and utils.trim(parts[2]):match("^%d+$")) or "1"
-          local is_focused = parts[3] and utils.trim(parts[3]) == "true"
-
-          if ws_name and ws_name ~= "" then
-            current_workspaces[ws_name] = { monitor = monitor_id }
-            if is_focused then
-              focused_ws_name = ws_name
-            end
-
-            if not workspace_items[ws_name] then
-              create_workspace_item(ws_name, monitor_id)
-            end
-            if workspace_items[ws_name] and workspace_items[ws_name].monitor ~= monitor_id then
-              workspace_items[ws_name].monitor = monitor_id
-            end
-          end
-        end
-      end
-
-      for ws_name in pairs(workspace_items) do
-        if not current_workspaces[ws_name] then
-          workspace_items[ws_name].item:remove()
-          workspace_items[ws_name] = nil
-        end
-      end
       sbar.exec(
         "aerospace list-windows --all --json --format '%{app-name}%{workspace}%{monitor-appkit-nsscreen-screens-id}'",
         function(windows_json)
@@ -83,46 +124,20 @@ local function update_all_workspaces()
             return
           end
 
-          local theme_colors = colors.get_colors()
           local windows_by_workspace = {}
           if type(windows_json) == "table" then
             for _, window in ipairs(windows_json) do
-              local ws = window.workspace
-              if ws then
-                if not windows_by_workspace[ws] then
-                  windows_by_workspace[ws] = { icons = {} }
+              local workspace = window.workspace
+              if workspace then
+                if not windows_by_workspace[workspace] then
+                  windows_by_workspace[workspace] = { icons = {} }
                 end
-                table.insert(windows_by_workspace[ws].icons, icons.get_app_icon(window["app-name"]))
+                table.insert(windows_by_workspace[workspace].icons, icons.get_app_icon(window["app-name"]))
               end
             end
           end
 
-          for ws_name, ws_data in pairs(workspace_items) do
-            local has_windows = windows_by_workspace[ws_name] and #windows_by_workspace[ws_name].icons > 0
-            local is_focused = (ws_name == focused_ws_name)
-
-            if not is_focused and not has_windows then
-              ws_data.item:set({ drawing = false })
-            else
-              local item_config = {
-                drawing = true,
-                display = ws_data.monitor,
-              }
-              local app_icons_str = (has_windows and table.concat(windows_by_workspace[ws_name].icons, " ")) or ""
-
-              if is_focused then
-                item_config.background = { color = theme_colors.highlighted_item_background }
-                item_config.icon = { color = theme_colors.highlighted_item_primary }
-                item_config.label = { string = app_icons_str, color = theme_colors.highlighted_item_primary }
-              else
-                item_config.background = { color = theme_colors.item_background }
-                item_config.icon = { color = theme_colors.item_primary }
-                item_config.label = { string = app_icons_str, color = theme_colors.item_primary }
-              end
-
-              ws_data.item:set(item_config)
-            end
-          end
+          update_workspace_styling(focused_workspace_name, windows_by_workspace)
         end
       )
     end
