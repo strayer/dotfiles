@@ -145,23 +145,14 @@ local function update_all_workspaces()
 end
 
 sbar.exec(
-  'aerospace list-workspaces --all --format "%{workspace},%{monitor-appkit-nsscreen-screens-id}"',
-  function(result)
-    if not result or result == "" then
+  'aerospace list-workspaces --all --format "%{workspace},%{monitor-appkit-nsscreen-screens-id},%{workspace-is-focused}"',
+  function(workspaces_result)
+    if not workspaces_result or workspaces_result == "" then
       print("Error: Failed to get aerospace workspaces list for initialization.")
       return
     end
 
-    local lines = utils.split(utils.trim(result), "\n")
-    for _, line in ipairs(lines) do
-      local parts = utils.split(line, ",")
-      local ws_name = utils.trim(parts[1])
-      local monitor_id = (parts[2] and utils.trim(parts[2]):match("^%d+$")) or "1"
-
-      if ws_name and ws_name ~= "" then
-        create_workspace_item(ws_name, monitor_id)
-      end
-    end
+    sync_workspace_items(workspaces_result)
 
     -- Always create event handler regardless of initial workspace state to fix startup race conditions
     local event_handler = sbar.add("item", "aerospace_event_handler", { drawing = false, updates = "on" })
