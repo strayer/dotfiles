@@ -30,10 +30,12 @@ end
 
 # Local software & scripts
 fish_add_path "$HOME/.local/bin"
-fish_add_path --move --prepend "$HOME/.bin"
 
 # python poetry
 fish_add_path "$HOME/.poetry/bin"
+
+# more up to date cURL
+fish_add_path /opt/homebrew/opt/curl/bin
 
 # Homebrew
 if type -q brew
@@ -161,3 +163,11 @@ end
 if test -e "$HOME/.orbstack/shell/init2.fish"
   source ~/.orbstack/shell/init2.fish 2>/dev/null || :
 end
+
+# Added by LM Studio; command-line tools
+if test -e "$HOME/.cache/lm-studio/bin"
+  fish_add_path "$HOME/.cache/lm-studio/bin"
+end
+
+# Add ~/.bin last to have it as the highest priority in PATH
+fish_add_path --move --prepend "$HOME/.bin"
