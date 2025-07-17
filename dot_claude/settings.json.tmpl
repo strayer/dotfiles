@@ -1,18 +1,18 @@
 {
+{{- if and (eq .claude_code_use_vertex "true") (eq .claude_code_vertex_auth_method "litellm") }}
   "apiKeyHelper": "~/.bin/get-claude-code-api-key",
+{{- end }}
   "env": {
     "DISABLE_TELEMETRY": "1",
     "DISABLE_BUG_COMMAND": "1",
     "DISABLE_ERROR_REPORTING": "1",
     "DISABLE_PROMPT_CACHING": "0",
-    "DISABLE_AUTOUPDATER": "1",
-{{- if eq .claude_code_use_vertex "true" }}
-    "ANTHROPIC_VERTEX_BASE_URL": "{{ .claude_code_vertex_base_url }}",
+    "DISABLE_AUTOUPDATER": "1"{{- if eq .claude_code_use_vertex "true" }},
     "CLOUD_ML_REGION": "{{ .claude_code_vertex_location }}",
     "ANTHROPIC_VERTEX_PROJECT_ID": "{{ .claude_code_vertex_project_id }}",
-    "CLAUDE_CODE_SKIP_VERTEX_AUTH": "1",
-    "CLAUDE_CODE_USE_VERTEX": "1"
-{{- end }}
+    "CLAUDE_CODE_USE_VERTEX": "1"{{- if eq .claude_code_vertex_auth_method "litellm" }},
+    "ANTHROPIC_VERTEX_BASE_URL": "{{ .claude_code_vertex_base_url }}",
+    "CLAUDE_CODE_SKIP_VERTEX_AUTH": "1"{{- end }}{{- end }}
   },
   "includeCoAuthoredBy": false,
   "permissions": {
