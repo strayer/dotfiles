@@ -1,3 +1,10 @@
+{{- if stat (joinPath .chezmoi.homeDir ".orbstack" "ssh" "config") -}}
+# Added by OrbStack: 'orb' SSH host for Linux machines
+# This only works if it's at the top of ssh_config (before any Host blocks).
+# Comment this line if you don't want it to be added again.
+Include ~/.orbstack/ssh/config
+
+{{ end -}}
 Include config.d/*
 
 Host *
@@ -11,4 +18,9 @@ Host *
   MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
   Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
 
-  IdentityAgent /Users/strayer/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh
+{{- if ne .chezmoi.hostname "CO-MBP-KC9KQV64V3" }}
+{{- if stat (joinPath .chezmoi.homeDir "Library" "Containers" "com.maxgoedjen.Secretive.SecretAgent" "Data" "socket.ssh") }}
+
+  IdentityAgent {{ .chezmoi.homeDir }}/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh
+{{- end }}
+{{- end }}
