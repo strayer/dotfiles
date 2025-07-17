@@ -65,6 +65,12 @@ brew "tflint"
 brew "yaml-language-server"
 brew "yamllint"
 
+# terminal entertainment
+brew "asciiquarium"
+brew "cbonsai"
+brew "lolcat"
+brew "pipes-sh"
+
 # various tools (I should split this into sections...)
 brew "age"
 brew "age-plugin-se"
@@ -117,7 +123,6 @@ brew "jpegoptim"
 brew "jq"
 brew "just"
 brew "lftp"
-brew "lolcat"
 brew "lsd"
 brew "mise"
 brew "mosh"
