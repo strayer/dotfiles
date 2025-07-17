@@ -156,3 +156,8 @@ if status --is-interactive
     abbr --add --global aie gh copilot suggest
   end
 end
+
+# Added by OrbStack: command-line tools and integration
+if test -e "$HOME/.orbstack/shell/init2.fish"
+  source ~/.orbstack/shell/init2.fish 2>/dev/null || :
+end
