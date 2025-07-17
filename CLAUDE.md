@@ -42,6 +42,14 @@ brew search <term>                   # Search for packages by name or descriptio
 brew bundle cleanup --file Brewfile  # Show packages installed but missing from this repository's Brewfile
 ```
 
+### Homebrew Automation
+```bash
+brew autoupdate start [interval] [options]  # Start automatic Homebrew updates via launchd
+brew autoupdate stop                         # Stop autoupdating but retain logs
+brew autoupdate status                       # Check current autoupdate status
+brew autoupdate logs                         # View autoupdate logs
+```
+
 ## Architecture & Environment Detection
 
 ### Hostname-Based Configuration
@@ -91,6 +99,7 @@ is_home = (hostname == "yobuko")
 
 #### Package Organization
 - **Custom taps**: Specialized repositories for tools not in homebrew-core
+  - `domt4/autoupdate`: Automatic Homebrew updates via launchd background service
 - **Fonts**: Nerd fonts and typography packages for terminal/editor use
 - **Linters/formatters/LSPs**: Development tools for code quality and IDE integration
 - **Terminal entertainment**: Fun terminal applications (asciiquarium, cbonsai, lolcat, pipes-sh)

@@ -9,6 +9,9 @@ tap "homebrew/services"
 # mas
 brew "mas"
 
+# homebrew autoupdate
+tap "domt4/autoupdate"
+
 # speedtest-cli
 tap "teamookla/speedtest"
 brew "teamookla/speedtest/speedtest"
