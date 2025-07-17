@@ -1,6 +1,6 @@
 {{- $email := promptStringOnce . "email" "Email address" -}}
 {{- $atuin_sync_server := promptStringOnce . "atuin_sync_server" "Atuin Sync Server (https://...)" -}}
-{{- $mealplan_url := promptStringOnce . "mealplan" "Mealplan URL" -}}
+{{- $mealplan_url := promptStringOnce . "mealplan_url" "Mealplan URL" -}}
 
 {{- $claude_code_use_vertex := promptBoolOnce . "claude_code_use_vertex" "Use Vertex AI in Claude Code?" true -}}
 {{- $claude_code_vertex_auth_method := "" -}}
