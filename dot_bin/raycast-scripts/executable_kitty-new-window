@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Kitty (new window)
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon images/kitty.png
+
+kitty --single-instance -d $HOME

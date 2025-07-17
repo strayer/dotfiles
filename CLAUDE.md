@@ -35,6 +35,14 @@ secretive-ssh-keygen [args]          # SSH key generation using Secretive app
 restart-gpg-agent.fish               # GPG agent management for multi-user conflicts
 ```
 
+### Raycast Scripts (in ~/.bin/raycast-scripts/)
+```bash
+firefox-new-window                   # Open new Firefox Developer Edition window
+ghostty-new-window                   # Open new Ghostty terminal window (AppleScript)
+kitty-new-window                     # Open new Kitty terminal window with single-instance mode
+reload-sketchybar                    # Reload SketchyBar configuration for development
+```
+
 ### Homebrew Package Discovery
 ```bash
 brew info <package>                  # Get detailed information about a package (description, dependencies, installation status)
@@ -172,6 +180,7 @@ launchctl load ~/Library/LaunchAgents/com.user.darkmode.plist
   - `atuin`: Command history settings
   - `chezmoi`: Dotfiles management
   - `bin`: Custom scripts in ~/.bin/
+  - `raycast`: Raycast launcher scripts
 - Type usage patterns:
   - `feat`: New features or additions (most common)
   - `fix`: Bug fixes or corrections
