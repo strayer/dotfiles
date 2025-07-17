@@ -35,6 +35,13 @@ secretive-ssh-keygen [args]          # SSH key generation using Secretive app
 restart-gpg-agent.fish               # GPG agent management for multi-user conflicts
 ```
 
+### Homebrew Package Discovery
+```bash
+brew info <package>                  # Get detailed information about a package (description, dependencies, installation status)
+brew search <term>                   # Search for packages by name or description
+brew bundle cleanup --file Brewfile  # Show packages installed but missing from this repository's Brewfile
+```
+
 ## Architecture & Environment Detection
 
 ### Hostname-Based Configuration
@@ -70,6 +77,43 @@ Sophisticated automated theme switching with cross-application coordination:
 - **Package management**: Comprehensive Brewfile (260+ work packages, 290+ home packages) with custom taps, MAS automation, and environment-specific tool sets
 - **Karabiner**: Custom keyboard modifications in `private_karabiner/`
 - **LaunchAgent automation**: Automated theme switching and system integration services
+
+### Brewfile Structure & Management
+
+The Brewfile uses hostname-based conditional logic to manage different package sets across environments:
+
+#### Environment Detection
+```ruby
+hostname = `hostname -s`.strip
+is_work = (hostname == "CO-MBP-KC9KQV64V3")
+is_home = (hostname == "yobuko")
+```
+
+#### Package Organization
+- **Custom taps**: Specialized repositories for tools not in homebrew-core
+- **Fonts**: Nerd fonts and typography packages for terminal/editor use
+- **Linters/formatters/LSPs**: Development tools for code quality and IDE integration
+- **Terminal entertainment**: Fun terminal applications (asciiquarium, cbonsai, lolcat, pipes-sh)
+- **Various tools**: General CLI utilities (should be split into more specific categories)
+- **Neovim-related**: Editor-specific dependencies
+- **Git tools**: Enhanced Git workflow utilities
+- **Container tools**: Docker/container management utilities
+- **Keyboard tools**: QMK/hardware development dependencies
+
+#### Environment-Specific Packages
+- **Work machine** (`is_work`): Enterprise tools (Azure CLI, Heroku, Terraform utilities, browser testing)
+- **Home machine** (`is_home`): Personal tools (gaming, 3D printing, home automation, creative software)
+
+#### Mac App Store Integration
+Uses `mas` command for App Store applications with specific app IDs, also environment-conditional.
+
+#### Adding New Packages
+1. Use `brew search` to find package names
+2. Use `brew info` to understand package purpose and dependencies
+3. Place in appropriate category or create new category if needed
+4. Consider if package should be universal, work-only, or home-only
+5. For custom taps, add tap declaration before the package
+6. Update package counts in documentation when adding significant numbers
 
 ### Security & Privacy
 - **GPG configuration**: Agent settings with multi-user conflict resolution and smart card support
