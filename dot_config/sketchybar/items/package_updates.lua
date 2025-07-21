@@ -95,7 +95,7 @@ local function update_package_updates()
   update_in_progress = true
 
   -- Execute combined command to get both brew and mise results
-  sbar.exec("echo '{\"brew\":'; brew outdated --json; echo ',\"mise\":'; mise outdated --json 2>/dev/null; echo '}'", function(combined_result, exit_code)
+  sbar.exec("~/.bin/outdated-packages.sh", function(combined_result, exit_code)
     local results = {}
     if exit_code == 0 and combined_result then
       local parsed = combined_result
@@ -122,4 +122,3 @@ package_updates:subscribe("forced", update_package_updates)
 
 -- Initial update
 update_package_updates()
-
