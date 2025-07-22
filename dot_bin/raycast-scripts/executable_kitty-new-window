@@ -8,4 +8,8 @@
 # Optional parameters:
 # @raycast.icon images/kitty.png
 
-kitty --single-instance -d $HOME
+if pgrep -U "$(id -u)" -x kitty >/dev/null; then
+  kitty --single-instance -d "$HOME"
+else
+  open -a "/Applications/kitty.app"
+fi
