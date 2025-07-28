@@ -109,7 +109,7 @@ if status --is-interactive
       brew up; or return
       brew upgrade; or return
       test "$os" = "Darwin"; and brew upgrade --cask
-      if type -e $HOME/.bin/outdated-packages.sh
+      if test -e $HOME/.bin/outdated-packages.sh
         echo "Pruning outdated-packages cache"
         $HOME/.bin/outdated-packages.sh prune
       end
