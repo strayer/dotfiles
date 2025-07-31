@@ -118,6 +118,16 @@ local catppuccin_mocha = {
 M.white = 0xffffffff
 M.transparent = 0x00000000
 
+-- Helper function to set alpha channel for colors
+function M.with_alpha(color, alpha)
+  -- alpha should be between 0.0 and 1.0
+  -- Convert alpha to 8-bit value (0-255)
+  local alpha_8bit = math.floor(alpha * 255)
+  -- Extract RGB components and combine with new alpha
+  local rgb = color & 0x00FFFFFF
+  return (alpha_8bit << 24) | rgb
+end
+
 -- Current theme cache
 local current_theme = "dark" -- Default to dark theme
 local theme_colors = {}
@@ -140,15 +150,15 @@ end
 function M.update_theme_colors()
   -- Re-detect the current theme first
   detect_system_theme_sync()
-  
+
   if current_theme == "light" then
     -- Light theme colors (Catppuccin Latte)
     theme_colors = {
       warning = catppuccin_latte.peach,
       critical = catppuccin_latte.red,
       bar_background = M.transparent,
-      item_background = catppuccin_latte.mantle,
-      highlighted_item_background = catppuccin_latte.mantle,
+      item_background = M.with_alpha(catppuccin_latte.mantle, 0.8),
+      highlighted_item_background = M.with_alpha(catppuccin_latte.mantle, 0.8),
       item_primary = catppuccin_latte.text,
       highlighted_item_primary = catppuccin_latte.blue,
     }
@@ -158,8 +168,8 @@ function M.update_theme_colors()
       warning = catppuccin_mocha.peach,
       critical = catppuccin_mocha.red,
       bar_background = M.transparent,
-      item_background = catppuccin_mocha.surface0,
-      highlighted_item_background = catppuccin_mocha.surface0,
+      item_background = M.with_alpha(catppuccin_mocha.surface0, 0.5),
+      highlighted_item_background = M.with_alpha(catppuccin_mocha.surface0, 0.5),
       item_primary = catppuccin_mocha.lavender,
       highlighted_item_primary = catppuccin_mocha.sky,
     }
@@ -185,7 +195,7 @@ function M.get_palette(palette_name)
   elseif palette_name == "mocha" then
     return catppuccin_mocha
   else
-    return catppuccin_mocha  -- Default fallback
+    return catppuccin_mocha -- Default fallback
   end
 end
 
@@ -199,10 +209,10 @@ function M.get_item_colors(options)
   local theme_colors = M.get_colors()
   local config = {
     icon = { color = theme_colors.item_primary },
-    label = { color = theme_colors.item_primary }, 
+    label = { color = theme_colors.item_primary },
     background = { color = theme_colors.item_background },
   }
-  
+
   -- Handle semantic states
   if options then
     if options.state == "critical" then
@@ -217,7 +227,7 @@ function M.get_item_colors(options)
       config.background.color = theme_colors.highlighted_item_background
     end
   end
-  
+
   return config
 end
 
