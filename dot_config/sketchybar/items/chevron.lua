@@ -72,7 +72,7 @@ if settings.is_work_machine then
   })
 
   -- Subscribe to events
-  chevron:subscribe({ "routine", "forced", "mouse.clicked" }, update_chevron_label)
+  chevron:subscribe({ "routine", "theme_colors_updated", "mouse.clicked" }, update_chevron_label)
 
   -- Initial update
   update_chevron_label()

@@ -67,19 +67,8 @@ end
 
 -- Subscribe to events
 volume:subscribe("volume_change", handle_volume_change)
-volume:subscribe("theme_change", function()
-  local theme_colors = colors.get_colors()
-  volume:set({
-    icon = {
-      color = theme_colors.item_primary,
-    },
-    label = {
-      color = theme_colors.item_primary,
-    },
-    background = {
-      color = theme_colors.item_background,
-    },
-  })
+volume:subscribe("theme_colors_updated", function()
+  volume:set(colors.get_item_colors())
 end)
 
 -- No initial update needed - volume_change events will trigger updates

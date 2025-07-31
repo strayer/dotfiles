@@ -36,12 +36,12 @@ local function update_battery()
     -- Show battery if <= 95%
     battery:set({ drawing = true })
 
-    -- Determine color first (like original shell script)
-    local battery_color = colors.get_colors().item_primary
+    -- Determine state based on battery percentage
+    local state = nil
     if battery_percent <= 15 then
-      battery_color = colors.get_colors().critical
+      state = "critical"
     elseif battery_percent <= 45 then
-      battery_color = colors.get_colors().warning
+      state = "warning"
     end
 
     -- Determine battery icon based on percentage ranges (like original)
@@ -56,26 +56,24 @@ local function update_battery()
       battery_icon = icons.system.battery.low
     end
 
-    -- Check charging status and override icon/color if charging
+    -- Check charging status and override state if charging
     local is_charging = result:find("AC Power") ~= nil
     if is_charging then
       battery_icon = icons.system.battery.charging
-      battery_color = colors.get_colors().item_primary -- Like original shell script
+      state = nil -- Reset to normal state when charging
     end
 
     -- Generate progress bar
     local progress_bar = utils.generate_unicode_bar(battery_percent, 8)
 
-    battery:set({
-      icon = {
-        string = battery_icon,
-        color = battery_color,
-      },
-      label = {
-        string = progress_bar .. " " .. battery_percent .. "%",
-        color = battery_color,
-      },
+    -- Get base colors with state
+    local config = colors.get_item_colors({ state = state })
+    -- Add battery-specific properties
+    utils.merge_tables(config, {
+      icon = { string = battery_icon },
+      label = { string = progress_bar .. " " .. battery_percent .. "%" },
     })
+    battery:set(config)
   end)
 end
 
@@ -83,6 +81,7 @@ end
 battery:subscribe("power_source_change", update_battery)
 battery:subscribe("system_woke", update_battery)
 battery:subscribe("routine", update_battery)
+battery:subscribe("theme_colors_updated", update_battery)
 
 -- Initial update
 update_battery()

@@ -36,4 +36,16 @@ function M.format_time()
   return date, time
 end
 
+-- Deep merge two tables (target gets modified)
+function M.merge_tables(target, source)
+  for key, value in pairs(source) do
+    if type(value) == "table" and type(target[key]) == "table" then
+      M.merge_tables(target[key], value)
+    else
+      target[key] = value
+    end
+  end
+  return target
+end
+
 return M

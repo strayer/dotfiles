@@ -2,6 +2,7 @@
 
 local icons = require("lib.icons")
 local colors = require("lib.colors")
+local utils = require("lib.utils")
 local settings = require("lib.settings")
 
 -- Add package updates item to right side
@@ -16,8 +17,6 @@ local package_updates = sbar.add("item", "package_updates", {
   update_freq = settings.update_freq.package_updates,
   updates = true,
 })
-
-local update_in_progress = false
 
 -- Process package update results
 local function process_package_results(results)
@@ -55,12 +54,12 @@ local function process_package_results(results)
   -- Show item with update counts
   package_updates:set({ drawing = true })
 
-  -- Determine color based on update count
-  local update_color = theme_colors.item_primary
+  -- Determine state based on update count
+  local state = nil
   if total_count > 20 then
-    update_color = theme_colors.critical
+    state = "critical"
   elseif total_count > 10 then
-    update_color = theme_colors.warning
+    state = "warning"
   end
 
   -- Format label with counts
@@ -75,25 +74,17 @@ local function process_package_results(results)
     label_text = label_text .. "m:" .. mise_count
   end
 
-  package_updates:set({
-    icon = {
-      string = icons.system.package_updates,
-      color = update_color,
-    },
-    label = {
-      string = label_text,
-      color = update_color,
-    },
+  -- Get colors based on state and set properties
+  local config = colors.get_item_colors({ state = state })
+  utils.merge_tables(config, {
+    icon = { string = icons.system.package_updates },
+    label = { string = label_text },
   })
+  package_updates:set(config)
 end
 
 -- Update package updates display
 local function update_package_updates()
-  if update_in_progress then
-    return
-  end
-  update_in_progress = true
-
   -- Execute combined command to get both brew and mise results
   sbar.exec("~/.bin/outdated-packages.sh", function(combined_result, exit_code)
     local results = {}
@@ -115,10 +106,15 @@ local function update_package_updates()
   end)
 end
 
+-- Handle theme changes
+local function handle_theme_change()
+  package_updates:set(colors.get_item_colors())
+end
+
 -- Subscribe to events
 package_updates:subscribe("system_woke", update_package_updates)
 package_updates:subscribe("routine", update_package_updates)
-package_updates:subscribe("forced", update_package_updates)
+package_updates:subscribe("theme_colors_updated", handle_theme_change)
 
 -- Initial update
 update_package_updates()

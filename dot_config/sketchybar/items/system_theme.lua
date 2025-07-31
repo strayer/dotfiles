@@ -11,9 +11,9 @@ local theme_handler = sbar.add("item", "theme_handler", {
 
 -- Handle theme changes
 theme_handler:subscribe("theme_change", function()
-  -- Update colors module
+  -- Update colors module first
   colors.update_theme_colors()
   
-  -- Force update all items by triggering a forced update
-  sbar.trigger("forced")
+  -- Then trigger a custom event for items to update
+  sbar.trigger("theme_colors_updated")
 end)

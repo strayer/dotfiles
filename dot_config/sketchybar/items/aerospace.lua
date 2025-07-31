@@ -162,7 +162,7 @@ sbar.exec(
       "display_change",
       "system_woke",
       "forced",
-      "theme_change",
+      "theme_colors_updated",
     }, update_all_workspaces)
 
     update_all_workspaces()

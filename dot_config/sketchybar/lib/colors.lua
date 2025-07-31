@@ -138,6 +138,9 @@ end
 
 -- Function to update theme colors based on current system theme
 function M.update_theme_colors()
+  -- Re-detect the current theme first
+  detect_system_theme_sync()
+  
   if current_theme == "light" then
     -- Light theme colors (Catppuccin Latte)
     theme_colors = {
@@ -189,6 +192,33 @@ end
 -- Function to get current theme name
 function M.get_current_theme()
   return current_theme
+end
+
+-- Helper function to get standard item color configuration
+function M.get_item_colors(options)
+  local theme_colors = M.get_colors()
+  local config = {
+    icon = { color = theme_colors.item_primary },
+    label = { color = theme_colors.item_primary }, 
+    background = { color = theme_colors.item_background },
+  }
+  
+  -- Handle semantic states
+  if options then
+    if options.state == "critical" then
+      config.icon.color = theme_colors.critical
+      config.label.color = theme_colors.critical
+    elseif options.state == "warning" then
+      config.icon.color = theme_colors.warning
+      config.label.color = theme_colors.warning
+    elseif options.state == "highlighted" then
+      config.icon.color = theme_colors.highlighted_item_primary
+      config.label.color = theme_colors.highlighted_item_primary
+      config.background.color = theme_colors.highlighted_item_background
+    end
+  end
+  
+  return config
 end
 
 -- Initialize theme detection synchronously
