@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Workaround script to find and close AeroSpace ghost windows
+# 
+# Ghost windows are phantom entries that appear in workspace listings even after
+# the actual application has been closed. They can interfere with window resizing
+# and workspace management. This issue seems to occur after repeatedly starting
+# and quitting applications, and may be related to macOS beta behavior.
+#
+# See: https://github.com/nikitabobko/AeroSpace/discussions/1471
+#
+# This script identifies ghost windows by their empty title field in the 
+# aerospace list-windows output and closes them using their window ID.
+#
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Close Aerospace Ghost Windows
+# @raycast.mode silent
+
+ghost_window_ids=$(aerospace list-windows --all | grep -e '.*|.*| $' | awk '{print $1}')
+
+for id in $ghost_window_ids; do
+  aerospace close --window-id $id
+done
+
+sketchybar --trigger aerospace_refresh
