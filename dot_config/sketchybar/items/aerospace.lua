@@ -5,8 +5,9 @@ local colors = require("lib.colors")
 local utils = require("lib.utils")
 local settings = require("lib.settings")
 
--- Register the custom event that will be triggered by an external script
+-- Register the custom events that will be triggered by external scripts
 sbar.add("event", "aerospace_workspace_change", "aerospace_workspace_change_event")
+sbar.add("event", "aerospace_refresh", "aerospace_refresh_event")
 
 -- Module state
 local workspace_items = {} -- Stores {item = sbar_item, monitor = monitor_id}
@@ -158,6 +159,7 @@ sbar.exec(
     local event_handler = sbar.add("item", "aerospace_event_handler", { drawing = false, updates = "on" })
     event_handler:subscribe({
       "aerospace_workspace_change",
+      "aerospace_refresh",
       "front_app_switched",
       "display_change",
       "system_woke",
