@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+options=(
+	width=4.0
+	active_color=0xff74c7ec
+	inactive_color=0xff000000
+)
+
+borders "${options[@]}"
