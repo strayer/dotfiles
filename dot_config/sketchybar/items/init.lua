@@ -17,4 +17,3 @@ local settings = require("lib.settings")
 if settings.is_work_machine then
   require("items.mealplan")
 end
-
