@@ -13,10 +13,8 @@
 {{-   $claude_code_vertex_base_url = promptStringOnce . "claude_code_vertex_base_url" "Claude Code Vertex Base URL" "http://localhost:4000/vertex_ai/v1" -}}
 {{- end -}}
 {{- $claude_code_vertex_project_id := "" -}}
-{{- $claude_code_vertex_location := "" -}}
 {{- if eq $claude_code_use_vertex true -}}
 {{-   $claude_code_vertex_project_id = promptStringOnce . "claude_code_vertex_project_id" "Claude Code Vertex Project ID" "" -}}
-{{-   $claude_code_vertex_location = promptStringOnce . "claude_code_vertex_location" "Claude Code Vertex Location" "us-east5" -}}
 {{- end -}}
 
 [data]
@@ -27,4 +25,3 @@
     claude_code_vertex_auth_method = {{ $claude_code_vertex_auth_method | quote }}
     claude_code_vertex_base_url = {{ $claude_code_vertex_base_url | quote }}
     claude_code_vertex_project_id = {{ $claude_code_vertex_project_id | quote }}
-    claude_code_vertex_location = {{ $claude_code_vertex_location | quote }}
