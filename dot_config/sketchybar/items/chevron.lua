@@ -37,12 +37,6 @@ if settings.is_work_machine then
     local label_color = theme_palette[random_entry.color_name]
     local background_color = theme_colors.item_background
 
-    if current_theme_name == "light" then
-      -- Swap colors for light mode
-      background_color = label_color
-      label_color = theme_colors.item_background
-    end
-
     -- Update the chevron item
     chevron:set({
       icon = {
@@ -78,25 +72,23 @@ if settings.is_work_machine then
   update_chevron_label()
 else
   -- On personal machines, show hostname with background and icon
-  
+
   -- Hostname override table for special display names
   local hostname_overrides = {
     ["yobuko"] = "よぶこ",
     -- Future overrides can be added here
   }
-  
+
   -- Get display name (override or actual hostname)
   local display_name = hostname_overrides[settings.hostname] or settings.hostname
-  
+
   -- Get current theme colors
   local theme_colors = colors.get_colors()
-  local current_theme_name = colors.get_current_theme()
-  local palette_name = (current_theme_name == "light") and "latte" or "mocha"
-  local theme_palette = colors.get_palette(palette_name)
-  
-  -- Use mauve color for a beautiful purple
-  local label_color = theme_palette.mauve
-  
+  local mocha_palette = colors.get_palette("mocha")
+
+  -- Use consistent mauve color from mocha palette for both themes
+  local label_color = mocha_palette.mauve
+
   chevron:set({
     icon = {
       string = icons.system.chevron,
@@ -116,15 +108,13 @@ else
       drawing = true,
     },
   })
-  
+
   -- Subscribe to theme updates to maintain color consistency
-  chevron:subscribe({"theme_colors_updated"}, function()
+  chevron:subscribe("theme_colors_updated", function()
     local updated_theme_colors = colors.get_colors()
-    local updated_theme_name = colors.get_current_theme()
-    local updated_palette_name = (updated_theme_name == "light") and "latte" or "mocha"
-    local updated_theme_palette = colors.get_palette(updated_palette_name)
-    local updated_label_color = updated_theme_palette.mauve
-    
+    local updated_mocha_palette = colors.get_palette("mocha")
+    local updated_label_color = updated_mocha_palette.mauve
+
     chevron:set({
       icon = { color = updated_label_color },
       label = { color = updated_label_color },

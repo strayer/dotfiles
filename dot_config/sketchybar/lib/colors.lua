@@ -156,22 +156,22 @@ function M.update_theme_colors()
     theme_colors = {
       warning = catppuccin_latte.peach,
       critical = catppuccin_latte.red,
-      bar_background = M.transparent,
-      item_background = M.with_alpha(catppuccin_latte.mantle, 0.8),
-      highlighted_item_background = M.with_alpha(catppuccin_latte.mantle, 0.8),
-      item_primary = catppuccin_latte.text,
+      bar_background = M.with_alpha(0x000000, 0.3),
+      item_background = M.transparent,
+      highlighted_item_background = M.with_alpha(catppuccin_latte.surface0, 0.8),
+      item_primary = catppuccin_latte.crust,
       highlighted_item_primary = catppuccin_latte.blue,
     }
   else
-    -- Dark theme colors (Catppuccin Mocha) - default
+    -- Dark theme colors (Catppuccin Mocha)
     theme_colors = {
       warning = catppuccin_mocha.peach,
       critical = catppuccin_mocha.red,
       bar_background = M.transparent,
-      item_background = M.with_alpha(catppuccin_mocha.surface0, 0.5),
-      highlighted_item_background = M.with_alpha(catppuccin_mocha.surface0, 0.5),
-      item_primary = catppuccin_mocha.lavender,
-      highlighted_item_primary = catppuccin_mocha.sky,
+      item_background = M.transparent,
+      highlighted_item_background = M.with_alpha(catppuccin_mocha.surface0, 0.7),
+      item_primary = catppuccin_mocha.subtext1,
+      highlighted_item_primary = catppuccin_mocha.text,
     }
   end
 end
@@ -206,25 +206,25 @@ end
 
 -- Helper function to get standard item color configuration
 function M.get_item_colors(options)
-  local theme_colors = M.get_colors()
+  local current_theme_colors = M.get_colors()
   local config = {
-    icon = { color = theme_colors.item_primary },
-    label = { color = theme_colors.item_primary },
-    background = { color = theme_colors.item_background },
+    icon = { color = current_theme_colors.item_primary },
+    label = { color = current_theme_colors.item_primary },
+    background = { color = current_theme_colors.item_background },
   }
 
   -- Handle semantic states
   if options then
     if options.state == "critical" then
-      config.icon.color = theme_colors.critical
-      config.label.color = theme_colors.critical
+      config.icon.color = current_theme_colors.critical
+      config.label.color = current_theme_colors.critical
     elseif options.state == "warning" then
-      config.icon.color = theme_colors.warning
-      config.label.color = theme_colors.warning
+      config.icon.color = current_theme_colors.warning
+      config.label.color = current_theme_colors.warning
     elseif options.state == "highlighted" then
-      config.icon.color = theme_colors.highlighted_item_primary
-      config.label.color = theme_colors.highlighted_item_primary
-      config.background.color = theme_colors.highlighted_item_background
+      config.icon.color = current_theme_colors.highlighted_item_primary
+      config.label.color = current_theme_colors.highlighted_item_primary
+      config.background.color = current_theme_colors.highlighted_item_background
     end
   end
 

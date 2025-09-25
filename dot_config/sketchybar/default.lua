@@ -12,7 +12,7 @@ sbar.default({
     font = {
       family = settings.font.text,
       style = "Bold",
-      size = 14.0
+      size = 14.0,
     },
     color = colors.get_colors().item_primary,
     padding_left = settings.paddings.icon_left,
@@ -21,8 +21,8 @@ sbar.default({
   label = {
     font = {
       family = settings.font.text,
-      style = "Bold", 
-      size = 14.0
+      style = "Bold",
+      size = 14.0,
     },
     color = colors.get_colors().item_primary,
     padding_left = settings.paddings.label_left,

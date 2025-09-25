@@ -23,7 +23,6 @@ local function update_clock()
   clock:set(item_colors)
 end
 
-
 -- Initial update
 update_clock()
 
@@ -31,4 +30,3 @@ update_clock()
 clock:subscribe("system_woke", update_clock)
 clock:subscribe("routine", update_clock)
 clock:subscribe("theme_colors_updated", update_clock)
-

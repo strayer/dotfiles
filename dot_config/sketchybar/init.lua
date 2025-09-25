@@ -4,4 +4,3 @@
 require("bar") -- Bar appearance configuration
 require("default") -- Default item styling
 require("items") -- All bar items
-

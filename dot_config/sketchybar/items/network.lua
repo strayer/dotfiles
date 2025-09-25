@@ -1,8 +1,6 @@
 -- items/network.lua - Network ping monitor
 
-local icons = require("lib.icons")
 local colors = require("lib.colors")
-local utils = require("lib.utils")
 local settings = require("lib.settings")
 
 -- Add network item to right side
@@ -34,7 +32,7 @@ local function update_network()
       if rtt then
         local rtt_num = tonumber(rtt)
         label_text = "rtt:" .. result
-        
+
         -- Determine state based on latency
         if rtt_num > 400 then
           state = "critical"

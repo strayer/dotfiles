@@ -18,9 +18,9 @@ local function handle_volume_change(env)
   if not volume_level then
     return
   end
-  
+
   -- Determine volume icon based on volume level (like original shell script)
-  local volume_icon = icons.system.volume.muted
+  local volume_icon
   if volume_level >= 60 then
     volume_icon = icons.system.volume.high
   elseif volume_level >= 30 then
@@ -30,18 +30,20 @@ local function handle_volume_change(env)
   else -- volume_level == 0
     volume_icon = icons.system.volume.muted
   end
-  
+
   -- Generate progress bar or empty label (like original shell script)
   local bar_label = ""
   if volume_level > 0 then
     local progress_bar = utils.generate_unicode_bar(volume_level, 8)
     bar_label = progress_bar .. " " .. volume_level .. "%"
   end
-  
-  -- Set icon and label with appropriate padding (like original shell script)
+
+  -- Set icon and label with appropriate padding
+  local config = colors.get_item_colors()
+
   if bar_label == "" then
     -- No label - extra icon padding
-    volume:set({
+    utils.merge_tables(config, {
       icon = {
         string = volume_icon,
         padding_right = 7,
@@ -52,7 +54,7 @@ local function handle_volume_change(env)
     })
   else
     -- Has label - normal icon padding
-    volume:set({
+    utils.merge_tables(config, {
       icon = {
         string = volume_icon,
         padding_right = 4,
@@ -63,6 +65,8 @@ local function handle_volume_change(env)
       },
     })
   end
+
+  volume:set(config)
 end
 
 -- Subscribe to events

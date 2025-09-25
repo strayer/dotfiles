@@ -17,10 +17,19 @@ local function create_workspace_item(workspace_name, monitor_id)
 
   local workspace_item = sbar.add("item", item_name, {
     position = "left",
-    icon = { string = workspace_name },
+    icon = {
+      string = workspace_name,
+      padding_left = 8,
+      padding_right = 2,
+    },
     label = {
       font = { family = settings.font.app_icons, style = "Regular", size = 16.0 },
       drawing = true,
+      padding_right = 8,
+    },
+    background = {
+      corner_radius = 16,
+      height = 24,
     },
   })
 
@@ -32,7 +41,8 @@ local function create_workspace_item(workspace_name, monitor_id)
   return workspace_item
 end
 
----@param workspaces_data table[] Aerospace workspace data with workspace, monitor-appkit-nsscreen-screens-id, workspace-is-focused fields
+---@param workspaces_data table[] Aerospace workspace data with workspace,
+---                               monitor-appkit-nsscreen-screens-id, workspace-is-focused fields
 ---@return string|nil focused_workspace_name The name of the currently focused workspace
 local function sync_workspace_items(workspaces_data)
   local current_workspaces = {}
@@ -91,20 +101,34 @@ local function update_workspace_styling(focused_workspace_name, windows_by_works
       if not is_focused and not has_windows then
         sbar.set(workspace_data.item_name, { drawing = false })
       else
+        local app_icons_str = (has_windows and table.concat(windows_by_workspace[workspace_name].icons, " ")) or ""
         local item_config = {
           drawing = true,
           display = workspace_data.monitor,
+          icon = {
+            padding_left = 8,
+            padding_right = 2,
+          },
+          label = {
+            string = app_icons_str,
+            padding_right = 8,
+          },
         }
-        local app_icons_str = (has_windows and table.concat(windows_by_workspace[workspace_name].icons, " ")) or ""
 
         if is_focused then
-          item_config.background = { color = theme_colors.highlighted_item_background }
-          item_config.icon = { color = theme_colors.highlighted_item_primary }
-          item_config.label = { string = app_icons_str, color = theme_colors.highlighted_item_primary }
+          -- Focused workspace gets highlighted background
+          item_config.background = {
+            color = theme_colors.highlighted_item_background,
+            corner_radius = 16,
+            height = 24,
+          }
+          item_config.icon.color = theme_colors.highlighted_item_primary
+          item_config.label.color = theme_colors.highlighted_item_primary
         else
+          -- Unfocused workspaces with windows are transparent
           item_config.background = { color = theme_colors.item_background }
-          item_config.icon = { color = theme_colors.item_primary }
-          item_config.label = { string = app_icons_str, color = theme_colors.item_primary }
+          item_config.icon.color = theme_colors.item_primary
+          item_config.label.color = theme_colors.item_primary
         end
 
         sbar.set(workspace_data.item_name, item_config)

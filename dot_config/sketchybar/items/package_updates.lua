@@ -2,7 +2,6 @@
 
 local icons = require("lib.icons")
 local colors = require("lib.colors")
-local utils = require("lib.utils")
 local settings = require("lib.settings")
 
 -- Add package updates item to right side
@@ -20,9 +19,6 @@ local package_updates = sbar.add("item", "package_updates", {
 
 -- Process package update results
 local function process_package_results(results)
-  update_in_progress = false
-
-  local theme_colors = colors.get_colors()
   local mise_count = 0
   local brew_count = 0
 
@@ -76,10 +72,8 @@ local function process_package_results(results)
 
   -- Get colors based on state and set properties
   local config = colors.get_item_colors({ state = state })
-  utils.merge_tables(config, {
-    icon = { string = icons.system.package_updates },
-    label = { string = label_text },
-  })
+  config.icon = { string = icons.system.package_updates }
+  config.label = { string = label_text }
   package_updates:set(config)
 end
 

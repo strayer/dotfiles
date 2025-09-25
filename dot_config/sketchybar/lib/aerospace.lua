@@ -148,4 +148,3 @@ function Aerospace:list_all_windows(cb)
 end
 
 return Aerospace
-

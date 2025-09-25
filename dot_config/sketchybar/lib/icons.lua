@@ -445,4 +445,3 @@ function M.get_all_app_icons()
 end
 
 return M
-

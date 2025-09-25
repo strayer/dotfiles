@@ -48,4 +48,10 @@ function M.merge_tables(target, source)
   return target
 end
 
+-- Timestamped logging function
+function M.log(...)
+  local timestamp = os.date("[%Y-%m-%d %H:%M:%S]")
+  print(timestamp, ...)
+end
+
 return M

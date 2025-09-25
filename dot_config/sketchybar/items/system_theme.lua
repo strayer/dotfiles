@@ -13,7 +13,7 @@ local theme_handler = sbar.add("item", "theme_handler", {
 theme_handler:subscribe("theme_change", function()
   -- Update colors module first
   colors.update_theme_colors()
-  
+
   -- Then trigger a custom event for items to update
   sbar.trigger("theme_colors_updated")
 end)
