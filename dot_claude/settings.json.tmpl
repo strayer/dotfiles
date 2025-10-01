@@ -1,5 +1,5 @@
 {
-{{- if and (eq .claude_code_use_vertex "true") (eq .claude_code_vertex_auth_method "litellm") }}
+{{- if and (eq .claude_code_provider "vertex") (eq .claude_code_vertex_auth_method "litellm") }}
   "apiKeyHelper": "~/.bin/get-claude-code-api-key",
 {{- end }}
   "env": {
@@ -7,7 +7,12 @@
     "DISABLE_BUG_COMMAND": "1",
     "DISABLE_ERROR_REPORTING": "1",
     "DISABLE_PROMPT_CACHING": "0",
-    "DISABLE_AUTOUPDATER": "1"{{- if eq .claude_code_use_vertex "true" }},
+    "DISABLE_AUTOUPDATER": "1"{{- if eq .claude_code_provider "bedrock" }},
+    "CLAUDE_CODE_USE_BEDROCK": "1",
+    "AWS_REGION": "eu-central-1",
+    "ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION": "us-east-1",
+    "AWS_PROFILE": "{{ .claude_code_bedrock_profile }}",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "eu.anthropic.claude-sonnet-4-5-20250929-v1:0"{{- else if eq .claude_code_provider "vertex" }},
     "CLOUD_ML_REGION": "global",
     "VERTEX_REGION_CLAUDE_4_0_SONNET": "europe-west1",
     "ANTHROPIC_VERTEX_PROJECT_ID": "{{ .claude_code_vertex_project_id }}",
