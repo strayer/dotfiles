@@ -19,8 +19,13 @@
 {{-   $claude_code_vertex_project_id = promptStringOnce . "claude_code_vertex_project_id" "Claude Code Vertex Project ID" "" -}}
 {{- end -}}
 
-{{- $claude_code_bedrock_profile := "" -}}
+{{- $claude_code_bedrock_auth_method := "" -}}
 {{- if eq $claude_code_provider "bedrock" -}}
+{{-   $auth_choices := list "aws_profile" "api_key" -}}
+{{-   $claude_code_bedrock_auth_method = promptChoiceOnce . "claude_code_bedrock_auth_method" "Bedrock authentication method" $auth_choices -}}
+{{- end -}}
+{{- $claude_code_bedrock_profile := "" -}}
+{{- if and (eq $claude_code_provider "bedrock") (eq $claude_code_bedrock_auth_method "aws_profile") -}}
 {{-   $claude_code_bedrock_profile = promptStringOnce . "claude_code_bedrock_profile" "AWS profile for Bedrock" "bedrock" -}}
 {{- end -}}
 
@@ -32,4 +37,5 @@
     claude_code_vertex_auth_method = {{ $claude_code_vertex_auth_method | quote }}
     claude_code_vertex_base_url = {{ $claude_code_vertex_base_url | quote }}
     claude_code_vertex_project_id = {{ $claude_code_vertex_project_id | quote }}
+    claude_code_bedrock_auth_method = {{ $claude_code_bedrock_auth_method | quote }}
     claude_code_bedrock_profile = {{ $claude_code_bedrock_profile | quote }}
