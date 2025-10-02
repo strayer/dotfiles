@@ -7,11 +7,13 @@ local socket = require("posix.sys.socket")
 local unistd = require("posix.unistd")
 local cjson = require("cjson")
 local simdjson = require("simdjson")
+local utils = require("lib.utils")
 
 local DEFAULT = {
   SOCK_FMT = "/tmp/bobko.aerospace-%s.sock",
   MAX_BUF = 2048,
   EXT_BUF = 8192,
+  TIMEOUT_SEC = 1, -- Socket read timeout in seconds
 }
 local ERR = {
   SOCKET = "socket error",
@@ -48,6 +50,10 @@ local function connect(path)
     close(fd)
     error("cannot connect to " .. path)
   end
+
+  -- Set socket timeout to prevent infinite blocking on read
+  socket.setsockopt(fd, socket.SOL_SOCKET, socket.SO_RCVTIMEO, DEFAULT.TIMEOUT_SEC, 0)
+
   return fd
 end
 
@@ -98,12 +104,41 @@ function Aerospace:_query(args, want_json, big)
   write(self.fd, payload)
 
   local raw = read(self.fd, big and DEFAULT.EXT_BUF or DEFAULT.MAX_BUF)
+  if not raw or #raw == 0 then
+    error("Socket read timeout or empty response")
+  end
+
   local out = stdout(raw)
   return want_json and decode(out) or out
 end
 
 local function passthrough(self, argtbl, json, big, cb)
-  local res = self:_query(argtbl, json, big)
+  -- Wrap in pcall to catch socket errors and always fire callback
+  local ok, res = pcall(function()
+    return self:_query(argtbl, json, big)
+  end)
+
+  if not ok then
+    utils.log("Aerospace socket error:", res)
+
+    -- Try to reconnect once on socket errors
+    local reconnect_ok = pcall(function()
+      self:reconnect()
+    end)
+
+    if reconnect_ok then
+      utils.log("Aerospace socket reconnected successfully")
+    else
+      utils.log("Aerospace socket reconnection failed")
+    end
+
+    if cb then
+      cb(nil) -- Fire callback with nil on error to prevent hangs
+      return nil
+    end
+    error(res) -- Re-throw if no callback (synchronous call)
+  end
+
   return cb and cb(res) or res
 end
 
