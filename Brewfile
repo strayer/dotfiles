@@ -106,6 +106,7 @@ brew "fd"
 brew "findutils"
 brew "fish"
 brew "fzf"
+brew "glow"  # CLI markdown viewer
 brew "gnu-sed"
 brew "gnu-tar"
 brew "go"
@@ -162,6 +163,7 @@ brew "rsync"
 brew "sevenzip"
 brew "shellcheck"
 brew "socat"
+brew "sops"
 brew "starship"
 brew "svgo"
 brew "taglib"
@@ -204,8 +206,6 @@ brew "dfu-util"
 cask "android-studio"
 cask "app-tamer"
 cask "avidemux"
-cask "betterdisplay"
-cask "bettertouchtool"
 cask "brave-browser@beta"
 cask "bruno"
 cask "clop"
@@ -223,15 +223,11 @@ cask "iina"
 cask "inkscape"
 cask "iterm2"
 cask "karabiner-elements"
-cask "keka"
-cask "kekaexternalhelper"
 cask "kitty"
 cask "lm-studio"
 cask "logitune"
-cask "marta"
 cask "mediainfo"
 cask "mitmproxy"
-cask "neovide-app"
 cask "obsidian"
 cask "orbstack"
 cask "p4v"
@@ -241,7 +237,6 @@ cask "qlmarkdown"
 cask "raycast"
 cask "secretive"
 cask "shottr"
-cask "skim"
 cask "spotify"
 cask "steermouse"
 cask "swiftdefaultappsprefpane"
@@ -259,7 +254,6 @@ mas "Bitwarden", id: 1352778147
 mas "Color Picker", id: 1545870783
 mas "Discovery", id: 1381004916
 mas "Microsoft Remote Desktop", id: 1295203466
-mas "Negative", id: 1378123825 # Dark mode for PDFs
 
 if is_work then
   tap "heroku/brew"
@@ -282,7 +276,6 @@ if is_work then
 
   cask "anypointstudio"
   cask "deepl"
-  cask "flameshot"
   cask "firefox@nightly"
   cask "google-chrome"
   cask "jabra-direct"
@@ -310,37 +303,26 @@ if is_home then
   cask "android-platform-tools"
   cask "autodesk-fusion"
   cask "balenaetcher"
-  cask "bambu-studio"
-  cask "betterzip"
   cask "calibre"
-  cask "diffusionbee"
   cask "discord"
-  cask "flux-app"
   cask "freecad"
-  cask "itsycal"
   cask "kicad"
   cask "macfuse"
+  cask "microsoft-auto-update"
+  cask "microsoft-excel"
   cask "mqtt-explorer"
-  cask "mumble"
-  cask "obs"
   cask "openmw"
   cask "openscad"
   cask "orcaslicer"
-  cask "parsec"
   cask "plex"
-  cask "prismlauncher"
-  cask "prusaslicer"
   cask "raspberry-pi-imager"
   cask "signal"
   cask "steam"
   cask "syncthing-app"
   cask "tailscale-app"
   cask "thunderbird@beta"
-  cask "todoist-app"
   cask "tor-browser"
   cask "veracrypt"
-  cask "vmware-fusion"
-  cask "yubico-yubikey-manager"
 
   mas "1Password for Safari", id: 1569813296
   mas "Brother P-touch Editor", id: 1453365242
@@ -349,7 +331,6 @@ if is_home then
   mas "Goodnotes", id: 1444383602
   mas "Home Assistant", id: 1099568401
   mas "OneDrive", id: 823766827
-  mas "Prime Video", id: 545519333
   mas "Telegram", id: 747648890
   mas "WireGuard", id: 1451685025
 end
