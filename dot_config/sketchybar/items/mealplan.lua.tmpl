@@ -35,12 +35,15 @@ local FOOD_TYPE_ICONS = {
 }
 
 -- Create main mealplan item first
-local mealplan = sbar.add("item", "mealplan", {
+local mealplan = sbar.add("item", "right.mealplan", {
   position = "right",
   icon = {
-    padding_left = 5,
+    padding_left = 7,
   },
   update_freq = 60,
+  popup = {
+    align = "center",
+  },
 })
 
 -- Module state
@@ -48,6 +51,8 @@ local M = {
   popup_items = {},
   meals = nil, -- In-memory store for meal data
   last_fetch_date = nil, -- The date of the last successful fetch
+  friday_dessert = nil, -- Friday's grand dessert
+  last_friday_fetch_date = nil, -- The date of the last Friday dessert fetch
 }
 
 -- HTTP client with lua-http
@@ -117,6 +122,53 @@ local function filter_and_process_meals(api_data)
   return filtered_meals
 end
 
+-- Get next Friday's date (or this Friday if today is not Friday)
+local function get_next_friday_date()
+  local today = os.time()
+  local weekday = tonumber(os.date("%w", today)) -- 0=Sunday, ..., 6=Saturday, 5=Friday
+  
+  if weekday == 5 then -- Today is Friday
+    return nil -- Don't show Friday dessert on Friday itself
+  end
+  
+  -- Calculate days until next Friday
+  local days_until_friday = (5 - weekday) % 7
+  if days_until_friday == 0 then
+    days_until_friday = 7 -- Next Friday is in a week
+  end
+  
+  local friday_time = today + (days_until_friday * 24 * 60 * 60)
+  return os.date("%Y-%m-%d", friday_time)
+end
+
+-- Find GRAND_DESSERT from Friday's meal data
+local function find_friday_dessert(api_data, friday_date)
+  if not api_data or #api_data == 0 or not friday_date then
+    return nil
+  end
+  
+  -- Find Friday's data in API response
+  local friday_items = {}
+  for _, day_data in ipairs(api_data) do
+    if day_data.date == friday_date then
+      friday_items = day_data.items or {}
+      break
+    end
+  end
+  
+  -- Look for GRAND_DESSERT
+  for _, meal in ipairs(friday_items) do
+    if meal.food_type == "GRAND_DESSERT" then
+      return {
+        name = (meal.short_name ~= cjson.null and meal.short_name) or meal.name or "Unknown Dessert",
+        price = string.format("%.2f", tonumber(meal.price) or 0),
+      }
+    end
+  end
+  
+  return nil
+end
+
 -- Invalidation strategy
 local function should_fetch_new_data()
   local today_str = os.date("%Y-%m-%d")
@@ -139,6 +191,21 @@ local function should_fetch_new_data()
 
   -- We have data for today, no need to refetch
   return false
+end
+
+-- Check if we should fetch Friday dessert data
+local function should_fetch_friday_dessert()
+  local friday_date = get_next_friday_date()
+  if not friday_date then
+    return false -- Today is Friday, don't fetch
+  end
+  
+  -- Always fetch if we have no Friday data or if the Friday date changed
+  if not M.friday_dessert or M.last_friday_fetch_date ~= friday_date then
+    return true, friday_date
+  end
+  
+  return false, friday_date
 end
 
 -- Display system
@@ -182,6 +249,29 @@ local function update_display(meals)
       })
       table.insert(M.popup_items, popup_item)
     end
+    
+    -- Add Friday dessert if available
+    if M.friday_dessert then
+      -- Add separator with title
+      local separator_item = sbar.add("item", "dessert_separator", {
+        position = "popup." .. mealplan.name,
+        icon = { drawing = false },
+        label = { string = "✦ ── Freitagsdessert ── ✦", color = theme_colors.item_secondary },
+        background = { color = theme_colors.item_background },
+      })
+      table.insert(M.popup_items, separator_item)
+      
+      -- Add Friday dessert item
+      local dessert_icon = FOOD_TYPE_ICONS["GRAND_DESSERT"] or "󰦌"
+      
+      local dessert_item = sbar.add("item", "friday_dessert", {
+        position = "popup." .. mealplan.name,
+        icon = { string = dessert_icon, color = theme_colors.item_primary },
+        label = { string = M.friday_dessert.name .. " (" .. M.friday_dessert.price .. "€)", color = theme_colors.item_primary },
+        background = { color = theme_colors.item_background },
+      })
+      table.insert(M.popup_items, dessert_item)
+    end
   end
 end
 
@@ -198,31 +288,53 @@ end
 
 -- Main update function
 local function update_mealplan()
-  if not should_fetch_new_data() then
-    update_display(M.meals)
-    return
+  local fetch_today = should_fetch_new_data()
+  local fetch_friday, friday_date = should_fetch_friday_dessert()
+  
+  -- Fetch today's data if needed
+  if fetch_today then
+    local today_str = os.date("%Y-%m-%d")
+    local api_data, _ = fetch_mealplan_data(today_str)
+
+    if api_data then
+      M.meals = filter_and_process_meals(api_data)
+      M.last_fetch_date = today_str
+    else
+      -- API failed - keep existing data if available
+      if not M.meals then
+        show_error_state()
+        return
+      end
+    end
+  end
+  
+  -- Fetch Friday dessert if needed
+  if fetch_friday and friday_date then
+    local friday_api_data, _ = fetch_mealplan_data(friday_date)
+    if friday_api_data then
+      M.friday_dessert = find_friday_dessert(friday_api_data, friday_date)
+      M.last_friday_fetch_date = friday_date
+    end
+    -- If Friday fetch fails, keep existing friday_dessert data
+  end
+  
+  -- Clear Friday dessert if today is Friday
+  if not friday_date then
+    M.friday_dessert = nil
+    M.last_friday_fetch_date = nil
   end
 
-  local today_str = os.date("%Y-%m-%d")
-  local api_data, _ = fetch_mealplan_data(today_str)
-
-  if api_data then
-    M.meals = filter_and_process_meals(api_data)
-    M.last_fetch_date = today_str
+  -- Update display with current data
+  if M.meals then
     update_display(M.meals)
   else
-    -- API failed - use stale data if available, otherwise show error
-    if M.meals then
-      update_display(M.meals)
-    else
-      show_error_state()
-    end
+    show_error_state()
   end
 end
 
 -- Mouse events for popup control
 mealplan:subscribe({ "mouse.entered", "mouse.exited", "mouse.exited.global" }, function(env)
-  if env.SENDER == "mouse.entered" and M.meals and #M.meals > 0 then
+  if env.SENDER == "mouse.entered" and M.meals and (#M.meals > 0 or M.friday_dessert) then
     mealplan:set({ popup = { drawing = true } })
   else
     mealplan:set({ popup = { drawing = false } })
