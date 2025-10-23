@@ -58,13 +58,25 @@ automatically-unhide-macos-hidden-apps = false
 #                 Monitor pattern is the same as for 'workspace-to-monitor-force-assignment'.
 #                 See:
 #                 https://nikitabobko.github.io/AeroSpace/guide#assign-workspaces-to-monitors
+#
+# Spacing philosophy:
+# - Built-in display: Consistent 7px between windows, 5px from edges
+# - External monitors: Consistent 7px between windows, 5px from edges
+# - Coordinates with SketchyBar two-pill layout (35px bar + 3px offset = 38px total)
+#
+# IMPORTANT: outer.top differs between monitor types due to notch:
+# - Built-in (with notch): Bar sits IN notch, so outer.top = 5px (gap only)
+# - External (no notch): Bar takes screen space, so outer.top = 43px (38px bar + 5px gap)
 [gaps]
-    inner.horizontal = [{ monitor."^built-in retina display$" = 10 }, 10]
-    inner.vertical =   [{ monitor."^built-in retina display$" = 10 }, 10]
-    outer.left =       [{ monitor."^built-in retina display$" = 10 }, 10]
-    outer.bottom =     [{ monitor."^built-in retina display$" = 10 }, 10]
-    outer.top =        [{ monitor."^built-in retina display$" = 10 }, 42]
-    outer.right =      [{ monitor."^built-in retina display$" = 10 }, 10]
+    # Space between windows (horizontal and vertical)
+    inner.horizontal = [{ monitor."^built-in retina display$" = 7 }, 7]
+    inner.vertical =   [{ monitor."^built-in retina display$" = 7 }, 7]
+
+    # Space from screen edges to windows
+    outer.left =       [{ monitor."^built-in retina display$" = 5 }, 5]
+    outer.bottom =     [{ monitor."^built-in retina display$" = 5 }, 5]
+    outer.top =        [{ monitor."^built-in retina display$" = 5 }, 43]  # Built-in: 5px gap | External: 38px bar + 5px gap
+    outer.right =      [{ monitor."^built-in retina display$" = 5 }, 5]
 
 # 'main' binding mode declaration
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes

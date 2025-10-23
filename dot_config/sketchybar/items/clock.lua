@@ -6,7 +6,7 @@ local utils = require("lib.utils")
 local settings = require("lib.settings")
 
 -- Add clock item to right side
-local clock = sbar.add("item", "clock", {
+local clock = sbar.add("item", "right.clock", {
   position = "right",
   icon = {
     string = icons.system.clock,

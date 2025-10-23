@@ -5,7 +5,7 @@ local colors = require("lib.colors")
 local settings = require("lib.settings")
 
 -- Add chevron decorator to left side
-local chevron = sbar.add("item", "chevron", {
+local chevron = sbar.add("item", "left.chevron", {
   position = "left",
 })
 

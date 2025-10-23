@@ -3,7 +3,7 @@
 local colors = require("lib.colors")
 
 -- Add invisible theme handler item
-local theme_handler = sbar.add("item", "theme_handler", {
+local theme_handler = sbar.add("item", "left.theme_handler", {
   position = "left",
   drawing = false,
   updates = true,

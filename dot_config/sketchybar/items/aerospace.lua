@@ -13,7 +13,7 @@ sbar.add("event", "aerospace_refresh", "aerospace_refresh_event")
 local workspace_items = {} -- workspace_name -> {item_name, monitor}
 
 local function create_workspace_item(workspace_name, monitor_id)
-  local item_name = "space." .. workspace_name
+  local item_name = "left.space." .. workspace_name
 
   local workspace_item = sbar.add("item", item_name, {
     position = "left",
@@ -179,7 +179,7 @@ sbar.aerospace:query_workspaces(function(workspaces_data)
   sync_workspace_items(workspaces_data)
 
   -- Always create event handler regardless of initial workspace state to fix startup race conditions
-  local event_handler = sbar.add("item", "aerospace_event_handler", { drawing = false, updates = "on" })
+  local event_handler = sbar.add("item", "left.aerospace_event_handler", { drawing = false, updates = "on" })
   event_handler:subscribe({
     "aerospace_workspace_change",
     "aerospace_refresh",

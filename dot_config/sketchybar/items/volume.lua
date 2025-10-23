@@ -5,7 +5,7 @@ local colors = require("lib.colors")
 local utils = require("lib.utils")
 
 -- Add volume item to right side
-local volume = sbar.add("item", "volume", {
+local volume = sbar.add("item", "right.volume", {
   position = "right",
   icon = {
     padding_left = 5,

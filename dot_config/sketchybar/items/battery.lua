@@ -6,7 +6,7 @@ local utils = require("lib.utils")
 local settings = require("lib.settings")
 
 -- Add battery item to right side
-local battery = sbar.add("item", "battery", {
+local battery = sbar.add("item", "right.battery", {
   position = "right",
   update_freq = settings.update_freq.battery,
   updates = true,

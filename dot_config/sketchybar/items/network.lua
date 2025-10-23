@@ -4,7 +4,7 @@ local colors = require("lib.colors")
 local settings = require("lib.settings")
 
 -- Add network item to right side
-local network = sbar.add("item", "network", {
+local network = sbar.add("item", "right.network", {
   position = "right",
   icon = {
     drawing = false,

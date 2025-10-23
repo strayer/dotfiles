@@ -19,6 +19,18 @@ M.paddings = {
   label_right = 7,
 }
 
+-- Bar and pill layout (two-pill design)
+-- These values are interdependent:
+-- - bar_height + bar_y_offset = 38 (aligns with notch bottom)
+-- - pill_height = bar_height - 4 (2px spacing top/bottom)
+M.layout = {
+  bar_height = 35,         -- Total bar height
+  bar_y_offset = 3,        -- Top offset (compensates for implicit OS margin)
+  bar_padding_h = 5,       -- Horizontal padding (left/right spacing from screen edges)
+  pill_height = 31,        -- Pill bracket height
+  pill_inner_padding = 4,  -- Padding inside pills (spacing from pill edge to first item)
+}
+
 -- Update frequencies (in seconds)
 M.update_freq = {
   clock = 10,

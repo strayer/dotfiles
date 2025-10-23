@@ -5,7 +5,7 @@ local colors = require("lib.colors")
 local settings = require("lib.settings")
 
 -- Add package updates item to right side
-local package_updates = sbar.add("item", "package_updates", {
+local package_updates = sbar.add("item", "right.package_updates", {
   position = "right",
   icon = {
     string = icons.system.package_updates,
