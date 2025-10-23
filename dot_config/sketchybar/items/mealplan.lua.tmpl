@@ -43,6 +43,13 @@ local mealplan = sbar.add("item", "right.mealplan", {
   update_freq = 60,
   popup = {
     align = "center",
+    background = {
+      color = colors.with_alpha(0x000000, 0.3),
+      corner_radius = 9,
+      border_width = 0,
+    },
+    blur_radius = 30,
+    y_offset = 2,
   },
 })
 
@@ -243,32 +250,70 @@ local function update_display(meals)
 
       local popup_item = sbar.add("item", item_name, {
         position = "popup." .. mealplan.name,
-        icon = { string = food_icon, color = theme_colors.item_primary },
-        label = { string = meal.name .. " (" .. meal.price .. "€)", color = theme_colors.item_primary },
-        background = { color = theme_colors.item_background },
+        icon = {
+          string = food_icon,
+          color = theme_colors.item_primary,
+          padding_left = 8,
+          padding_right = 4,
+        },
+        label = {
+          string = meal.name .. " (" .. meal.price .. "€)",
+          color = theme_colors.item_primary,
+          padding_right = 8,
+        },
+        background = {
+          color = colors.with_alpha(0x000000, 0.0),
+          drawing = true,
+        },
+        padding_left = 4,
+        padding_right = 4,
       })
       table.insert(M.popup_items, popup_item)
     end
-    
+
     -- Add Friday dessert if available
     if M.friday_dessert then
       -- Add separator with title
       local separator_item = sbar.add("item", "dessert_separator", {
         position = "popup." .. mealplan.name,
         icon = { drawing = false },
-        label = { string = "✦ ── Freitagsdessert ── ✦", color = theme_colors.item_secondary },
-        background = { color = theme_colors.item_background },
+        label = {
+          string = "✦ ── Freitagsdessert ── ✦",
+          color = theme_colors.item_primary,
+          padding_left = 8,
+          padding_right = 8,
+        },
+        background = {
+          color = colors.with_alpha(0x000000, 0.0),
+          drawing = true,
+        },
+        padding_left = 4,
+        padding_right = 4,
       })
       table.insert(M.popup_items, separator_item)
-      
+
       -- Add Friday dessert item
       local dessert_icon = FOOD_TYPE_ICONS["GRAND_DESSERT"] or "󰦌"
-      
+
       local dessert_item = sbar.add("item", "friday_dessert", {
         position = "popup." .. mealplan.name,
-        icon = { string = dessert_icon, color = theme_colors.item_primary },
-        label = { string = M.friday_dessert.name .. " (" .. M.friday_dessert.price .. "€)", color = theme_colors.item_primary },
-        background = { color = theme_colors.item_background },
+        icon = {
+          string = dessert_icon,
+          color = theme_colors.item_primary,
+          padding_left = 8,
+          padding_right = 4,
+        },
+        label = {
+          string = M.friday_dessert.name .. " (" .. M.friday_dessert.price .. "€)",
+          color = theme_colors.item_primary,
+          padding_right = 8,
+        },
+        background = {
+          color = colors.with_alpha(0x000000, 0.0),
+          drawing = true,
+        },
+        padding_left = 4,
+        padding_right = 4,
       })
       table.insert(M.popup_items, dessert_item)
     end
