@@ -1,0 +1,30 @@
+{
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(npx lint-staged:*)",
+      "Bash(npx prettier:*)",
+      "Bash(terraform fmt:*)",
+      "Bash(terraform validate:*)",
+      "Bash(tflint:*)",
+      "Bash(markdownlint:*)",
+      "Bash(shellcheck:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(git add:*)",
+      "Bash(brew info:*)",
+      "Bash(brew search:*)"
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "ccusage statusline --visual-burn-rate emoji"
+  },
+  "env": {
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_BUG_COMMAND": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "DISABLE_PROMPT_CACHING": "1",
+    "DISABLE_AUTOUPDATER": "1"
+  }
+}
