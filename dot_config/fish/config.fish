@@ -93,6 +93,8 @@ if status --is-interactive
     function l
       lsd -lah --date "+%F %T" $argv
     end
+
+    abbr --add --global lt l --tree
   end
 
   function du
