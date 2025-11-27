@@ -156,7 +156,10 @@ local function update_all_workspaces()
       if type(windows_data) == "table" then
         for _, window in ipairs(windows_data) do
           local workspace = window.workspace
-          if workspace then
+          local title = window["window-title"] or ""
+          -- Filter out Outlook reminder popups
+          local is_filtered = title:match("Erinnerungen$")
+          if workspace and not is_filtered then
             if not windows_by_workspace[workspace] then
               windows_by_workspace[workspace] = { icons = {} }
             end
