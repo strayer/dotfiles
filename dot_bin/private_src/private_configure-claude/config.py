@@ -4,12 +4,9 @@ from custom_types import Provider, ProviderConfig
 PROVIDER_CONFIGS: dict[Provider, ProviderConfig] = {
     "vertex": {
         "common_env": {
-            "CLOUD_ML_REGION": "global",
-            "VERTEX_REGION_CLAUDE_4_0_SONNET": "europe-west1",
-            "VERTEX_REGION_CLAUDE_4_5_SONNET": "europe-west1",
-            "VERTEX_REGION_CLAUDE_4_5_HAIKU": "europe-west1",
+            "CLOUD_ML_REGION": "europe-west1",
             "CLAUDE_CODE_USE_VERTEX": "1",
-            "ANTHROPIC_MODEL": "claude-sonnet-4-5@20250929",
+            "ANTHROPIC_MODEL": "claude-opus-4-5@20251101",
             "ANTHROPIC_SMALL_FAST_MODEL": "claude-haiku-4-5@20251001",
         },
         "auth": {
@@ -28,6 +25,7 @@ PROVIDER_CONFIGS: dict[Provider, ProviderConfig] = {
     "bedrock": {
         "common_env": {
             "CLAUDE_CODE_USE_BEDROCK": "1",
+            "DISABLE_PROMPT_CACHING": "1",
             "AWS_REGION": "eu-central-1",
             "ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION": "us-east-1",
             "ANTHROPIC_DEFAULT_SONNET_MODEL": (
