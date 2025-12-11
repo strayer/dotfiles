@@ -158,7 +158,7 @@ local function update_all_workspaces()
           local workspace = window.workspace
           local title = window["window-title"] or ""
           -- Filter out Outlook reminder popups
-          local is_filtered = title:match("Erinnerungen$")
+          local is_filtered = title:match("^%d+ Erinnerungen$") or title == "1 Erinnerung"
           if workspace and not is_filtered then
             if not windows_by_workspace[workspace] then
               windows_by_workspace[workspace] = { icons = {} }
