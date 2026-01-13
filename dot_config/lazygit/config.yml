@@ -4,8 +4,7 @@ gui:
   nerdFontsVersion: "3"
   timeFormat: "2006-01-02"
   shortTimeFormat: "15:04:05"
-
 git:
   parseEmoji: true
-  paging:
-    pager: delta --dark --paging=never
+  pagers:
+    - pager: delta --dark --paging=never
