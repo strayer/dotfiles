@@ -37,6 +37,11 @@ brew "felixkratz/formulae/sketchybar"
 tap "nikitabobko/tap"
 cask "nikitabobko/tap/aerospace"
 
+# AI
+brew "gemini-cli"
+brew "opencode"
+cask "claude-code"
+
 # fonts
 cask "font-iosevka"
 cask "font-liberation"
