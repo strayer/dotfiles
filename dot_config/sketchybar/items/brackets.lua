@@ -24,7 +24,9 @@ sbar.add("bracket", "right_pill", { "/right\\..*/" }, {
 })
 
 -- Subscribe to theme changes to update bracket colors
-sbar.subscribe("theme_change", function()
+-- Use a hidden item to handle theme changes for brackets
+local bracket_handler = sbar.add("item", "bracket_theme_handler", { drawing = false })
+bracket_handler:subscribe("theme_change", function()
   local bracket_color = colors.with_alpha(0x000000, 0.3)
 
   sbar.set("left_pill", {
