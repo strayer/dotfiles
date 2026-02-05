@@ -70,6 +70,7 @@ brew "stylua"
 brew "taplo"
 brew "terraform-ls"
 brew "tflint"
+brew "vtsls"
 brew "yaml-language-server"
 brew "yamllint"
 
