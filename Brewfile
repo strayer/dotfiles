@@ -37,10 +37,15 @@ brew "felixkratz/formulae/sketchybar"
 tap "nikitabobko/tap"
 cask "nikitabobko/tap/aerospace"
 
+# rift
+tap "acsandmann/tap"
+brew "acsandmann/tap/rift"
+
 # AI
 brew "gemini-cli"
 brew "opencode"
 cask "claude-code"
+cask "codex"
 
 # fonts
 cask "font-iosevka"
@@ -221,15 +226,16 @@ cask "daisydisk"
 cask "db-browser-for-sqlite"
 cask "dbeaver-community"
 cask "firefox@developer-edition"
+cask "gcloud-cli"
 cask "ghostty"
 cask "gimp"
-cask "gcloud-cli"
 cask "hex-fiend"
 cask "iina"
 cask "inkscape"
 cask "iterm2"
 cask "karabiner-elements"
 cask "kitty"
+cask "libreoffice"
 cask "lm-studio"
 cask "logitune"
 cask "mediainfo"
