@@ -1,0 +1,136 @@
+# Rift window manager configuration
+
+[settings]
+animate = true
+animation_duration = 0.2
+mouse_follows_focus = false
+hot_reload = true
+
+# Startup commands - set up SketchyBar integration
+run_on_start = [
+  "rift-cli subscribe cli --event workspace_changed --command sh --args -c --args 'sketchybar --trigger rift_workspace_change RIFT_SPACE_ID=\"$RIFT_SPACE_ID\" RIFT_DISPLAY_UUID=\"$RIFT_DISPLAY_UUID\" RIFT_WORKSPACE_NAME=\"$RIFT_WORKSPACE_NAME\"'",
+  "rift-cli subscribe cli --event windows_changed --command sh --args -c --args 'sketchybar --trigger rift_windows_change RIFT_SPACE_ID=\"$RIFT_SPACE_ID\" RIFT_DISPLAY_UUID=\"$RIFT_DISPLAY_UUID\" RIFT_WORKSPACE_NAME=\"$RIFT_WORKSPACE_NAME\"'",
+]
+
+[settings.layout]
+mode = "bsp"
+
+[settings.layout.gaps.outer]
+# Top gap accounts for SketchyBar (38px bar + 5px gap = 43px)
+# On built-in display with notch, this creates extra space but avoids overlap
+top = 43.0
+left = 5.0
+bottom = 5.0
+right = 5.0
+
+[settings.layout.gaps.inner]
+horizontal = 7.0
+vertical = 7.0
+
+# Per-display gaps: Built-in display with notch needs smaller top gap since SketchyBar
+# sits in the notch area. External displays need full 43px top gap for SketchyBar.
+[settings.layout.gaps.per_display."37D8832A-2D66-02CA-B9F7-8F30A301B230"]
+outer = { top = 5.0, left = 5.0, bottom = 5.0, right = 5.0 }
+inner = { horizontal = 7.0, vertical = 7.0 }
+
+[virtual_workspaces]
+enabled = true
+default_workspace_count = 15
+default_workspace = 0
+workspace_auto_back_and_forth = true
+preserve_focus_per_workspace = true
+
+# Index 0-8: numeric workspaces "1"-"9"
+# Index 9-14: named workspaces C, M, O, P, T, W
+workspace_names = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "M", "O", "P", "T", "W"]
+
+# Modifier combinations for cleaner bindings
+[modifier_combinations]
+comb1 = "Alt + Shift"
+comb2 = "Alt + Ctrl"
+
+[keys]
+# Activate/deactivate rift on current space (REQUIRED to start managing windows)
+"Alt + Z" = "toggle_space_activated"
+
+# Layout toggle (equivalent to alt-slash in AeroSpace)
+"Alt + Slash" = "toggle_orientation"
+
+# Focus navigation (vim-style hjkl)
+"Alt + H" = { move_focus = "left" }
+"Alt + J" = { move_focus = "down" }
+"Alt + K" = { move_focus = "up" }
+"Alt + L" = { move_focus = "right" }
+
+# Move windows (vim-style hjkl)
+"comb1 + H" = { move_node = "left" }
+"comb1 + J" = { move_node = "down" }
+"comb1 + K" = { move_node = "up" }
+"comb1 + L" = { move_node = "right" }
+
+# Resize windows
+"comb1 + Minus" = "resize_window_shrink"
+"comb1 + Equal" = "resize_window_grow"
+
+# Workspace switching - numeric (1-9)
+"Alt + 1" = { switch_to_workspace = 0 }
+"Alt + 2" = { switch_to_workspace = 1 }
+"Alt + 3" = { switch_to_workspace = 2 }
+"Alt + 4" = { switch_to_workspace = 3 }
+"Alt + 5" = { switch_to_workspace = 4 }
+"Alt + 6" = { switch_to_workspace = 5 }
+"Alt + 7" = { switch_to_workspace = 6 }
+"Alt + 8" = { switch_to_workspace = 7 }
+"Alt + 9" = { switch_to_workspace = 8 }
+
+# Workspace switching - named (C, M, O, P, T, W)
+"Alt + C" = { switch_to_workspace = 9 }
+"Alt + M" = { switch_to_workspace = 10 }
+"Alt + O" = { switch_to_workspace = 11 }
+"Alt + P" = { switch_to_workspace = 12 }
+"Alt + T" = { switch_to_workspace = 13 }
+"Alt + W" = { switch_to_workspace = 14 }
+
+# Move window to workspace - numeric (1-9)
+"comb1 + 1" = { move_window_to_workspace = 0 }
+"comb1 + 2" = { move_window_to_workspace = 1 }
+"comb1 + 3" = { move_window_to_workspace = 2 }
+"comb1 + 4" = { move_window_to_workspace = 3 }
+"comb1 + 5" = { move_window_to_workspace = 4 }
+"comb1 + 6" = { move_window_to_workspace = 5 }
+"comb1 + 7" = { move_window_to_workspace = 6 }
+"comb1 + 8" = { move_window_to_workspace = 7 }
+"comb1 + 9" = { move_window_to_workspace = 8 }
+
+# Move window to workspace - named (C, M, O, P, T, W)
+"comb1 + C" = { move_window_to_workspace = 9 }
+"comb1 + M" = { move_window_to_workspace = 10 }
+"comb1 + O" = { move_window_to_workspace = 11 }
+"comb1 + P" = { move_window_to_workspace = 12 }
+"comb1 + T" = { move_window_to_workspace = 13 }
+"comb1 + W" = { move_window_to_workspace = 14 }
+
+# Workspace back-and-forth
+"Alt + Tab" = "switch_to_last_workspace"
+
+# Toggle floating
+"comb1 + Space" = "toggle_window_floating"
+
+# Fullscreen
+"comb1 + F" = "toggle_fullscreen_within_gaps"
+"Alt + F" = "toggle_fullscreen"
+
+# Join window with adjacent
+"comb2 + H" = { join_window = "left" }
+"comb2 + J" = { join_window = "down" }
+"comb2 + K" = { join_window = "up" }
+"comb2 + L" = { join_window = "right" }
+
+# Unjoin windows
+"comb2 + E" = "unjoin_windows"
+
+# Toggle stack mode (closest to accordion)
+"Alt + Comma" = "toggle_stack"
+
+# Debug
+"comb1 + D" = "debug"

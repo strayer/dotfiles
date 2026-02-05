@@ -5,7 +5,8 @@ require("items.padding")
 
 -- Left side items
 require("items.chevron")
-require("items.aerospace")
+-- require("items.aerospace")  -- Disabled: migrated to Rift
+require("items.rift")
 require("items.system_theme")
 
 -- Right side items
