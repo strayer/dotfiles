@@ -35,14 +35,14 @@ inner = { horizontal = 7.0, vertical = 7.0 }
 
 [virtual_workspaces]
 enabled = true
-default_workspace_count = 15
+default_workspace_count = 16
 default_workspace = 0
 workspace_auto_back_and_forth = true
 preserve_focus_per_workspace = true
 
 # Index 0-8: numeric workspaces "1"-"9"
-# Index 9-14: named workspaces C, M, O, P, T, W
-workspace_names = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "M", "O", "P", "T", "W"]
+# Index 9-15: named workspaces C, M, O, P, T, W, D
+workspace_names = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "M", "O", "P", "T", "W", "D"]
 
 # Modifier combinations for cleaner bindings
 [modifier_combinations]
@@ -83,13 +83,14 @@ comb2 = "Alt + Ctrl"
 "Alt + 8" = { switch_to_workspace = 7 }
 "Alt + 9" = { switch_to_workspace = 8 }
 
-# Workspace switching - named (C, M, O, P, T, W)
+# Workspace switching - named (C, M, O, P, T, W, D)
 "Alt + C" = { switch_to_workspace = 9 }
 "Alt + M" = { switch_to_workspace = 10 }
 "Alt + O" = { switch_to_workspace = 11 }
 "Alt + P" = { switch_to_workspace = 12 }
 "Alt + T" = { switch_to_workspace = 13 }
 "Alt + W" = { switch_to_workspace = 14 }
+"Alt + D" = { switch_to_workspace = 15 }
 
 # Move window to workspace - numeric (1-9)
 "comb1 + 1" = { move_window_to_workspace = 0 }
@@ -102,13 +103,14 @@ comb2 = "Alt + Ctrl"
 "comb1 + 8" = { move_window_to_workspace = 7 }
 "comb1 + 9" = { move_window_to_workspace = 8 }
 
-# Move window to workspace - named (C, M, O, P, T, W)
+# Move window to workspace - named (C, M, O, P, T, W, D)
 "comb1 + C" = { move_window_to_workspace = 9 }
 "comb1 + M" = { move_window_to_workspace = 10 }
 "comb1 + O" = { move_window_to_workspace = 11 }
 "comb1 + P" = { move_window_to_workspace = 12 }
 "comb1 + T" = { move_window_to_workspace = 13 }
 "comb1 + W" = { move_window_to_workspace = 14 }
+"comb1 + D" = { move_window_to_workspace = 15 }
 
 # Workspace back-and-forth
 "Alt + Tab" = "switch_to_last_workspace"
@@ -131,6 +133,3 @@ comb2 = "Alt + Ctrl"
 
 # Toggle stack mode (closest to accordion)
 "Alt + Comma" = "toggle_stack"
-
-# Debug
-"comb1 + D" = "debug"
