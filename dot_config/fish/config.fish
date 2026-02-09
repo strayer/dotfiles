@@ -46,6 +46,7 @@ if type -q brew
   set -gx HOMEBREW_NO_ANALYTICS 1
   set -gx HOMEBREW_NO_AUTO_UPDATE 1
   set -gx HOMEBREW_INSTALL_CLEANUP 1
+  set -gx HOMEBREW_USE_INTERNAL_API 1
 end
 
 # google-cloud-sdk
