@@ -18,7 +18,8 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "ccusage statusline --visual-burn-rate emoji"
+    "command": "~/.claude/statusline.sh",
+    "padding": 0
   },
   "env": {
     "DISABLE_TELEMETRY": "1",
