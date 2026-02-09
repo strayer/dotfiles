@@ -38,6 +38,12 @@ M.system = {
     critical = "󰁺",
   },
   network = "󰖩",
+  network_type = {
+    ethernet = "󰈀",
+    wifi = "󰖩",
+    hotspot = "󱄙",
+    disconnected = "󰖪",
+  },
   package_updates = "󰏔",
   warning = "󰀪",
   error = "󰅖",

@@ -1,0 +1,48 @@
+#!/bin/bash
+set -euo pipefail
+
+if ! command -v swiftc &>/dev/null; then
+  echo "Error: swiftc not found. Install Xcode or Command Line Tools." >&2
+  exit 1
+fi
+
+SOURCE="$HOME/.bin/sketchybar-network-watcher.swift"
+BUNDLE="$HOME/.bin/sketchybar-network-watcher.app"
+BINARY="$BUNDLE/Contents/MacOS/sketchybar-network-watcher"
+
+# Create .app bundle structure
+mkdir -p "$BUNDLE/Contents/MacOS"
+
+cat > "$BUNDLE/Contents/Info.plist" <<'PLISTEOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>com.user.sketchybar-network-watcher</string>
+    <key>CFBundleName</key>
+    <string>sketchybar-network-watcher</string>
+    <key>CFBundleExecutable</key>
+    <string>sketchybar-network-watcher</string>
+    <key>LSBackgroundOnly</key>
+    <true/>
+    <key>NSLocationUsageDescription</key>
+    <string>Displays the current WiFi network name in the status bar.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Displays the current WiFi network name in the status bar.</string>
+</dict>
+</plist>
+PLISTEOF
+
+echo "Compiling sketchybar-network-watcher..."
+swiftc -O \
+  -framework AppKit \
+  -framework CoreLocation \
+  -framework CoreWLAN \
+  -framework SystemConfiguration \
+  "$SOURCE" -o "$BINARY"
+
+# Ad-hoc sign the bundle so macOS recognizes it
+codesign --force --sign - "$BUNDLE"
+
+echo "Compiled $BUNDLE"
