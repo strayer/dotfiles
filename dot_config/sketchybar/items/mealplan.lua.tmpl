@@ -25,7 +25,7 @@ local CONFIG = {
 -- Food type icon mapping
 local FOOD_TYPE_ICONS = {
   MEAT = "", -- nf-fae-meat
-  BEEF = "", -- nf-fa-cow
+  BEEF = "󰆚", -- nf-md-cow
   PORK = "󱀆", -- nf-md-pig_variant
   POULTRY = "󱗆", -- nf-md-bird
   FISH = "󰈺", -- nf-md-fish
@@ -133,17 +133,17 @@ end
 local function get_next_friday_date()
   local today = os.time()
   local weekday = tonumber(os.date("%w", today)) -- 0=Sunday, ..., 6=Saturday, 5=Friday
-  
+
   if weekday == 5 then -- Today is Friday
     return nil -- Don't show Friday dessert on Friday itself
   end
-  
+
   -- Calculate days until next Friday
   local days_until_friday = (5 - weekday) % 7
   if days_until_friday == 0 then
     days_until_friday = 7 -- Next Friday is in a week
   end
-  
+
   local friday_time = today + (days_until_friday * 24 * 60 * 60)
   return os.date("%Y-%m-%d", friday_time)
 end
@@ -153,7 +153,7 @@ local function find_friday_dessert(api_data, friday_date)
   if not api_data or #api_data == 0 or not friday_date then
     return nil
   end
-  
+
   -- Find Friday's data in API response
   local friday_items = {}
   for _, day_data in ipairs(api_data) do
@@ -162,7 +162,7 @@ local function find_friday_dessert(api_data, friday_date)
       break
     end
   end
-  
+
   -- Look for GRAND_DESSERT
   for _, meal in ipairs(friday_items) do
     if meal.food_type == "GRAND_DESSERT" then
@@ -172,7 +172,7 @@ local function find_friday_dessert(api_data, friday_date)
       }
     end
   end
-  
+
   return nil
 end
 
@@ -206,12 +206,12 @@ local function should_fetch_friday_dessert()
   if not friday_date then
     return false -- Today is Friday, don't fetch
   end
-  
+
   -- Always fetch if we have no Friday data or if the Friday date changed
   if not M.friday_dessert or M.last_friday_fetch_date ~= friday_date then
     return true, friday_date
   end
-  
+
   return false, friday_date
 end
 
@@ -335,7 +335,7 @@ end
 local function update_mealplan()
   local fetch_today = should_fetch_new_data()
   local fetch_friday, friday_date = should_fetch_friday_dessert()
-  
+
   -- Fetch today's data if needed
   if fetch_today then
     local today_str = os.date("%Y-%m-%d")
@@ -352,7 +352,7 @@ local function update_mealplan()
       end
     end
   end
-  
+
   -- Fetch Friday dessert if needed
   if fetch_friday and friday_date then
     local friday_api_data, _ = fetch_mealplan_data(friday_date)
@@ -362,7 +362,7 @@ local function update_mealplan()
     end
     -- If Friday fetch fails, keep existing friday_dessert data
   end
-  
+
   -- Clear Friday dessert if today is Friday
   if not friday_date then
     M.friday_dessert = nil
