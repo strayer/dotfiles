@@ -1,10 +1,14 @@
 # Rift window manager configuration
 
+# Default config:
+# https://raw.githubusercontent.com/acsandmann/rift/refs/heads/main/rift.default.toml
+
 [settings]
 animate = true
 animation_duration = 0.2
 mouse_follows_focus = false
 hot_reload = true
+default_disable = false
 
 # Startup commands - set up SketchyBar integration
 run_on_start = [
