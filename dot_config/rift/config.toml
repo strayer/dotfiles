@@ -4,8 +4,7 @@
 # https://raw.githubusercontent.com/acsandmann/rift/refs/heads/main/rift.default.toml
 
 [settings]
-animate = true
-animation_duration = 0.2
+animate = false  # disable animations for now; https://github.com/acsandmann/rift/issues/269
 mouse_follows_focus = false
 hot_reload = true
 default_disable = false
