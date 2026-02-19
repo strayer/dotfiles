@@ -165,6 +165,7 @@ if status --is-interactive
     abbr --add --global ai gh copilot explain
     abbr --add --global aie gh copilot suggest
   end
+
 end
 
 # Added by OrbStack: command-line tools and integration
