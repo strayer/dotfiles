@@ -38,6 +38,7 @@ M.system = {
     critical = "󰁺",
   },
   network = "󰖩",
+  network_ping = "",
   network_type = {
     ethernet = "󰈀",
     wifi = "󰖩",
