@@ -3,60 +3,56 @@
 local colors = require("lib.colors")
 local settings = require("lib.settings")
 
--- Add network item to right side
+local PING_TARGET = "1.1.1.1"
+local PING_TIMEOUT = 2
+
 local network = sbar.add("item", "right.network", {
   position = "right",
-  icon = {
-    drawing = false,
-  },
-  label = {
-    padding_left = 7,
-  },
+  icon = { drawing = false },
+  label = { padding_left = 7 },
   update_freq = settings.update_freq.network,
 })
 
--- Update network display
 local function update_network()
-  local ping_command = os.getenv("HOME") .. "/.bin/single-ping 1.1.1.1"
-
-  sbar.exec(ping_command, function(result, exit_code)
-    local config, state, label_text
+  sbar.exec("ping -c 1 -t " .. PING_TIMEOUT .. " " .. PING_TARGET, function(result, exit_code)
+    local state, label_text
 
     if exit_code ~= 0 or not result then
-      -- Network error
       state = "critical"
       label_text = "rtt:???"
     else
-      -- Extract RTT from ping output
-      local rtt = result:match("([%d%.]+)ms")
+      local rtt = result:match("time=([%d%.]+)")
       if rtt then
         local rtt_num = tonumber(rtt)
-        label_text = "rtt:" .. result
-
-        -- Determine state based on latency
+        label_text = string.format("rtt:%.0fms", rtt_num)
         if rtt_num > 400 then
           state = "critical"
         elseif rtt_num > 200 then
           state = "warning"
         end
       else
-        -- Could not parse RTT
         state = "critical"
         label_text = "rtt:???"
       end
     end
 
-    -- Get colors based on state and set label
-    config = colors.get_item_colors({ state = state })
+    local config = colors.get_item_colors({ state = state })
     config.label.string = label_text
     network:set(config)
   end)
 end
 
--- Subscribe to timer events for automatic updates
-network:subscribe("system_woke", update_network)
+network:subscribe("system_woke", function()
+  update_network()
+  sbar.exec("sleep 3", function()
+    update_network()
+  end)
+  sbar.exec("sleep 8", function()
+    update_network()
+  end)
+end)
+
 network:subscribe("routine", update_network)
 network:subscribe("theme_colors_updated", update_network)
 
--- Initial update
 update_network()
