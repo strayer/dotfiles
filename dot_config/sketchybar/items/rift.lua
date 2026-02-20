@@ -128,7 +128,7 @@ local function process_workspace_data(workspaces_data, display)
           -- Filter out Outlook reminder popups
           local is_filtered = title:match("^%d+ Erinnerungen$") or title == "1 Erinnerung"
           if not is_filtered then
-            local app_name = window.bundle_id or ""
+            local app_name = window.app_name or ""
             table.insert(windows_by_workspace[workspace_name].icons, icons.get_app_icon(app_name))
           end
         end
