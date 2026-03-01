@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Rift: Remove Master Pane
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon 🪟
+# @raycast.packageName Rift
+
+# Documentation:
+# @raycast.description Decrease number of master panes by one (master-stack only)
+
+/opt/homebrew/bin/rift-cli execute layout adjust-master-count -1

@@ -9,6 +9,10 @@ local settings = require("lib.settings")
 ---@type table<string, {item_name: string, index: number, display: number}>
 local workspace_items = {} -- "workspace_name:display" -> {item_name, index, display}
 
+-- Layout mode items per display
+---@type table<number, string>
+local layout_items = {} -- display_number -> item_name
+
 -- Track if new items were created during this update cycle
 local items_created_this_cycle = false
 
@@ -59,6 +63,35 @@ local function get_workspace_key(workspace_name, display)
   return workspace_name .. ":" .. tostring(display)
 end
 
+--- Ensure the layout mode item exists for a display (must be created before workspace items)
+---@param display number SketchyBar display number
+local function ensure_layout_item(display)
+  if layout_items[display] then
+    return
+  end
+
+  local item_name = "left.rift_layout." .. tostring(display)
+  sbar.add("item", item_name, {
+    position = "left",
+    display = display,
+    icon = {
+      string = "󰕴",
+      padding_left = 8,
+      padding_right = 2,
+    },
+    label = {
+      padding_right = 8,
+    },
+    background = {
+      corner_radius = 16,
+      height = 24,
+    },
+  })
+
+  layout_items[display] = item_name
+  items_created_this_cycle = true
+end
+
 local function create_workspace_item(workspace_name, workspace_index, display)
   local key = get_workspace_key(workspace_name, display)
   local item_name = "left.space." .. workspace_name .. "." .. tostring(display)
@@ -94,8 +127,10 @@ end
 ---@param display number SketchyBar display number
 ---@return string|nil focused_workspace_name The name of the currently focused workspace
 ---@return table<string, {icons: string[]}> windows_by_workspace Windows grouped by workspace
+---@return string|nil focused_layout_mode The layout mode for the focused workspace
 local function process_workspace_data(workspaces_data, display)
   local focused_workspace_name = nil
+  local focused_layout_mode = nil
   local windows_by_workspace = {}
 
   if not workspaces_data or type(workspaces_data) ~= "table" then
@@ -110,6 +145,7 @@ local function process_workspace_data(workspaces_data, display)
     if workspace_name and workspace_name ~= "" then
       if is_active then
         focused_workspace_name = workspace_name
+        focused_layout_mode = workspace.layout_mode
       end
 
       local key = get_workspace_key(workspace_name, display)
@@ -136,13 +172,14 @@ local function process_workspace_data(workspaces_data, display)
     end
   end
 
-  return focused_workspace_name, windows_by_workspace
+  return focused_workspace_name, windows_by_workspace, focused_layout_mode
 end
 
 ---@param focused_workspace_name string|nil The currently focused workspace name
 ---@param windows_by_workspace table<string, {icons: string[]}> Windows grouped by workspace with app icons
+---@param focused_layout_mode string|nil The layout mode for the focused workspace
 ---@param display number SketchyBar display number
-local function update_workspace_styling(focused_workspace_name, windows_by_workspace, display)
+local function update_workspace_styling(focused_workspace_name, windows_by_workspace, focused_layout_mode, display)
   -- Refresh brackets if new items were created this cycle
   if items_created_this_cycle then
     items_created_this_cycle = false
@@ -201,6 +238,25 @@ local function update_workspace_styling(focused_workspace_name, windows_by_works
       end
     end
   end
+
+  -- Update layout mode item for this display
+  local layout_item_name = layout_items[display]
+  if layout_item_name then
+    local layout_config = {
+      display = display,
+      icon = {
+        color = theme_colors.item_primary,
+      },
+      label = {
+        string = focused_layout_mode or "",
+        color = theme_colors.item_primary,
+      },
+      background = {
+        color = theme_colors.item_background,
+      },
+    }
+    sbar.set(layout_item_name, layout_config)
+  end
 end
 
 --- Update a single display's workspaces
@@ -231,10 +287,12 @@ update_display = function(space_id, display_uuid)
       end
 
       if sbar_display then
+        ensure_layout_item(sbar_display)
         sbar.exec("rift-cli query workspaces --space-id " .. space_id, function(workspaces)
           if workspaces and type(workspaces) == "table" then
-            local focused_workspace_name, windows_by_workspace = process_workspace_data(workspaces, sbar_display)
-            update_workspace_styling(focused_workspace_name, windows_by_workspace, sbar_display)
+            local focused_workspace_name, windows_by_workspace, focused_layout_mode =
+              process_workspace_data(workspaces, sbar_display)
+            update_workspace_styling(focused_workspace_name, windows_by_workspace, focused_layout_mode, sbar_display)
           end
         end)
       end
@@ -243,10 +301,12 @@ update_display = function(space_id, display_uuid)
   end
 
   -- Query workspaces for this specific display/space
+  ensure_layout_item(sbar_display)
   sbar.exec("rift-cli query workspaces --space-id " .. space_id, function(workspaces)
     if workspaces and type(workspaces) == "table" then
-      local focused_workspace_name, windows_by_workspace = process_workspace_data(workspaces, sbar_display)
-      update_workspace_styling(focused_workspace_name, windows_by_workspace, sbar_display)
+      local focused_workspace_name, windows_by_workspace, focused_layout_mode =
+        process_workspace_data(workspaces, sbar_display)
+      update_workspace_styling(focused_workspace_name, windows_by_workspace, focused_layout_mode, sbar_display)
     end
   end)
 end
@@ -271,10 +331,12 @@ update_all_workspaces = function()
       local sbar_display = space_to_display[space_id]
 
       if space_id and sbar_display then
+        ensure_layout_item(sbar_display)
         sbar.exec("rift-cli query workspaces --space-id " .. space_id, function(workspaces)
           if workspaces and type(workspaces) == "table" then
-            local focused_workspace_name, windows_by_workspace = process_workspace_data(workspaces, sbar_display)
-            update_workspace_styling(focused_workspace_name, windows_by_workspace, sbar_display)
+            local focused_workspace_name, windows_by_workspace, focused_layout_mode =
+              process_workspace_data(workspaces, sbar_display)
+            update_workspace_styling(focused_workspace_name, windows_by_workspace, focused_layout_mode, sbar_display)
           end
         end)
       end

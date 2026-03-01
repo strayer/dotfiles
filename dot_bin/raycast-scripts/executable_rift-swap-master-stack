@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Rift: Swap Master & Stack
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon 🪟
+# @raycast.packageName Rift
+
+# Documentation:
+# @raycast.description Swap first master window with first stack window (master-stack only)
+
+/opt/homebrew/bin/rift-cli execute layout swap-master-stack

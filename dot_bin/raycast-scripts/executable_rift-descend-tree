@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Rift: Descend Tree
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon 🪟
+# @raycast.packageName Rift
+
+# Documentation:
+# @raycast.description Move selection down the layout tree to child node
+
+/opt/homebrew/bin/rift-cli execute layout descend

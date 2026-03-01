@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Rift: Mode Traditional
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon 🪟
+# @raycast.packageName Rift
+
+# Documentation:
+# @raycast.description Switch active workspace to traditional (i3/sway) layout
+
+/opt/homebrew/bin/rift-cli execute workspace set-layout traditional

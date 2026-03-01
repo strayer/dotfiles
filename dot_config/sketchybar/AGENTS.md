@@ -9,6 +9,12 @@ This document provides guidance for AI coding agents (Claude Code, Gemini CLI, C
 - **Configuration Language**: Lua (SbarLua)
 - **Entry Point**: `sketchybarrc` → `init.lua`
 
+## Nerd Font Icons (Strict Rule)
+
+- NEVER EVER try to manually determine Nerd Font Unicode glyphs or code points.
+- Always suggest Nerd Font *class names* only (e.g., `nf-md-...`) and let the user supply the final glyph.
+- If an icon is needed, insert a placeholder and explicitly ask the user to replace it with their chosen Nerd Font glyph.
+
 ## SketchyBar Query Interface
 
 The query interface is essential for debugging, inspecting state, and understanding the current bar configuration. All queries return JSON.
@@ -222,7 +228,7 @@ This enables regex-based bracket matching: `"/left\\..*/"` and `"/right\\..*/"`
 ```lua
 local my_item = sbar.add("item", "right.my_item", {
   position = "right",
-  icon = { string = "󰍉" },
+  icon = { string = "NF_ICON_PLACEHOLDER" }, -- replace with user-provided Nerd Font glyph
   label = { string = "Hello" },
   update_freq = 60,  -- seconds
 })

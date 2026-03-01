@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Rift: Mode BSP
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon 🪟
+# @raycast.packageName Rift
+
+# Documentation:
+# @raycast.description Switch active workspace to BSP (binary space partitioning) layout
+
+/opt/homebrew/bin/rift-cli execute workspace set-layout bsp
