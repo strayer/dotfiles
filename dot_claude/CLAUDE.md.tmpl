@@ -1,0 +1,7 @@
+{{- if eq .chezmoi.hostname "CO-MBP-KC9KQV64V3" -}}
+- When creating Pull Requests, only write test plans if the project documentation (README, CLAUDE.md, contribution guidelines, pull request templates, ...) explicity request it.
+
+# Git CLI caveats
+
+Authentication to org-127120047@github.com requires SSH certificates managed through Smallstep CLI. If access to those repositories fails with "Permission denied (public key)", request a new certificate with `step ssh login`.
+{{- end -}}

@@ -95,9 +95,7 @@ def detect_provider(settings: dict | None) -> Provider | None:
     return None
 
 
-def detect_auth_method(
-    settings: dict | None, provider: Provider
-) -> str | None:
+def detect_auth_method(settings: dict | None, provider: Provider) -> str | None:
     """
     Detect the auth method for a given provider from current settings.
 
@@ -137,14 +135,7 @@ def get_preserved_settings(current_settings: dict | None) -> dict:
     if not current_settings:
         return {}
 
-    # Base settings that are managed by the script
-    base_keys = {
-        "includeCoAuthoredBy",
-        "permissions",
-        "statusLine",
-        "env",
-        "apiKeyHelper",
-    }
+    # Settings managed by the script: base-settings.json keys + dynamically added keys
+    base_keys = load_base_settings().keys() | {"apiKeyHelper"}
 
-    # Return any settings not in base_keys
     return {k: v for k, v in current_settings.items() if k not in base_keys}

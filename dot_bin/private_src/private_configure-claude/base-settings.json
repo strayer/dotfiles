@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
@@ -9,6 +10,7 @@
       "Bash(tflint:*)",
       "Bash(markdownlint:*)",
       "Bash(shellcheck:*)",
+      "Bash(step ssh login)",
       "Bash(gh issue list:*)",
       "Bash(gh issue view:*)",
       "Bash(git add:*)",
