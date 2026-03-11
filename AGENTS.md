@@ -186,6 +186,18 @@ launchctl load ~/Library/LaunchAgents/com.user.darkmode.plist
 - **GPG agent conflicts**: Use `restart-gpg-agent.fish` when multiple users conflict
 - **SSH key management**: Use `secretive-ssh-keygen` for Secretive app integration
 
+## Third-Party Software References
+
+Coding agents can use the DeepWiki MCP server to retrieve documentation for the following third-party projects used in this repository:
+
+| Software | GitHub Repo | DeepWiki | Config Location | Purpose |
+|---|---|---|---|---|
+| SketchyBar | [FelixKratz/SketchyBar](https://github.com/FelixKratz/SketchyBar) | [deepwiki.com/FelixKratz/SketchyBar](https://deepwiki.com/FelixKratz/SketchyBar) | `dot_config/sketchybar/` | Custom macOS status bar |
+| SbarLua | [FelixKratz/SbarLua](https://github.com/FelixKratz/SbarLua) | [deepwiki.com/FelixKratz/SbarLua](https://deepwiki.com/FelixKratz/SbarLua) | `dot_config/sketchybar/` | Lua API for SketchyBar |
+| Rift | [acsandmann/rift](https://github.com/acsandmann/rift) | [deepwiki.com/acsandmann/rift](https://deepwiki.com/acsandmann/rift) | `dot_config/rift/config.toml` | BSP tiling window manager |
+
+Usage: `mcp__deepwiki__ask_question` with `repoName` set to the GitHub repo (e.g., `"acsandmann/rift"`) and a relevant `question`.
+
 ## Conventional Commit Guidelines
 
 - Use conventional commit message format for all commits
