@@ -47,6 +47,12 @@ preserve_focus_per_workspace = true
 # Index 9-15: named workspaces C, M, O, P, T, W, D
 workspace_names = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "M", "O", "P", "T", "W", "D"]
 
+# App rules - windows that should float instead of being tiled
+app_rules = [
+  { app_id = "com.apple.systempreferences", floating = true },
+  { app_id = "cc.ffitch.shottr", floating = true },
+]
+
 # Modifier combinations for cleaner bindings
 [modifier_combinations]
 comb1 = "Alt + Shift"
