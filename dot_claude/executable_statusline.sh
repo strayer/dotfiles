@@ -182,7 +182,7 @@ brick_line+=" | ${duration_hours}h${duration_min}m"
 # Add cost only if non-zero, rounded to 2 decimal places
 if command -v bc &>/dev/null; then
   if (($(echo "$cost_usd > 0" | bc -l 2>/dev/null || echo "0"))); then
-    cost_formatted=$(printf "%.2f" "$cost_usd" 2>/dev/null || echo "0.00")
+    cost_formatted=$(export LC_NUMERIC=C; printf "%.2f" "$cost_usd" 2>/dev/null || echo "0.00")
     brick_line+=" | \033[0;33m\$${cost_formatted}\033[0m"
   fi
 else
