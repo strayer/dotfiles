@@ -55,6 +55,7 @@ network:subscribe("system_woke", function()
 end)
 
 network:subscribe("routine", update_network)
+network:subscribe("mouse.clicked", update_network)
 network:subscribe("theme_colors_updated", update_network)
 
 update_network()
