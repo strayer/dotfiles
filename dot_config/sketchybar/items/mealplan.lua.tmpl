@@ -8,7 +8,7 @@ end
 
 -- Configuration constants
 local CONFIG = {
-  api_url = "{{ .mealplan_url }}",
+  api_url = "{{ (secret | fromYaml).mealplan_url }}",
   min_price_filter = 1.0, -- Minimum price in euros to show meals
   request_timeout = 10, -- HTTP request timeout in seconds
 }
