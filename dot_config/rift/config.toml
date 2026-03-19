@@ -16,7 +16,7 @@ run_on_start = [
 ]
 
 [settings.layout]
-mode = "bsp"
+mode = "traditional"
 
 [settings.layout.gaps.outer]
 # Top gap accounts for SketchyBar (38px bar + 5px gap = 43px)
