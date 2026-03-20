@@ -2,10 +2,6 @@ hostname = `hostname -s`.strip
 is_work = (hostname == "CO-MBP-KC9KQV64V3")
 is_home = (hostname == "yobuko")
 
-# base taps
-tap "homebrew/bundle"
-tap "homebrew/services"
-
 # mas
 brew "mas"
 
@@ -42,10 +38,10 @@ tap "acsandmann/tap"
 brew "acsandmann/tap/rift"
 
 # AI
-tap "jundot/omlx"
+tap "jundot/omlx", "https://github.com/jundot/omlx"
 brew "gemini-cli"
 brew "llm"
-brew "omlx"
+brew "jundot/omlx/omlx"
 brew "opencode"
 cask "claude-code"
 cask "codex"
