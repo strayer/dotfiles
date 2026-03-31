@@ -57,6 +57,7 @@ app_rules = [
 [modifier_combinations]
 comb1 = "Alt + Shift"
 comb2 = "Alt + Ctrl"
+comb3 = "Ctrl + Shift"
 
 [keys]
 # Activate/deactivate rift on current space (REQUIRED to start managing windows)
@@ -139,6 +140,12 @@ comb2 = "Alt + Ctrl"
 
 # Unjoin windows
 "comb2 + E" = "unjoin_windows"
+
+# Move window to display
+"comb3 + H" = { move_window_to_display = { selector = "left" } }
+"comb3 + J" = { move_window_to_display = { selector = "down" } }
+"comb3 + K" = { move_window_to_display = { selector = "up" } }
+"comb3 + L" = { move_window_to_display = { selector = "right" } }
 
 # Toggle stack mode (closest to accordion)
 "Alt + Comma" = "toggle_stack"
