@@ -39,11 +39,12 @@ brew "acsandmann/tap/rift"
 
 # AI
 tap "jundot/omlx", "https://github.com/jundot/omlx"
+brew "agent-browser"
 brew "gemini-cli"
 brew "llm"
 brew "jundot/omlx/omlx"
 brew "opencode"
-cask "claude-code"
+cask "claude-code@latest"
 cask "codex"
 
 # fonts
