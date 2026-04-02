@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Restart rift service
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon ♻️
+
+rift service restart
+
