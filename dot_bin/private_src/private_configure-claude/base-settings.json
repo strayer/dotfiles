@@ -1,6 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "includeCoAuthoredBy": false,
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "permissions": {
     "allow": [
       "Bash(npx lint-staged:*)",
@@ -20,12 +23,12 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "~/.claude/statusline.sh",
+    "command": "~/.claude/claude-statusline",
     "padding": 0
   },
   "env": {
     "DISABLE_TELEMETRY": "1",
-    "DISABLE_BUG_COMMAND": "1",
+    "DISABLE_FEEDBACK_COMMAND": "1",
     "DISABLE_ERROR_REPORTING": "1",
     "DISABLE_AUTOUPDATER": "1"
   }
