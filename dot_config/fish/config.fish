@@ -106,20 +106,6 @@ if status --is-interactive
     end
   end
 
-  if type -q brew
-    function brup
-      echo "### Running brew up…"
-      brew up; or return
-      brew upgrade; or return
-      test "$os" = "Darwin"; and brew upgrade --cask
-      if test -e $HOME/.bin/outdated-packages.sh
-        echo "Pruning outdated-packages cache"
-        $HOME/.bin/outdated-packages.sh prune
-      end
-      brew cleanup
-    end
-  end
-
   # if type -q kitty
   #   kitty + complete setup fish | source
   # end
