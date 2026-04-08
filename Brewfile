@@ -38,8 +38,10 @@ tap "acsandmann/tap"
 brew "acsandmann/tap/rift"
 
 # AI
+tap "eugene1g/safehouse"
 tap "jundot/omlx", "https://github.com/jundot/omlx"
 brew "agent-browser"
+brew "eugene1g/safehouse/agent-safehouse"
 brew "gemini-cli"
 brew "llm"
 brew "jundot/omlx/omlx"
