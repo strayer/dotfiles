@@ -1,4 +1,4 @@
 function sandbox-gemini
     set -lx NO_BROWSER true
-    safe --add-dirs-ro="$HOME/.config/gcloud/application_default_credentials.json" gemini $argv
+    _sandbox-coding-agent --add-dirs-ro="$HOME/.config/gcloud/application_default_credentials.json" gemini $argv
 end
