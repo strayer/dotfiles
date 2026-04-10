@@ -12,5 +12,5 @@ function sandbox-claude
             set -a extra_args --add-dirs-ro=(string replace '~' "$HOME" "$helper")
         end
     end
-    _sandbox-coding-agent $extra_args claude $argv
+    _sandbox-coding-agent --enable=clipboard $extra_args claude $argv
 end
