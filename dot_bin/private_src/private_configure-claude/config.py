@@ -4,9 +4,9 @@ from custom_types import Provider, ProviderConfig
 PROVIDER_CONFIGS: dict[Provider, ProviderConfig] = {
     "vertex": {
         "common_env": {
-            "CLOUD_ML_REGION": "europe-west1",
+            "CLOUD_ML_REGION": "global",
             "CLAUDE_CODE_USE_VERTEX": "1",
-            "ANTHROPIC_MODEL": "claude-opus-4-6[1m]",
+            "ANTHROPIC_MODEL": "claude-opus-4-7",
             "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4-5@20251001",
         },
         "auth": {
