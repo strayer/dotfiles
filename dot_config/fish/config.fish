@@ -34,6 +34,11 @@ fish_add_path "$HOME/.local/bin"
 # python poetry
 fish_add_path "$HOME/.poetry/bin"
 
+# local rift
+if test -e "$HOME/dev/rift/target/release/rift"
+  fish_add_path "$HOME/dev/rift/target/release/"
+end
+
 # more up to date cURL
 fish_add_path /opt/homebrew/opt/curl/bin
 
