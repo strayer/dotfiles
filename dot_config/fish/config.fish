@@ -153,6 +153,9 @@ if status --is-interactive
   end
 
   if type -q gh
+    set -gx GH_TELEMETRY false
+    set -gx DO_NOT_TRACK true
+
     abbr --add --global ai gh copilot explain
     abbr --add --global aie gh copilot suggest
   end
