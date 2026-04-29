@@ -1,13 +1,17 @@
 -- items/init.lua - Item loader for all bar components
 
+local settings = require("lib.settings")
+
 -- Padding items (load first to appear at edges)
 require("items.padding")
 
 -- Left side items
 require("items.chevron")
--- require("items.aerospace")  -- Disabled: migrated to Rift
--- require("items.rift")       -- Disabled: migrated to OmniWM
-require("items.omniwm")
+if settings.window_manager == "omniwm" then
+  require("items.omniwm")
+elseif settings.window_manager == "rift" then
+  require("items.rift")
+end
 require("items.system_theme")
 
 -- Right side items
@@ -19,7 +23,6 @@ require("items.network_type")
 require("items.network")
 
 -- Work-specific items (loaded conditionally)
-local settings = require("lib.settings")
 if settings.is_work_machine then
   require("items.mealplan")
 end
