@@ -6,7 +6,8 @@ require("items.padding")
 -- Left side items
 require("items.chevron")
 -- require("items.aerospace")  -- Disabled: migrated to Rift
-require("items.rift")
+-- require("items.rift")       -- Disabled: migrated to OmniWM
+require("items.omniwm")
 require("items.system_theme")
 
 -- Right side items
