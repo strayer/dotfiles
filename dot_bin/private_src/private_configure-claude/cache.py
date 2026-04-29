@@ -1,7 +1,6 @@
 """Cache management for configure-claude"""
 
 import json
-from pathlib import Path
 
 from platformdirs import user_cache_path
 
@@ -43,9 +42,17 @@ def write_cache(cache: Cache) -> None:
         _ = f.write("\n")
 
 
-def get_cached_variables(
-    cache: Cache, provider: str, auth_method: str
-) -> dict | None:
+def get_cached_provider_settings(cache: Cache, provider: str) -> dict:
+    return cache.get("provider_settings", {}).get(provider, {})
+
+
+def set_cached_provider_settings(cache: Cache, provider: str, settings: dict) -> None:
+    if "provider_settings" not in cache:
+        cache["provider_settings"] = {}
+    cache["provider_settings"][provider] = settings
+
+
+def get_cached_variables(cache: Cache, provider: str, auth_method: str) -> dict | None:
     """
     Get cached variables for a specific provider and auth method.
 

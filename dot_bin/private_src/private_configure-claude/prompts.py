@@ -14,7 +14,7 @@ def prompt_provider(current_provider: Provider | None) -> Provider:
 
     choice = Prompt.ask(
         "Choose provider",
-        choices=["vertex", "bedrock"],
+        choices=["vertex", "bedrock", "subscription"],
         default=current_provider,
     )
     return choice  # type: ignore[return-value]
@@ -36,9 +36,7 @@ def prompt_bedrock_auth() -> str:
     return choice
 
 
-def collect_vertex_variables(
-    auth_method: str, cached_values: dict | None
-) -> dict:
+def collect_vertex_variables(auth_method: str, cached_values: dict | None) -> dict:
     """Collect required Vertex variables from user, using cached values as defaults."""
     console.print("\n[bold]Vertex AI Configuration[/bold]")
 
@@ -55,16 +53,13 @@ def collect_vertex_variables(
     return {"project_id": project_id}
 
 
-def collect_bedrock_variables(
-    auth_method: str, cached_values: dict | None
-) -> dict:
+def collect_bedrock_variables(auth_method: str, cached_values: dict | None) -> dict:
     """Collect required Bedrock variables from user, using cached values as defaults."""
     console.print("\n[bold]AWS Bedrock Configuration[/bold]")
 
     if auth_method == "aws_profile":
         aws_profile = Prompt.ask(
-            "AWS Profile",
-            default=(cached_values or {}).get("aws_profile", "")
+            "AWS Profile", default=(cached_values or {}).get("aws_profile", "")
         )
         return {"aws_profile": aws_profile}
 

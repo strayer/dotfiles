@@ -1,6 +1,6 @@
 from typing import Literal, TypedDict
 
-Provider = Literal["vertex", "bedrock"]
+Provider = Literal["vertex", "bedrock", "subscription"]
 VertexAuth = Literal["litellm", "direct"]
 BedrockAuth = Literal["api_key", "aws_profile"]
 
@@ -43,6 +43,13 @@ class BedrockCache(TypedDict, total=False):
     aws_profile: BedrockAwsProfile
 
 
+class ProviderSettingsCache(TypedDict, total=False):
+    vertex: dict
+    bedrock: dict
+    subscription: dict
+
+
 class Cache(TypedDict, total=False):
     vertex: VertexCache
     bedrock: BedrockCache
+    provider_settings: ProviderSettingsCache

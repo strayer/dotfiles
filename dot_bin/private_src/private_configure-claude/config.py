@@ -48,4 +48,13 @@ PROVIDER_CONFIGS: dict[Provider, ProviderConfig] = {
             },
         },
     },
+    "subscription": {
+        "common_env": {},
+        "auth": {
+            "none": {
+                "env": {},
+                "api_key_helper": None,
+            },
+        },
+    },
 }

@@ -92,7 +92,7 @@ def detect_provider(settings: dict | None) -> Provider | None:
     if "CLAUDE_CODE_USE_BEDROCK" in env:
         return "bedrock"
 
-    return None
+    return "subscription"
 
 
 def detect_auth_method(settings: dict | None, provider: Provider) -> str | None:
@@ -120,8 +120,9 @@ def detect_auth_method(settings: dict | None, provider: Provider) -> str | None:
         elif "AWS_PROFILE" in env:
             return "aws_profile"
         elif "CLAUDE_CODE_USE_BEDROCK" in env:
-            # Default to api_key if only the provider flag is set
             return "api_key"
+    elif provider == "subscription":
+        return "none"
 
     return None
 

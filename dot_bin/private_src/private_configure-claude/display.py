@@ -15,15 +15,12 @@ def display_current_status(
 ) -> None:
     """Display current configuration status at startup."""
     # Build status content
-    if current_provider and current_auth:
+    if current_provider and current_auth and current_auth != "none":
         provider_status = (
             f"[bold cyan]{current_provider}[/bold cyan] [dim]({current_auth})[/dim]"
         )
     elif current_provider:
-        provider_status = (
-            f"[bold cyan]{current_provider}[/bold cyan] "
-            f"[dim](auth method unknown)[/dim]"
-        )
+        provider_status = f"[bold cyan]{current_provider}[/bold cyan]"
     else:
         provider_status = "[yellow]Not configured[/yellow]"
 
@@ -54,6 +51,9 @@ def display_current_status(
 
 def display_success(provider: str, auth_method: str) -> None:
     """Display success message after configuration."""
-    console.print(
-        f"\n[green]✓[/green] Configured [bold]{provider}[/bold] ({auth_method})"
-    )
+    if auth_method and auth_method != "none":
+        console.print(
+            f"\n[green]✓[/green] Configured [bold]{provider}[/bold] ({auth_method})"
+        )
+    else:
+        console.print(f"\n[green]✓[/green] Configured [bold]{provider}[/bold]")

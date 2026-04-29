@@ -2,7 +2,13 @@
 
 import click
 
-from cache import get_cached_variables, read_cache, write_cache
+from cache import (
+    get_cached_provider_settings,
+    get_cached_variables,
+    read_cache,
+    set_cached_provider_settings,
+    write_cache,
+)
 from config import Provider
 from display import display_current_status, display_success
 from prompts import (
@@ -20,6 +26,8 @@ from settings import (
     read_settings,
     write_settings,
 )
+
+PROVIDER_SPECIFIC_KEYS = {"model"}
 
 
 @click.command()
@@ -41,30 +49,58 @@ def main() -> None:
     # 3. Prompt for provider and auth method
     provider: Provider = prompt_provider(current_provider)
 
+    # 4. Handle provider-specific vs global preserved settings
+    provider_specific = {
+        k: v for k, v in preserved.items() if k in PROVIDER_SPECIFIC_KEYS
+    }
+    global_preserved = {
+        k: v for k, v in preserved.items() if k not in PROVIDER_SPECIFIC_KEYS
+    }
+
+    if current_provider and provider != current_provider:
+        set_cached_provider_settings(cache, current_provider, provider_specific)
+        provider_specific = get_cached_provider_settings(cache, provider)
+
+    preserved = {**global_preserved, **provider_specific}
+
+    # 5. Collect provider-specific variables
     if provider == "vertex":
         auth_method = prompt_vertex_auth()
         cached_vars = get_cached_variables(cache, provider, auth_method)
         variables = collect_vertex_variables(auth_method, cached_vars)
-    else:  # bedrock
+    elif provider == "bedrock":
         auth_method = prompt_bedrock_auth()
         cached_vars = get_cached_variables(cache, provider, auth_method)
         variables = collect_bedrock_variables(auth_method, cached_vars)
+    else:  # subscription
+        auth_method = "none"
+        variables = {}
 
-    # 4. Build new settings (merges base-settings.json + provider config)
+    # 6. Build new settings (merges base-settings.json + provider config)
     new_settings = build_settings(provider, auth_method, variables)
 
-    # 5. Preserve custom settings from current config
+    # 7. Preserve custom settings from current config
     for key, value in preserved.items():
         new_settings[key] = value
 
-    # 6. Write settings
+    # 8. Write settings
     write_settings(new_settings)
     display_success(provider, auth_method)
 
-    # 7. Update cache with new values (preserve all other cached configs)
+    # 9. Update cache with new values (preserve all other cached configs)
     if provider not in cache:
         cache[provider] = {}
-    cache[provider][auth_method] = variables
+    if auth_method != "none":
+        cache[provider][auth_method] = variables
+    set_cached_provider_settings(
+        cache,
+        provider,
+        {
+            k: v
+            for k, v in get_preserved_settings(new_settings).items()
+            if k in PROVIDER_SPECIFIC_KEYS
+        },
+    )
     write_cache(cache)
 
 
