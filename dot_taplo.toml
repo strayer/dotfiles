@@ -1,0 +1,6 @@
+#:schema https://json.schemastore.org/taplo.json
+
+# make taplo work in all toml files in my home dir
+# ref: https://github.com/tamasfe/taplo/issues/320#issuecomment-2897257730
+
+include = ["**/*.toml", "**/*.toml.tmpl"]
