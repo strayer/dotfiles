@@ -1,0 +1,132 @@
+---
+name: research
+description: Research a topic on the web with Linkup agentic search, returning a synthesized answer with inline numbered citations to live web sources.
+when_to_use: |
+  Trigger when the user wants information that requires fresh, sourced web content. Concrete signals:
+  - Explicit verbs: "research", "look up", "find", "investigate", "fact-check", "verify", "dig into"
+  - Recency cues: "latest", "current", "recent", "this week", "in 2026", "what's new with"
+  - External-knowledge cues: company/product/market intel, pricing, funding rounds, competitor info, news, regulations, public profiles
+  - Citation cues: "with sources", "cited", "find sources for", "back this up"
+  - Questions about anything past the model's training cutoff or that depend on a live website
+  Do NOT trigger for: pure code questions, questions about files in the repo, math, or anything answerable from the conversation context alone.
+argument-hint: <research question>
+allowed-tools: Bash({{ .chezmoi.homeDir }}/.claude/skills/research/scripts/search.py *)
+context: fork
+---
+
+# Linkup Research
+
+You research topics on the live web via Linkup's agentic search. Linkup does the retrieval *and* writes a synthesized answer with `[N]` citation markers. Your job is to craft the right query, run the call, and present the answer with inline subject links woven in — so readers can both audit any claim (via the numbered citations) and follow up on any entity (via the inline links).
+
+If `$ARGUMENTS` is provided, treat it as the research question and start immediately. Otherwise ask the user what they want researched.
+
+## Tool
+
+```bash
+${CLAUDE_SKILL_DIR}/scripts/search.py "<natural language research brief>" --depth standard
+```
+
+- `--depth`: `fast` | `standard` (default) | `deep`. See depth selection below.
+- `--include-images`: include image sources when the user wants visual content.
+- Output: Linkup's synthesized answer with `[1]`, `[2]`, … inline citation markers, followed by a `## Sources` section listing each source as `[N] [Title](URL)`. Paste through verbatim, or lightly rephrase while preserving the `[N]` markers and the source list.
+
+## Workflow
+
+1. **Plan the query.** Identify the user's information need. Draft one focused research brief (or up to 3 if the topic genuinely splits into independent facets — see "Multi-call research" below).
+2. **Run the search.** Maximum 3 calls per request. Run independent calls in parallel.
+3. **Enrich and present.** Take Linkup's answer and weave inline subject links into the prose (see "Inline subject links" below). Preserve every `[N]` marker. For multiple calls, weave the answers together, renumber the `[N]` markers consecutively, and merge the source lists into a single `## Sources` section at the bottom.
+
+## Query crafting (mandatory)
+
+Linkup is an *agentic* search engine: when you call it, you delegate retrieval to an assistant that runs web searches, scrapes pages, and refines across iterations. **Write the query as a clear research brief, not a keyword string.** Specify:
+
+- **GOAL** — what to find out
+- **SCOPE** — what kinds of sources or content to look at
+- **DATA POINTS** — what specific information to extract or prioritize
+- **COVERAGE** (when relevant) — include the literal phrase "Run several searches with adjacent keywords."
+
+Do NOT write bare keywords — they produce poor results.
+Do NOT ask Linkup to analyze, compare, or reason — it retrieves; Linkup's own synthesis step handles light reasoning over what it found.
+
+## Depth selection
+
+- **`standard`** (default) — single agentic-search iteration. Can run parallel sub-searches and scrape ONE URL provided directly in the query. Use for the vast majority of requests.
+- **`deep`** — up to 10 iterative passes; can scrape multiple URLs and chain search → scrape → re-search. Use only when the request genuinely needs Linkup to chain steps (e.g., "find the pricing page, scrape it, also pull up customer logos").
+- **`fast`** (beta, sub-second, no LLM) — single atomic-fact lookups under latency pressure ("EUR/USD rate", "CEO of OpenAI").
+
+Default to `standard`. Escalate to `deep` only when chaining is required.
+
+## Multi-call research
+
+For multi-faceted requests, prefer 2–3 focused `standard` calls in parallel over one `deep` call:
+
+- Call 1: `Find {company}'s ARR and growth rate from latest earnings or press coverage.`
+- Call 2: `Find {company}'s enterprise customer count and net revenue retention from investor or analyst reports.`
+- Call 3: `Find {company}'s recent product launches and partnerships in the last 6 months. Run several searches with adjacent keywords.`
+
+When merging multiple call outputs into one response, renumber `[N]` markers and `## Sources` entries so they are unique and consecutive across the merged block.
+
+**Hard cap: 3 search calls per request.**
+
+## Examples
+
+| Intent | Bad query | Good query | Depth |
+|---|---|---|---|
+| Latest funding | `company X funding 2024` | `Find the most recent funding rounds and valuation data for {company}. Look at press releases, Crunchbase profiles, and news from 2024 onward. Extract round size, valuation, lead investors, and announcement date.` | standard |
+| Broad coverage | `AI agents news` | `Find recent significant developments in AI agent frameworks and tools. Look at product announcements, research papers, and analysis from major tech publications. Run several searches with adjacent keywords.` | standard |
+| Pricing (no URL) | `company pricing features` | `Find the pricing page for {company}. Scrape it. Extract plan names, prices per tier, and included features for each plan.` | deep |
+| Company profile | `Acme Corp product features` | `Find and scrape {company}'s homepage, product pages, and 2–3 recent blog posts. Extract: core offering, target industries, company sizes referenced, key differentiators, and pricing model if visible.` | deep |
+| Known URL + context | — | `Scrape {company_url}. Also search for articles mentioning {company}'s clients. Return a list of known clients with the source of each.` | standard |
+
+## Inline subject links
+
+Two layers of sourcing, doing different jobs:
+
+- **Numbered citations `[N]`** — verifiability. Audits a specific claim. Linkup placed these; preserve them exactly where they are.
+- **Inline subject links `[entity](url)`** — discoverability. Lets the reader jump to *the thing being talked about*. You add these on top of Linkup's prose.
+
+**How to add them:** Scan the `## Sources` list. For each source whose title clearly corresponds to a proper noun, project, person, or product mentioned in the prose, wrap the first mention of that entity in a markdown link to its URL. Pick the link target by relevance:
+
+- Source #4 is `[0xhckr/ghostty-shaders GitHub repo](https://github.com/0xhckr/ghostty-shaders)` and the prose mentions `0xhckr/ghostty-shaders` → link the first mention to that URL.
+- Source #7 is `[Anthropic Releases Claude Opus 4.7 - DataNorth AI]` and the prose mentions `Claude Opus 4.7` → link the first mention to that URL.
+
+**Rules:**
+
+- Only link the **first** mention of an entity in your prose. Subsequent mentions stay plain text.
+- Only link when there is a **clear, specific match** between the source title and a noun in the prose. If you have to stretch, don't link.
+- Use the entity's natural form as the link text (`[Claude Opus 4.7]`, not `[here]` or `[this article]`).
+- An entity may share its URL with one of the `[N]` markers — that's fine and expected. The marker stays alongside the link.
+- Never fabricate URLs. Only use URLs from the `## Sources` block.
+
+## Citation discipline
+
+The `[N]` markers and the `## Sources` block are Linkup's contribution — preserve both.
+
+- **Do** keep every `[N]` marker in the position Linkup placed it.
+- **Do** keep the `## Sources` block at the bottom of your response.
+- **Do not** invent additional `[N]` citations or attach them to claims Linkup didn't cite.
+- **Do not** drop entries from the source list, even if a marker doesn't appear in your final prose (it can still be the target of an inline subject link).
+- **Do not** convert `[N]` to `[^N]` markdown footnote syntax — it doesn't render in terminal markdown viewers.
+- If you rephrase a sentence, carry the `[N]` markers along with the claims they support.
+
+## Common mistakes
+
+- Writing bare keyword queries instead of research briefs. `company X funding 2024` → write `Find {company}'s most recent funding round (size, lead investors, date)…`
+- Using `deep` when `standard` suffices. Deep is for chaining; for facts and broad coverage, standard with "Run several searches with adjacent keywords" is faster and equally effective.
+- Asking Linkup to analyze or compare. Linkup retrieves; you frame.
+- Burning multiple calls on the same question phrased differently. If one call covers the topic, stop.
+- Stripping or renumbering citations inconsistently when merging multi-call results — the `[N]` markers in the body and the entries in the `## Sources` block must stay in sync.
+- Linking the same entity multiple times in the prose. First mention only.
+- Stretching to add a subject link when no source title clearly matches the entity. If in doubt, leave the entity as plain text.
+
+## Setup
+
+If the script exits with `LINKUP_API_KEY not set`, add the key to the `env` block in `~/.claude/settings.json`:
+
+```json
+"env": {
+  "LINKUP_API_KEY": "lp_..."
+}
+```
+
+Get a key at https://app.linkup.so. Restart Claude Code after adding.

@@ -1,0 +1,72 @@
+---
+name: scrape
+description: Scrape a single web page with Firecrawl and return clean markdown stripped of nav/header/footer/ads.
+when_to_use: |
+  Trigger when the user wants the content of a specific URL extracted as readable markdown. Concrete signals:
+  - Explicit verbs: "scrape", "extract", "read this page", "get the content of", "pull down", "save this article"
+  - URL provided alongside an action verb that implies needing the page content
+  - Documentation/article reading where the user pasted a link
+  - When a previous tool (linkup-research, search, MCP) returned a URL the user wants to dive into
+  Do NOT trigger for:
+  - Open research questions without a specific URL (use linkup-research instead)
+  - URLs to plain files (.md, .txt, JSON, OpenAPI specs) — use `curl -s` instead, no extraction needed
+  - Multi-page crawls or domain mapping (out of scope for this skill)
+  - Pages requiring login, form-fill, or click interactions (out of scope; would need /v2/interact)
+argument-hint: <url>
+allowed-tools: Bash({{ .chezmoi.homeDir }}/.claude/skills/scrape/scripts/scrape.py *)
+---
+
+# Scrape
+
+You scrape a single web page via Firecrawl's `/v2/scrape` endpoint and return clean markdown. Firecrawl strips nav/header/footer/ads at the HTML level, blocks cookie banners, and converts the main content to markdown.
+
+If `$ARGUMENTS` is provided, treat it as the URL (or a URL with extra context) and run the scrape immediately. Otherwise ask the user for the URL.
+
+## Tool
+
+```bash
+${CLAUDE_SKILL_DIR}/scripts/scrape.py "<url>" [flags]
+```
+
+Output: a small header (`# Title`, `URL:`, `Status:`), then `---`, then the page markdown. With `--include-links`, an extra `## Links` section.
+
+## Flags — when to use which
+
+- **(none)** — the default. Just `<url>`. Markdown only, cached up to 2 days, auto proxy.
+- **`--fresh`** — bypass the 2-day cache. Use when the user says "latest", "current", "today's", "just published", or you have any reason to think the page changed recently.
+- **`--wait-for 5000`** — extra 5s delay before grabbing content. Use as a **retry** when the first attempt comes back empty or just navigation (likely a JS-rendered SPA). Don't add it preemptively — it slows every scrape.
+- **`--mobile`** — emulate a mobile device. Use only when the user explicitly wants the mobile view or the page is known to be mobile-only.
+- **`--proxy enhanced`** — use enhanced anti-bot proxies. Use as a **retry** when the first attempt returned a 403 or anti-bot block. Costs more (up to 5 credits) — don't use preemptively.
+- **`--include-links`** — also list extracted links. Use when the user wants to follow up by scraping linked pages, or asks for "links on the page".
+
+## Workflow
+
+1. **Scrape** — call the script with just the URL.
+2. **Inspect** — if the markdown is empty or contains only navigation/menu text, retry once with `--wait-for 5000`. If the call returned a 403-style error, retry with `--proxy enhanced`. Otherwise proceed.
+3. **Present** — paste the markdown verbatim by default. Keep the header block (title/URL/status) so the user can see what was scraped. Only summarize if the user asked for a summary.
+
+## Output discipline
+
+- **Default to verbatim.** The user invoked `/scrape` because they want the content. Don't paraphrase, summarize, or trim unless asked.
+- **Preserve the header block** (title, URL, status) — it's the audit trail.
+- **Markdown is large.** A typical page is 5–50 KB; long-form articles can hit several hundred KB. If the page is huge and the user's intent looks like "I want to know X about this page", you may summarize the answer to X and offer the full markdown on request.
+- **Never fabricate URLs or content.** The script's output is the source of truth.
+
+## Common mistakes
+
+- Adding `--wait-for` or `--proxy enhanced` preemptively. Both slow / cost more — only use them as targeted retries.
+- Summarizing when the user asked for the page content. Default verbatim, summarize on request.
+- Calling scrape on plain files (`.md`, `.txt`, `.json`, OpenAPI specs). Use `curl -s URL` instead — no extraction needed and no Firecrawl credit burned.
+- Treating a near-empty markdown as success. Inspect; retry with `--wait-for 5000` once before reporting.
+
+## Setup
+
+If the script exits with `FIRECRAWL_API_KEY not set`, add the key to the `env` block in `~/.claude/settings.json`:
+
+```json
+"env": {
+  "FIRECRAWL_API_KEY": "fc-..."
+}
+```
+
+Get a key at https://firecrawl.dev. Restart Claude Code after adding.
