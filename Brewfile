@@ -201,6 +201,7 @@ brew "zoxide"
 # neovim-related
 brew "luarocks"
 brew "neovim"
+brew "tree-sitter-cli"
 
 # better git
 brew "diff-so-fancy"
