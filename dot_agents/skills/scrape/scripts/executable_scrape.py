@@ -12,10 +12,9 @@ API_URL = "https://api.firecrawl.dev/v2/scrape"
 TIMEOUT = 90
 
 MISSING_KEY_HINT = (
-    "Error: FIRECRAWL_API_KEY not set.\n"
-    'Add it to the "env" block of ~/.claude/settings.json:\n'
-    '  "env": { "FIRECRAWL_API_KEY": "fc-..." }\n'
-    "Get a key at https://firecrawl.dev, then restart Claude Code.\n"
+    "Error: FIRECRAWL_API_KEY is not set.\n"
+    "Export it in the environment before invoking this script.\n"
+    "Get a key at https://firecrawl.dev.\n"
 )
 
 

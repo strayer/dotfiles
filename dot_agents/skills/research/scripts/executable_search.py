@@ -12,10 +12,9 @@ API_URL = "https://api.linkup.so/v1/search"
 TIMEOUT = 120
 
 MISSING_KEY_HINT = (
-    "Error: LINKUP_API_KEY not set.\n"
-    'Add it to the "env" block of ~/.claude/settings.json:\n'
-    '  "env": { "LINKUP_API_KEY": "lp_..." }\n'
-    "Get a key at https://app.linkup.so, then restart Claude Code.\n"
+    "Error: LINKUP_API_KEY is not set.\n"
+    "Export it in the environment before invoking this script.\n"
+    "Get a key at https://app.linkup.so.\n"
 )
 
 

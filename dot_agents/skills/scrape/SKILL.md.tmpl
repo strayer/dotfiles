@@ -61,12 +61,5 @@ Output: a small header (`# Title`, `URL:`, `Status:`), then `---`, then the page
 
 ## Setup
 
-If the script exits with `FIRECRAWL_API_KEY not set`, add the key to the `env` block in `~/.claude/settings.json`:
-
-```json
-"env": {
-  "FIRECRAWL_API_KEY": "fc-..."
-}
-```
-
-Get a key at https://firecrawl.dev. Restart Claude Code after adding.
+The script reads `FIRECRAWL_API_KEY` from the environment. Get a key at
+https://firecrawl.dev and export it before invoking the skill.

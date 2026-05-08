@@ -1,3 +1,9 @@
+encryption = "age"
+
+[age]
+    identity = "{{ .chezmoi.homeDir }}/.config/chezmoi/age-identity.txt"
+    recipientsFile = "{{ .chezmoi.sourceDir }}/.chezmoisecrets-recipients.txt"
+
 [secret]
     command = "{{ .chezmoi.sourceDir }}/dot_bin/executable_chezmoi-secrets"
     args = ["get"]

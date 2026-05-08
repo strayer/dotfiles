@@ -26,10 +26,19 @@ function sb --description "Run commands in a safehouse sandbox"
                     set -a extra_args --add-dirs-ro=(string replace '~' "$HOME" "$helper")
                 end
             end
-            _sb-coding-agent $extra_args claude $argv[2..]
+            _with-agent-secrets
+            _sb-coding-agent \
+                $extra_args \
+                --env-pass=FIRECRAWL_API_KEY,LINKUP_API_KEY \
+                --add-dirs-ro="$HOME/.agents/skills" \
+                claude $argv[2..]
 
         case codex
-            _sb-coding-agent codex $argv[2..]
+            _with-agent-secrets
+            _sb-coding-agent \
+                --env-pass=FIRECRAWL_API_KEY,LINKUP_API_KEY \
+                --add-dirs-ro="$HOME/.agents/skills" \
+                codex $argv[2..]
 
         case gemini
             set -lx NO_BROWSER true

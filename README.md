@@ -4,76 +4,72 @@ Personal configuration files, managed with [chezmoi](https://chezmoi.io). Uses G
 
 ## Setup
 
-Prerequisites: `chezmoi`, `age`, `age-plugin-se`, `age-plugin-yubikey`
+Prerequisites: `chezmoi`, `age`, `age-plugin-se`, `age-plugin-yubikey`.
 
-```bash
-chezmoi init git@github.com:USER/dotfiles.git
-chezmoi apply --init
-```
+Two things in this repo are encrypted with [age](https://age-encryption.org) and both decrypt against the identity at `~/.config/chezmoi/age-identity.txt`:
 
-The `--init` flag regenerates the chezmoi config from the source template before applying, which is necessary on first run to configure the secrets backend.
+- `.chezmoisecrets.age` — YAML of static secrets (URLs, server addresses), decrypted on demand by the `chezmoi-secrets` helper.
+- `dot_config/dot-secret/impls/encrypted_executable_*.age` — runtime backends for `dot-secret`, decrypted by chezmoi itself during `chezmoi apply`.
+
+The single inviolable rule: **the identity file must exist at that path before `chezmoi apply` runs**. If it doesn't, chezmoi cannot decrypt the impls and `dot-secret` exits with `selected backend is unavailable: <codename>`. Recovery is just "place the identity, re-run apply" — no corrupted state, only missing files.
+
+### Adding a new machine
+
+The SE key is hardware-bound and cannot be ferried over, so it has to be generated on the new machine and that machine has to be added as a recipient on an existing one before encrypted files can flow.
+
+1. **On the new machine**, generate the SE identity:
+
+   ```bash
+   mkdir -p ~/.config/chezmoi
+   age-plugin-se keygen -o ~/.config/chezmoi/age-identity.txt
+   ```
+
+   If carrying the YubiKey over, also drop its identity stub at `~/.config/chezmoi/age-identity-yubikey.txt` (run `age-plugin-yubikey` to print it).
+
+2. **On an existing machine**, add the new machine as a recipient and re-encrypt:
+
+   - Append the new SE recipient line (from the new machine's identity file) to `.chezmoisecrets-recipients.txt`.
+   - Re-encrypt static secrets: `chezmoi-secrets edit`, save without changes.
+   - Re-encrypt each `dot_config/dot-secret/impls/encrypted_executable_*.age` so the new recipient can decrypt them.
+   - Commit and push.
+
+3. **Back on the new machine**, clone and apply in one command:
+
+   ```bash
+   chezmoi init --apply git@github.com:USER/dotfiles.git
+   ```
+
+   The identity from step 1 is already on disk, so every encrypted file decrypts as chezmoi processes it.
+
+### First-time setup (no existing machine yet)
+
+Skip step 2 above. After step 1, add both recipient lines (SE + YubiKey) to `.chezmoisecrets-recipients.txt` directly in your local clone, run `chezmoi init --apply`, then seed initial secrets with `chezmoi-secrets edit`.
 
 ## Secrets management
 
-Secrets (API URLs, server addresses) are stored in `.chezmoisecrets.age` — a YAML file encrypted with [age](https://age-encryption.org). Each machine has a Secure Enclave key via `age-plugin-se` and a YubiKey backup via `age-plugin-yubikey`. The file is encrypted for all recipients, so any single key can decrypt it.
-
-Chezmoi's `[secret]` config calls a wrapper script (`chezmoi-secrets`) that decrypts and outputs the YAML. Templates access values with:
+Static secrets live in `.chezmoisecrets.age`. The `[secret]` block in `.chezmoi.toml.tmpl` calls a `chezmoi-secrets` wrapper that decrypts on demand. Templates read values with:
 
 ```
 {{ (secret | fromYaml).some_key | quote }}
 ```
 
-### Generating keys
-
-Secure Enclave:
-
-```bash
-mkdir -p ~/.config/chezmoi
-age-plugin-se keygen -o ~/.config/chezmoi/age-identity.txt
-```
-
-YubiKey:
-
-```bash
-age-plugin-yubikey
-# Save identity output to ~/.config/chezmoi/age-identity-yubikey.txt
-```
-
-Add both recipient lines (from the identity files) to `.chezmoisecrets-recipients.txt` in the repo root.
-
-### Creating initial secrets
-
-```bash
-chezmoi-secrets edit
-```
-
-This opens your `$EDITOR` with an empty file. Write your secrets as YAML:
-
-```yaml
-atuin_sync_server: https://atuin.example.com
-mealplan_url: https://mealplan.example.com/api
-```
-
-Save and close. The script encrypts to all recipients and writes `.chezmoisecrets.age`.
-
-### Adding a new machine
-
-1. On the new machine, generate SE and YubiKey identities (see above)
-2. On an existing machine, add the new recipient lines to `.chezmoisecrets-recipients.txt`
-3. Re-encrypt for all recipients — run `chezmoi-secrets edit`, save without changes
-4. Commit and push `.chezmoisecrets.age` and `.chezmoisecrets-recipients.txt`
-5. On the new machine:
-
-```bash
-chezmoi init git@github.com:USER/dotfiles.git
-chezmoi apply --init
-```
-
-### Updating secrets
+To update:
 
 ```bash
 chezmoi-secrets edit    # modify values, save
 chezmoi diff            # verify rendered templates
 ```
 
-Commit `.chezmoisecrets.age` and push. Other machines pick up changes on next `chezmoi update`.
+Commit `.chezmoisecrets.age` and push. Other machines pick up changes on the next `chezmoi update`.
+
+## Runtime secret access
+
+Short-lived automation secrets (API keys for tooling, agent skills, etc.) go through `dot-secret` instead of being stored in shell startup files or `~/.claude/settings.json`.
+
+```bash
+dot-secret list
+dot-secret get linkup_api_key
+dot-secret set firecrawl_api_key
+```
+
+The public command is a stable dispatcher: it reads a codenamed backend selector from `~/.config/dot-secret/backend` and execs the matching implementation under `~/.config/dot-secret/impls/<codename>`. Both the selector and the impls are generated by chezmoi from `dot_config/dot-secret/`, where the impl scripts are stored as `encrypted_executable_*.age` files. Backend choice and allowlist details therefore stay out of the public dotfiles.

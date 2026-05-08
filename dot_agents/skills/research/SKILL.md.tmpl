@@ -121,12 +121,5 @@ The `[N]` markers and the `## Sources` block are Linkup's contribution — prese
 
 ## Setup
 
-If the script exits with `LINKUP_API_KEY not set`, add the key to the `env` block in `~/.claude/settings.json`:
-
-```json
-"env": {
-  "LINKUP_API_KEY": "lp_..."
-}
-```
-
-Get a key at https://app.linkup.so. Restart Claude Code after adding.
+The script reads `LINKUP_API_KEY` from the environment. Get a key at
+https://app.linkup.so and export it before invoking the skill.
