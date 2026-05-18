@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Brave Beta (New Window)
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon images/brave-beta.png
+
+open --new "/Applications/Brave Browser Beta.app"
