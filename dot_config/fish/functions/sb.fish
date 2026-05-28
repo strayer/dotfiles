@@ -1,6 +1,19 @@
 function sb --description "Run commands in a safehouse sandbox"
-    if test (count $argv) -eq 0
-        echo "Usage: sb <command> [args...]"
+    set -l sb_args
+    set -l cmd_idx 0
+
+    for i in (seq (count $argv))
+        switch $argv[$i]
+            case '-*'
+                set -a sb_args $argv[$i]
+            case '*'
+                set cmd_idx $i
+                break
+        end
+    end
+
+    if test $cmd_idx -eq 0
+        echo "Usage: sb [sandbox-options...] <command> [args...]"
         echo ""
         echo "Coding agents:"
         echo "  claude     Claude Code (Vertex AI, apiKeyHelper)"
@@ -8,10 +21,18 @@ function sb --description "Run commands in a safehouse sandbox"
         echo "  gemini     Gemini CLI (gcloud ADC)"
         echo ""
         echo "Any other command runs in a plain safehouse sandbox."
+        echo ""
+        echo "Sandbox options (passed to safehouse) go before the command."
         return 1
     end
 
-    switch $argv[1]
+    set -l cmd $argv[$cmd_idx]
+    set -l cmd_args
+    if test $cmd_idx -lt (count $argv)
+        set cmd_args $argv[(math $cmd_idx + 1)..]
+    end
+
+    switch $cmd
         case claude
             set -l extra_args
             if test -f ~/.claude/settings.json
@@ -28,25 +49,28 @@ function sb --description "Run commands in a safehouse sandbox"
             end
             _with-agent-secrets
             _sb-coding-agent \
+                $sb_args \
                 $extra_args \
                 --env-pass=FIRECRAWL_API_KEY,LINKUP_API_KEY \
                 --add-dirs-ro="$HOME/.agents/skills" \
-                claude $argv[2..]
+                claude $cmd_args
 
         case codex
             _with-agent-secrets
             _sb-coding-agent \
+                $sb_args \
                 --env-pass=FIRECRAWL_API_KEY,LINKUP_API_KEY \
                 --add-dirs-ro="$HOME/.agents/skills" \
-                codex $argv[2..]
+                codex $cmd_args
 
         case gemini
             set -lx NO_BROWSER true
             _sb-coding-agent \
+                $sb_args \
                 --add-dirs-ro="$HOME/.config/gcloud/application_default_credentials.json" \
-                gemini $argv[2..]
+                gemini $cmd_args
 
         case '*'
-            safehouse $argv
+            safehouse $sb_args $cmd $cmd_args
     end
 end
