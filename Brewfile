@@ -267,10 +267,15 @@ cask "yubico-authenticator"
 cask "zen"
 
 mas "Amphetamine", id: 937984704
+mas "Balance Lock", id: 1019371109
 mas "Bitwarden", id: 1352778147
+mas "Brother P-touch Editor", id: 1453365242
 mas "Color Picker", id: 1545870783
+mas "CrystalFetch", id: 6454431289 # Download Windows images from microsoft.com
 mas "Discovery", id: 1381004916
+mas "Draw Things", id: 6444050820
 mas "Microsoft Remote Desktop", id: 1295203466
+mas "Xcode", id: 497799835
 
 if is_work then
   tap "heroku/brew"
@@ -344,8 +349,6 @@ if is_home then
   cask "veracrypt"
 
   mas "1Password for Safari", id: 1569813296
-  mas "Brother P-touch Editor", id: 1453365242
-  mas "CrystalFetch", id: 6454431289 # Download Windows images from microsoft.com
   mas "Microsoft Word", id: 462054704
   mas "Goodnotes", id: 1444383602
   mas "Home Assistant", id: 1099568401
