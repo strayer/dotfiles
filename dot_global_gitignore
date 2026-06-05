@@ -1,4 +1,7 @@
 .aider.*/
 .aider.*.history*
 
+.claude/settings.local.json
+.claude/worktrees/
+
 # vim: ft=gitignore
