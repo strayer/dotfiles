@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Clipboard to Markdown
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon images/markdown.png
+# @raycast.packageName Clipboard
+
+# Documentation:
+# @raycast.description Convert rich (HTML) clipboard contents to clean Markdown
+
+set -euo pipefail
+
+PANDOC="$(command -v pandoc || echo /opt/homebrew/bin/pandoc)"
+
+# Extract the clipboard's HTML flavor (osascript returns «data HTML<hex>»).
+html="$(osascript -e 'the clipboard as «class HTML»' 2>/dev/null \
+  | perl -ne 'print chr foreach unpack("C*",pack("H*",substr($_,11,-3)))')"
+
+if [ -n "$html" ]; then
+  md="$(printf '%s' "$html" | "$PANDOC" -f html -t gfm-raw_html --wrap=none)"
+else
+  # No rich content — pass plain text through unchanged.
+  md="$(pbpaste)"
+fi
+
+printf '%s' "$md" | pbcopy
+echo "Clipboard converted to Markdown"
