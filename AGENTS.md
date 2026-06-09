@@ -84,7 +84,7 @@ The repository prompts for sensitive configuration during initial setup:
 Sophisticated automated theme switching with cross-application coordination:
 
 - **Supported themes**: tokyonight (day/storm/night), cyberdream variants
-- **Applications**: bat, fish, kitty, alacritty, sketchybar, git-delta, aichat, neovim, wezterm
+- **Applications**: bat, fish, kitty, sketchybar, git-delta, aichat, neovim, wezterm
 - **Implementation**: Symlinks managed by toggle-theme.sh with validation and logging
 - **Automation**: LaunchAgent integration with dark-mode-notify binary for system detection
 - **State management**: Theme persistence in `~/.cache/system-theme.txt`
@@ -96,7 +96,7 @@ Sophisticated automated theme switching with cross-application coordination:
 
 - **Runtime management**: mise configuration in `dot_config/mise/config.toml.tmpl`
 - **Shell**: Fish with custom functions and theme integration
-- **Terminal**: Multiple terminal configurations (kitty, alacritty, wezterm)
+- **Terminal**: Multiple terminal configurations (kitty, wezterm, ghostty)
 - **Git**: Environment-specific signing keys and configurations
 
 ### System Integration
