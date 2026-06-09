@@ -101,8 +101,8 @@ Sophisticated automated theme switching with cross-application coordination:
 
 ### System Integration
 
-- **SketchyBar**: Complete SbarLua configuration with modular architecture (`init.lua`, `bar.lua`, `default.lua`, items/\*). Includes window manager integration (Rift PoC, AeroSpace legacy), custom items (battery, network, clock, volume, meal planning), and theme coordination. Coding agents can use the deepwiki mcp to retrieve information about [SketchyBar](https://deepwiki.com/FelixKratz/SketchyBar) and [SbarLua](https://deepwiki.com/FelixKratz/SbarLua).
-- **Window Manager**: Rift (PoC, replacing AeroSpace) - BSP tiling window manager with Mach IPC. Configuration in `dot_config/rift/config.toml`. Uses CLI subscriptions to trigger SketchyBar updates on workspace/window changes.
+- **SketchyBar**: Complete SbarLua configuration with modular architecture (`init.lua`, `bar.lua`, `default.lua`, items/\*). Includes window manager integration (Rift), custom items (battery, network, clock, volume, meal planning), and theme coordination. Coding agents can use the deepwiki mcp to retrieve information about [SketchyBar](https://deepwiki.com/FelixKratz/SketchyBar) and [SbarLua](https://deepwiki.com/FelixKratz/SbarLua).
+- **Window Manager**: Rift - BSP tiling window manager with Mach IPC. Configuration in `dot_config/rift/config.toml`. Uses CLI subscriptions to trigger SketchyBar updates on workspace/window changes.
 - **Package management**: Comprehensive Brewfile (260+ work packages, 290+ home packages) with custom taps, MAS automation, and environment-specific tool sets
 - **Karabiner**: Custom keyboard modifications in `private_karabiner/`
 - **LaunchAgent automation**: Automated theme switching and system integration services

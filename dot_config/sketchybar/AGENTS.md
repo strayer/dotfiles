@@ -128,11 +128,7 @@ sketchybar --query default_menu_items
     "notification": "AppleInterfaceThemeChangedNotification"
   },
   "routine": { "bit": 524288 },
-  "theme_colors_updated": { "bit": 1048576 },
-  "aerospace_workspace_change": {
-    "bit": 2097152,
-    "notification": "aerospace_workspace_change_event"
-  }
+  "theme_colors_updated": { "bit": 1048576 }
 }
 ```
 
@@ -274,8 +270,6 @@ This configuration registers custom events:
 | `theme_colors_updated`       | Internal event after colors refresh   |
 | `rift_workspace_change`      | Rift workspace switched (PoC)         |
 | `rift_refresh`               | Rift needs full refresh (PoC)         |
-| `aerospace_workspace_change` | AeroSpace workspace switched (legacy) |
-| `aerospace_refresh`          | AeroSpace needs full refresh (legacy) |
 
 ### Environment Detection
 
@@ -315,8 +309,8 @@ sketchybar --reload
 # Trigger theme refresh
 sketchybar --trigger theme_colors_updated
 
-# Trigger AeroSpace refresh
-sketchybar --trigger aerospace_refresh
+# Trigger Rift refresh
+sketchybar --trigger rift_refresh
 ```
 
 ### Setting Item Properties Dynamically
@@ -339,13 +333,11 @@ sketchybar --animate ease_out 0.3 --set right.clock label.color=0xffff0000
 3. **Test in isolation**: Comment out items in `items/init.lua` to isolate issues
 4. **Watch for typos**: Item names are case-sensitive and must match exactly
 5. **Verify events**: Use `sketchybar --query events` to confirm event registration
-6. **Check socket**: AeroSpace integration uses Unix socket at `/tmp/bobko.aerospace-<user>.sock`
 
 ## Dependencies
 
 - **SbarLua**: Lua bindings for SketchyBar (`~/.local/share/sketchybar_lua/sketchybar.so`)
 - **rift.lua**: Lua bindings for Rift Mach IPC (`~/.local/share/rift.lua/rift.so`) - PoC
-- **luaposix**: POSIX bindings for AeroSpace socket communication (legacy)
 - **cjson**: JSON encoding/decoding
 - **simdjson**: Fast JSON parsing (with fallback to cjson)
 - **sketchybar-app-font**: App icon font for workspace indicators
@@ -361,7 +353,3 @@ Rift integration uses Mach IPC via `rift.lua` for querying workspace state, and 
 rift-cli subscribe cli --event workspace_changed --command sh --args -c --args 'sketchybar --trigger rift_workspace_change RIFT_SPACE_ID="$RIFT_SPACE_ID" RIFT_DISPLAY_UUID="$RIFT_DISPLAY_UUID" RIFT_WORKSPACE_NAME="$RIFT_WORKSPACE_NAME"'
 rift-cli subscribe cli --event windows_changed --command sh --args -c --args 'sketchybar --trigger rift_windows_change RIFT_SPACE_ID="$RIFT_SPACE_ID" RIFT_DISPLAY_UUID="$RIFT_DISPLAY_UUID" RIFT_WORKSPACE_NAME="$RIFT_WORKSPACE_NAME"'
 ```
-
-### AeroSpace (Legacy)
-
-AeroSpace integration uses Unix socket communication via `luaposix`. The socket is at `/tmp/bobko.aerospace-<user>.sock`. Currently disabled in `items/init.lua`.

@@ -29,10 +29,6 @@ tap "felixkratz/formulae"
 brew "felixkratz/formulae/borders"
 brew "felixkratz/formulae/sketchybar"
 
-# aerospace
-tap "nikitabobko/tap"
-cask "nikitabobko/tap/aerospace"
-
 # rift
 tap "acsandmann/tap"
 brew "acsandmann/tap/rift"
