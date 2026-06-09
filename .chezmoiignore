@@ -1,2 +1,7 @@
 CLAUDE.md
 .chezmoisecrets*
+
+{{ if ne .chezmoi.os "darwin" -}}
+{{/* macOS-only: symlink pnpm's native config dir to the XDG location */ -}}
+Library/Preferences/pnpm/config.yaml
+{{- end }}
