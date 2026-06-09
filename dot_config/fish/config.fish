@@ -86,12 +86,6 @@ if status --is-interactive
     end
   end
 
-  if type -q exa
-    function l
-      exa -lbahg --git --time-style long-iso $argv
-    end
-  end
-
   if type -q lsd
     function l
       lsd -lah --date "+%F %T" $argv

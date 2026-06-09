@@ -83,7 +83,7 @@ The repository prompts for sensitive configuration during initial setup:
 
 Sophisticated automated theme switching with cross-application coordination:
 
-- **Supported themes**: tokyonight (day/storm/night), cyberdream variants
+- **Supported themes**: tokyonight (day/storm/night)
 - **Applications**: bat, fish, kitty, sketchybar, git-delta, aichat, neovim, wezterm
 - **Implementation**: Symlinks managed by toggle-theme.sh with validation and logging
 - **Automation**: LaunchAgent integration with dark-mode-notify binary for system detection
