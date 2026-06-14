@@ -1,0 +1,243 @@
+#!/usr/bin/env python3
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Rift: Arrange Windows
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon 🗂️
+# @raycast.packageName Rift
+
+# Documentation:
+# @raycast.description Move known apps to their fixed virtual workspaces (recovers from rift dumping every window onto workspace 1). Each window is moved on the display it currently lives on.
+# @raycast.author Sven Grunewaldt
+
+"""Restore known apps to their fixed rift virtual workspaces.
+
+rift sometimes dumps every window onto workspace 1. This walks each connected
+display (every display owns its own MacOS space with its own set of virtual
+workspaces) and moves known apps back to their assigned workspace - on the
+display they currently live on.
+
+rift only relocates a window when that window's display is the active "context",
+which is switched by warping the mouse to the display, so we focus each display
+before issuing its moves and verify the switch took effect.
+"""
+
+import json
+import subprocess
+import sys
+import time
+
+RIFT = "/opt/homebrew/bin/rift-cli"
+
+# Seconds to wait after warping the mouse before rift settles on the new context.
+CONTEXT_SETTLE = 1.0
+# Seconds between individual moves on the same display.
+MOVE_DELAY = 0.3
+# Hard cap per rift-cli call so a hung CLI can never freeze the Raycast command.
+TIMEOUT = 10
+
+# bundle_id -> target virtual-workspace INDEX (0-based).
+# Index mapping comes from `workspace_names` in dot_config/rift/config.toml:
+#   0:"1" 1:"2" 2:"3" 3:"4" 4:"5" 5:"6" 6:"7" 7:"8" 8:"9"
+#   9:"C" 10:"M" 11:"O" 12:"P" 13:"T" 14:"W" 15:"D"
+#
+# Desired layout:
+#   1 -> Zen | 2 -> Ghostty/Kitty | M -> messengers | D -> Discord
+#   T -> Thunderbird | P -> Spotify | O -> Obsidian
+APP_WORKSPACE = {
+    "app.zen-browser.zen": 0,  # 1: Zen
+    "com.mitchellh.ghostty": 1,  # 2: Ghostty
+    "net.kovidgoyal.kitty": 1,  # 2: Kitty
+    "org.whispersystems.signal-desktop": 10,  # M: Signal
+    "ru.keepcoder.Telegram": 10,  # M: Telegram
+    "io.element.elementx": 10,  # M: Element X
+    "com.apple.MobileSMS": 10,  # M: Messages
+    "com.hnc.Discord": 15,  # D: Discord
+    "org.mozilla.thunderbird": 13,  # T: Thunderbird
+    "org.mozilla.thunderbirdbeta": 13,  # T: Thunderbird Beta
+    "com.spotify.client": 12,  # P: Spotify
+    "md.obsidian": 11,  # O: Obsidian
+}
+
+# Terminals are only relocated when they got dumped onto workspace 1 (index 0).
+# This preserves deliberate per-project terminal layouts on other workspaces
+# (e.g. one project per workspace 3/4/...) while still recovering from a reset.
+TERMINALS = {"com.mitchellh.ghostty", "net.kovidgoyal.kitty"}
+
+
+def rift(*args):
+    """Run a rift-cli command. Returns (ok, stdout, stderr)."""
+    try:
+        proc = subprocess.run(
+            [RIFT, *args], capture_output=True, text=True, timeout=TIMEOUT
+        )
+    except OSError as exc:
+        return False, "", str(exc)
+    except subprocess.TimeoutExpired:
+        return False, "", f"timed out after {TIMEOUT}s"
+    return proc.returncode == 0, proc.stdout, proc.stderr.strip()
+
+
+def rift_json(*args):
+    """Run a rift-cli query and parse its JSON output, or raise RuntimeError."""
+    ok, out, err = rift(*args)
+    label = "rift-cli " + " ".join(args)
+    if not ok:
+        raise RuntimeError(f"`{label}` failed: {err or 'non-zero exit'}")
+    try:
+        return json.loads(out)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"`{label}` returned invalid JSON: {exc}")
+
+
+def active_context_uuid(displays):
+    for display in displays:
+        if isinstance(display, dict) and display.get("is_active_context"):
+            return display.get("uuid")
+    return None
+
+
+def pending_moves(workspaces):
+    """Yield (window_id, target_index, label) for misplaced windows on a space."""
+    for ws in workspaces:
+        if not isinstance(ws, dict):
+            continue
+
+        index = ws.get("index")
+        if not isinstance(index, int):
+            continue
+
+        windows = ws.get("windows")
+
+        if not isinstance(windows, list):
+            continue
+
+        for win in windows:
+            if not isinstance(win, dict):
+                continue
+
+            bundle = win.get("bundle_id")
+            target = APP_WORKSPACE.get(bundle)
+
+            if target is None or target == index:
+                continue
+
+            # Terminals only move off workspace 1; everything else moves anywhere.
+            if bundle in TERMINALS and index != 0:
+                continue
+
+            wid = win.get("window_server_id")
+
+            if not isinstance(wid, int):
+                continue
+
+            yield wid, target, (win.get("app_name") or bundle)
+
+
+def main():
+    try:
+        displays = rift_json("query", "displays")
+    except RuntimeError as exc:
+        print(f"rift: {exc}", file=sys.stderr)
+        return 1
+
+    if not isinstance(displays, list) or not displays:
+        print("rift: no displays reported", file=sys.stderr)
+        return 1
+
+    original_uuid = active_context_uuid(displays)
+    moved = 0
+    failed = 0
+
+    for display in displays:
+        if not isinstance(display, dict):
+            continue
+
+        space = display.get("space")
+        uuid = display.get("uuid")
+
+        if not isinstance(space, int) or not isinstance(uuid, str) or not uuid:
+            continue
+
+        try:
+            workspaces = rift_json("query", "workspaces", "--space-id", str(space))
+        except RuntimeError as exc:
+            print(f"rift: {exc}", file=sys.stderr)
+            failed += 1
+            continue
+
+        if not isinstance(workspaces, list):
+            print(f"rift: unexpected workspace data for space {space}", file=sys.stderr)
+            failed += 1
+            continue
+
+        moves = list(pending_moves(workspaces))
+        if not moves:
+            continue
+
+        # Make this display the active context so move-window targets its workspaces.
+        ok, _, err = rift("execute", "display", "move-mouse-to-uuid", uuid)
+        if not ok:
+            print(f"rift: could not focus display {uuid}: {err}", file=sys.stderr)
+            failed += len(moves)
+            continue
+        time.sleep(CONTEXT_SETTLE)
+
+        # Verify the switch took effect before moving anything - otherwise the
+        # moves would silently land on the wrong display.
+        try:
+            now_active = active_context_uuid(rift_json("query", "displays"))
+        except RuntimeError:
+            now_active = None
+
+        if now_active != uuid:
+            print(
+                f"rift: display {uuid} did not become active; "
+                f"skipping {len(moves)} window(s)",
+                file=sys.stderr,
+            )
+            failed += len(moves)
+            continue
+
+        for wid, target, label in moves:
+            ok, _, err = rift(
+                "execute", "workspace", "move-window", str(target), str(wid)
+            )
+
+            if ok:
+                moved += 1
+            else:
+                failed += 1
+                print(
+                    f"rift: failed to move {label} ({wid}) -> workspace {target}: {err}",
+                    file=sys.stderr,
+                )
+
+            time.sleep(MOVE_DELAY)
+
+    # Restore focus to wherever the cursor started (cosmetic; never fatal).
+    if original_uuid:
+        ok, _, err = rift("execute", "display", "move-mouse-to-uuid", original_uuid)
+        if not ok:
+            print(
+                f"rift: could not restore focus to {original_uuid}: {err}",
+                file=sys.stderr,
+            )
+
+    if failed:
+        print(f"rift: arranged {moved} window(s), {failed} failed")
+        return 1
+
+    if moved == 0:
+        print("rift: windows already arranged")
+    else:
+        print(f"rift: arranged {moved} window(s) to fixed workspaces")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
