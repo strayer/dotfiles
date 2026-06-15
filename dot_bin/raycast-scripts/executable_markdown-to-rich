@@ -1,0 +1,85 @@
+#!/usr/bin/swift
+
+// Required parameters:
+// @raycast.schemaVersion 1
+// @raycast.title Markdown to Rich Text
+// @raycast.mode silent
+
+// Optional parameters:
+// @raycast.icon images/markdown.png
+// @raycast.packageName Clipboard
+
+// Documentation:
+// @raycast.description Convert Markdown clipboard contents to rich formatting
+
+import AppKit
+
+/// Print a message and exit 0 so Raycast shows it as a notification
+/// rather than an error toast.
+func fail(_ message: String) -> Never {
+    print(message)
+    exit(0)
+}
+
+let pasteboard = NSPasteboard.general
+
+guard let markdown = pasteboard.string(forType: .string), !markdown.isEmpty else {
+    fail("Clipboard is empty")
+}
+
+// Locate pandoc — the Markdown -> HTML engine.
+let pandoc = ["/opt/homebrew/bin/pandoc", "/usr/local/bin/pandoc", "/usr/bin/pandoc"]
+    .first { FileManager.default.isExecutableFile(atPath: $0) }
+guard let pandoc else { fail("pandoc not found") }
+
+// Markdown -> HTML via pandoc.
+let task = Process()
+task.executableURL = URL(fileURLWithPath: pandoc)
+task.arguments = ["-f", "gfm", "-t", "html", "--wrap=none"]
+
+let input = Pipe()
+let output = Pipe()
+task.standardInput = input
+task.standardOutput = output
+
+do {
+    try task.run()
+} catch {
+    fail("Failed to run pandoc: \(error.localizedDescription)")
+}
+
+// Feed stdin on a background queue so a large HTML result filling the pipe
+// buffer can't deadlock against our blocking read below.
+DispatchQueue.global().async {
+    input.fileHandleForWriting.write(Data(markdown.utf8))
+    input.fileHandleForWriting.closeFile()
+}
+let htmlData = output.fileHandleForReading.readDataToEndOfFile()
+task.waitUntilExit()
+guard task.terminationStatus == 0 else {
+    fail("pandoc exited with status \(task.terminationStatus)")
+}
+
+// HTML -> attributed string -> RTF.
+guard let attributed = try? NSAttributedString(
+    data: htmlData,
+    options: [.documentType: NSAttributedString.DocumentType.html,
+              .characterEncoding: String.Encoding.utf8.rawValue],
+    documentAttributes: nil
+) else {
+    fail("Failed to render HTML")
+}
+let fullRange = NSRange(location: 0, length: attributed.length)
+guard let rtfData = attributed.rtf(from: fullRange, documentAttributes: [:]) else {
+    fail("Failed to produce RTF")
+}
+
+// Put all the flavors a browser writes for a rich selection onto one clipboard
+// item: RTF + HTML for rich apps, and the original Markdown source as the
+// plain-text fallback for plain-text targets.
+pasteboard.clearContents()
+pasteboard.setData(rtfData, forType: .rtf)
+pasteboard.setData(htmlData, forType: .html)
+pasteboard.setString(markdown, forType: .string)
+
+print("Clipboard converted to Rich Text")
