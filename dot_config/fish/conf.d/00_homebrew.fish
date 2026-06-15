@@ -3,6 +3,9 @@ if test -e /opt/homebrew/bin/brew
   eval (/opt/homebrew/bin/brew shellenv)
 end
 
+# Don't upgrade casks that update themselves
+set -gx HOMEBREW_NO_UPGRADE_AUTO_UPDATES_CASKS 1
+
 # Make sure Homebrew is in PATH
 if test -d /home/linuxbrew/.linuxbrew/bin
   fish_add_path /home/linuxbrew/.linuxbrew/bin
