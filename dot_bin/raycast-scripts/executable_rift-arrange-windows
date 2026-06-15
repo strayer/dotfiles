@@ -45,8 +45,8 @@ TIMEOUT = 10
 #   9:"C" 10:"M" 11:"O" 12:"P" 13:"T" 14:"W" 15:"D"
 #
 # Desired layout:
-#   1 -> Zen | 2 -> Ghostty/Kitty | M -> messengers | D -> Discord
-#   T -> Thunderbird | P -> Spotify | O -> Obsidian
+#   1 -> Zen | 2 -> Ghostty/Kitty | M -> messengers/Outlook | D -> Discord
+#   T -> Thunderbird/Teams | P -> Spotify | O -> Obsidian
 APP_WORKSPACE = {
     "app.zen-browser.zen": 0,  # 1: Zen
     "com.mitchellh.ghostty": 1,  # 2: Ghostty
@@ -55,9 +55,11 @@ APP_WORKSPACE = {
     "ru.keepcoder.Telegram": 10,  # M: Telegram
     "io.element.elementx": 10,  # M: Element X
     "com.apple.MobileSMS": 10,  # M: Messages
+    "com.microsoft.Outlook": 10,  # M: Outlook
     "com.hnc.Discord": 15,  # D: Discord
     "org.mozilla.thunderbird": 13,  # T: Thunderbird
     "org.mozilla.thunderbirdbeta": 13,  # T: Thunderbird Beta
+    "com.microsoft.teams2": 13,  # T: Teams
     "com.spotify.client": 12,  # P: Spotify
     "md.obsidian": 11,  # O: Obsidian
 }
