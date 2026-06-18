@@ -26,11 +26,12 @@ before issuing its moves and verify the switch took effect.
 """
 
 import json
+import os
 import subprocess
 import sys
 import time
 
-RIFT = "/opt/homebrew/bin/rift-cli"
+RIFT = os.path.expanduser("~/.bin/rift-cli")
 
 # Seconds to wait after warping the mouse before rift settles on the new context.
 CONTEXT_SETTLE = 1.0

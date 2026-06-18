@@ -12,4 +12,4 @@
 # Documentation:
 # @raycast.description Toggle stacked (tabbed) state for the selected container
 
-/opt/homebrew/bin/rift-cli execute layout toggle-stack
+"$HOME/.bin/rift-cli" execute layout toggle-stack

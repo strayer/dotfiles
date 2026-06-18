@@ -1,0 +1,19 @@
+#!/bin/dash
+# rift-cli shim — resolves the rift CLI binary at call time.
+# Uses dash (POSIX sh) for faster startup; this shim is hit on every SketchyBar
+# workspace/window refresh, so shell launch overhead matters.
+#
+# Prefers a local dev build under ~/dev/rift/target/release so local changes can
+# be tested without touching Homebrew. Falls back to the Homebrew-installed
+# binary when the dev build is absent, so a plain `cargo clean` transparently
+# restores the Homebrew version with no extra steps.
+#
+# This is the single source of truth for rift resolution. Every consumer routes
+# through it: the interactive shell (~/.bin is first on PATH), Raycast scripts
+# and SketchyBar (which call it by absolute path), and the rift launchd agent
+# (`rift service install` bakes this shim's path into the plist via PATH lookup).
+dev="$HOME/dev/rift/target/release/rift-cli"
+if [ -x "$dev" ]; then
+  exec "$dev" "$@"
+fi
+exec /opt/homebrew/bin/rift-cli "$@"

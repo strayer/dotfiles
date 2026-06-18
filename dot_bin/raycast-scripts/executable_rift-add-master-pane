@@ -12,4 +12,4 @@
 # Documentation:
 # @raycast.description Increase number of master panes by one (master-stack only)
 
-/opt/homebrew/bin/rift-cli execute layout adjust-master-count 1
+"$HOME/.bin/rift-cli" execute layout adjust-master-count 1

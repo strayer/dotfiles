@@ -12,4 +12,4 @@
 # Documentation:
 # @raycast.description Switch active workspace to traditional (i3/sway) layout
 
-/opt/homebrew/bin/rift-cli execute workspace set-layout traditional
+"$HOME/.bin/rift-cli" execute workspace set-layout traditional

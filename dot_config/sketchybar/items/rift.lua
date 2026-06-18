@@ -4,6 +4,12 @@ local icons = require("lib.icons")
 local colors = require("lib.colors")
 local settings = require("lib.settings")
 
+-- Resolve rift-cli through the ~/.bin shim so SketchyBar honors the local dev
+-- build when present. SketchyBar's launchd PATH does not include ~/.bin, so a
+-- bare `rift-cli` would always hit the Homebrew binary; calling the shim by
+-- absolute path keeps it in sync with every other rift consumer.
+local RIFT_CLI = (os.getenv("HOME") or "") .. "/.bin/rift-cli"
+
 -- Module state
 -- workspace key includes display to support same workspace name on multiple displays
 ---@type table<string, {item_name: string, index: number, display: number}>
@@ -116,7 +122,7 @@ local function create_workspace_item(workspace_name, workspace_index, display)
   })
 
   workspace_item:subscribe("mouse.clicked", function(_)
-    sbar.exec("rift-cli execute workspace switch " .. tostring(workspace_index))
+    sbar.exec(RIFT_CLI .. " execute workspace switch " .. tostring(workspace_index))
   end)
 
   workspace_items[key] = { item_name = item_name, index = workspace_index, display = display }
@@ -273,7 +279,7 @@ update_display = function(space_id, display_uuid)
 
   if not sbar_display then
     -- Need to query displays to find the mapping, then update
-    sbar.exec("rift-cli query displays", function(displays)
+    sbar.exec(RIFT_CLI .. " query displays", function(displays)
       if not displays or type(displays) ~= "table" then
         return
       end
@@ -288,7 +294,7 @@ update_display = function(space_id, display_uuid)
 
       if sbar_display then
         ensure_layout_item(sbar_display)
-        sbar.exec("rift-cli query workspaces --space-id " .. space_id, function(workspaces)
+        sbar.exec(RIFT_CLI .. " query workspaces --space-id " .. space_id, function(workspaces)
           if workspaces and type(workspaces) == "table" then
             local focused_workspace_name, windows_by_workspace, focused_layout_mode =
               process_workspace_data(workspaces, sbar_display)
@@ -302,7 +308,7 @@ update_display = function(space_id, display_uuid)
 
   -- Query workspaces for this specific display/space
   ensure_layout_item(sbar_display)
-  sbar.exec("rift-cli query workspaces --space-id " .. space_id, function(workspaces)
+  sbar.exec(RIFT_CLI .. " query workspaces --space-id " .. space_id, function(workspaces)
     if workspaces and type(workspaces) == "table" then
       local focused_workspace_name, windows_by_workspace, focused_layout_mode =
         process_workspace_data(workspaces, sbar_display)
@@ -313,7 +319,7 @@ end
 
 --- Update all displays (used for system events)
 update_all_workspaces = function()
-  sbar.exec("rift-cli query displays", function(displays)
+  sbar.exec(RIFT_CLI .. " query displays", function(displays)
     if not displays or type(displays) ~= "table" then
       return
     end
@@ -332,7 +338,7 @@ update_all_workspaces = function()
 
       if space_id and sbar_display then
         ensure_layout_item(sbar_display)
-        sbar.exec("rift-cli query workspaces --space-id " .. space_id, function(workspaces)
+        sbar.exec(RIFT_CLI .. " query workspaces --space-id " .. space_id, function(workspaces)
           if workspaces and type(workspaces) == "table" then
             local focused_workspace_name, windows_by_workspace, focused_layout_mode =
               process_workspace_data(workspaces, sbar_display)

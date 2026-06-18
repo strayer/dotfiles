@@ -12,4 +12,4 @@
 # Documentation:
 # @raycast.description Move selection up the layout tree to parent container
 
-/opt/homebrew/bin/rift-cli execute layout ascend
+"$HOME/.bin/rift-cli" execute layout ascend

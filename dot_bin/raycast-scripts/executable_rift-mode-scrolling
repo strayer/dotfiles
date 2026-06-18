@@ -12,4 +12,4 @@
 # Documentation:
 # @raycast.description Switch active workspace to scrolling (niri) layout
 
-/opt/homebrew/bin/rift-cli execute workspace set-layout scrolling
+"$HOME/.bin/rift-cli" execute workspace set-layout scrolling

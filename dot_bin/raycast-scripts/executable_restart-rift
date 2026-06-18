@@ -8,5 +8,5 @@
 # Optional parameters:
 # @raycast.icon ♻️
 
-rift service restart
+"$HOME/.bin/rift" service restart
 

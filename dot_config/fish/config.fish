@@ -31,10 +31,10 @@ end
 # Local software & scripts
 fish_add_path "$HOME/.local/bin"
 
-# local rift
-if test -e "$HOME/dev/rift/target/release/rift"
-  fish_add_path "$HOME/dev/rift/target/release/"
-end
+# rift: dev-vs-Homebrew resolution is handled by the ~/.bin/rift and
+# ~/.bin/rift-cli shims (on PATH ahead of Homebrew), so no dev-dir prepend is
+# needed here. The shims prefer ~/dev/rift/target/release when it exists and
+# fall back to Homebrew otherwise — a `cargo clean` switches back automatically.
 
 # more up to date cURL
 fish_add_path /opt/homebrew/opt/curl/bin

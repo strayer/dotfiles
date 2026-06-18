@@ -12,4 +12,4 @@
 # Documentation:
 # @raycast.description Move selection down the layout tree to child node
 
-/opt/homebrew/bin/rift-cli execute layout descend
+"$HOME/.bin/rift-cli" execute layout descend

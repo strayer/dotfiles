@@ -12,4 +12,4 @@
 # Documentation:
 # @raycast.description Swap first master window with first stack window (master-stack only)
 
-/opt/homebrew/bin/rift-cli execute layout swap-master-stack
+"$HOME/.bin/rift-cli" execute layout swap-master-stack
