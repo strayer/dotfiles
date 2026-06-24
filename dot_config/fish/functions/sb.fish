@@ -1,4 +1,4 @@
-function sb --description "Run commands in a safehouse sandbox"
+function sb --description "Run commands in a nono sandbox"
     set -l sb_args
     set -l cmd_idx 0
 
@@ -18,11 +18,10 @@ function sb --description "Run commands in a safehouse sandbox"
         echo "Coding agents:"
         echo "  claude     Claude Code (Vertex AI, apiKeyHelper)"
         echo "  codex      OpenAI Codex"
-        echo "  gemini     Gemini CLI (gcloud ADC)"
         echo ""
-        echo "Any other command runs in a plain safehouse sandbox."
+        echo "Any other command runs in a plain nono sandbox."
         echo ""
-        echo "Sandbox options (passed to safehouse) go before the command."
+        echo "Sandbox options (passed to nono run) go before the command."
         return 1
     end
 
@@ -32,45 +31,62 @@ function sb --description "Run commands in a safehouse sandbox"
         set cmd_args $argv[(math $cmd_idx + 1)..]
     end
 
+    # Coding-agent skills (research, scrape) read FIRECRAWL_API_KEY / LINKUP_API_KEY
+    # from the environment. _with-agent-secrets resolves them on the host and
+    # exports them into this function's scope; we then hand each one to nono
+    # explicitly via `--env-credential-map env://VAR VAR` so the key is injected
+    # into the sandboxed child even if a profile later starts filtering env vars.
+    # Only the coding agents get them — arbitrary `sb <cmd>` runs stay clean.
+    set -l secret_args
+    if contains -- $cmd claude codex
+        _with-agent-secrets
+        if set -q FIRECRAWL_API_KEY
+            set -a secret_args --env-credential-map env://FIRECRAWL_API_KEY FIRECRAWL_API_KEY
+        end
+        if set -q LINKUP_API_KEY
+            set -a secret_args --env-credential-map env://LINKUP_API_KEY LINKUP_API_KEY
+        end
+    end
+
     switch $cmd
         case claude
+            # Model auth stays as-is: grant read access to whichever Vertex
+            # credential path ~/.claude/settings.json points at. Everything else
+            # (workdir, ~/.agents, ~/.global_gitignore, secretive, gh) is covered
+            # by the claude-code profile.
             set -l extra_args
             if test -f ~/.claude/settings.json
-                # Allow gcloud ADC when using Vertex AI direct auth
+                # gcloud ADC when using Vertex AI direct auth
                 if jq -e '.env.CLAUDE_CODE_USE_VERTEX' ~/.claude/settings.json >/dev/null 2>&1
                         and not jq -e '.env.CLAUDE_CODE_SKIP_VERTEX_AUTH' ~/.claude/settings.json >/dev/null 2>&1
-                    set extra_args --add-dirs-ro="$HOME/.config/gcloud/application_default_credentials.json"
+                    set extra_args --read-file="$HOME/.config/gcloud/application_default_credentials.json"
                 end
-                # Allow apiKeyHelper script if configured
+                # apiKeyHelper script if configured
                 set -l helper (jq -r '.apiKeyHelper // empty' ~/.claude/settings.json)
                 if test -n "$helper"
-                    set -a extra_args --add-dirs-ro=(string replace '~' "$HOME" "$helper")
+                    set -a extra_args --read-file=(string replace '~' "$HOME" "$helper")
                 end
             end
-            _with-agent-secrets
-            _sb-coding-agent \
+            nono run \
+                --profile claude-code \
+                --allow-cwd \
                 $sb_args \
                 $extra_args \
-                --env-pass=FIRECRAWL_API_KEY,LINKUP_API_KEY \
-                --add-dirs-ro="$HOME/.agents/skills" \
-                claude $cmd_args
+                $secret_args \
+                -- claude $cmd_args
 
         case codex
-            _with-agent-secrets
-            _sb-coding-agent \
+            # codex-cli extends the official always-further/codex pack (which
+            # grants ~/.codex auth + ~/.agents) with the same extras as
+            # claude-code (workdir, ~/.global_gitignore, secretive, gh).
+            nono run \
+                --profile codex-cli \
+                --allow-cwd \
                 $sb_args \
-                --env-pass=FIRECRAWL_API_KEY,LINKUP_API_KEY \
-                --add-dirs-ro="$HOME/.agents/skills" \
-                codex $cmd_args
-
-        case gemini
-            set -lx NO_BROWSER true
-            _sb-coding-agent \
-                $sb_args \
-                --add-dirs-ro="$HOME/.config/gcloud/application_default_credentials.json" \
-                gemini $cmd_args
+                $secret_args \
+                -- codex $cmd_args
 
         case '*'
-            safehouse $sb_args $cmd $cmd_args
+            nono run --allow-cwd $sb_args -- $cmd $cmd_args
     end
 end

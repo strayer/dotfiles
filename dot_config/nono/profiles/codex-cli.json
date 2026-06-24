@@ -1,0 +1,20 @@
+{
+  "extends": "always-further/codex",
+  "meta": {
+    "name": "codex-cli"
+  },
+  "groups": {
+    "include": []
+  },
+  "workdir": {
+    "access": "readwrite"
+  },
+  "filesystem": {
+    "allow": [],
+    "read": [
+      "$HOME/.global_gitignore",
+      "$HOME/.bin/secretive-ssh-keygen",
+      "$HOME/.config/gh"
+    ]
+  }
+}
