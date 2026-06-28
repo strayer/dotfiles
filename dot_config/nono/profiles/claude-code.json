@@ -17,6 +17,9 @@
       "$HOME/.bin/secretive-ssh-keygen",
       "$HOME/.config/gh",
       "$HOME/.ssh/known_hosts"
+    ],
+    "bypass_protection": [
+      "$HOME/.ssh/known_hosts"
     ]
   }
 }
