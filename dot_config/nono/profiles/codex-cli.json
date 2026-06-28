@@ -14,7 +14,8 @@
     "read": [
       "$HOME/.global_gitignore",
       "$HOME/.bin/secretive-ssh-keygen",
-      "$HOME/.config/gh"
+      "$HOME/.config/gh",
+      "$HOME/.ssh/known_hosts"
     ]
   }
 }

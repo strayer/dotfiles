@@ -15,7 +15,8 @@
       "$HOME/.global_gitignore",
       "$HOME/.agents",
       "$HOME/.bin/secretive-ssh-keygen",
-      "$HOME/.config/gh"
+      "$HOME/.config/gh",
+      "$HOME/.ssh/known_hosts"
     ]
   }
 }
