@@ -1,12 +1,12 @@
 hostname = `hostname -s`.strip
-is_work = (hostname == "CO-MBP-KC9KQV64V3")
-is_home = (hostname == "yobuko")
 
-# mas
-brew "mas"
+# role (platform comes from Homebrew's OS.mac? / OS.linux? helpers inline below)
+is_work = ["CO-MBP-KC9KQV64V3", "DEMUE1M1602"].include?(hostname)  # work macOS or Linux/WSL
+is_home = (hostname == "yobuko")                                   # personal (always macOS)
 
-# homebrew autoupdate
-tap "domt4/autoupdate"
+# =============================================================================
+# Universal CLI tools (macOS + Linux via Linuxbrew)
+# =============================================================================
 
 # speedtest-cli
 tap "teamookla/speedtest"
@@ -24,36 +24,12 @@ brew "homeport/tap/dyff"
 tap "timrogers/tap"
 brew "litra"
 
-# felixkratz tools
-tap "felixkratz/formulae"
-brew "felixkratz/formulae/borders"
-brew "felixkratz/formulae/sketchybar"
-
-# rift
-tap "acsandmann/tap"
-brew "acsandmann/tap/rift"
-
 # AI
-tap "jundot/omlx", "https://github.com/jundot/omlx"
 brew "agent-browser"
 brew "nono"
 brew "gemini-cli"
 brew "llm"
-brew "jundot/omlx/omlx"
 brew "opencode"
-cask "claude-code@latest"
-cask "codex"
-
-# fonts
-cask "font-iosevka"
-cask "font-liberation"
-cask "font-iosevka-nerd-font"
-cask "font-monocraft"
-cask "font-roboto"
-cask "font-roboto-mono"
-cask "font-roboto-serif"
-cask "font-sketchybar-app-font"
-cask "font-symbols-only-nerd-font"
 
 # linters, formatters, LSPs
 brew "ansible-lint"
@@ -83,7 +59,6 @@ brew "pipes-sh"
 
 # various tools (I should split this into sections...)
 brew "age"
-brew "age-plugin-se"
 brew "age-plugin-yubikey"
 brew "aichat"
 brew "aria2"
@@ -131,7 +106,6 @@ brew "httpstat"
 brew "influxdb"
 brew "iperf"
 brew "iperf3"
-brew "iproute2mac"
 brew "jpegoptim"
 brew "jq"
 brew "just"
@@ -154,10 +128,8 @@ brew "parallel"
 brew "pass-otp"
 brew "pdf2svg"
 brew "pigz"
-brew "pinentry-mac"
 brew "pipx"
 brew "pixz"
-brew "pngpaste"
 brew "pnpm"
 brew "powershell"
 brew "pre-commit"
@@ -214,66 +186,8 @@ brew "dive"
 brew "platformio"
 brew "dfu-util"
 
-# casks
-cask "android-studio"
-cask "app-tamer"
-cask "avidemux"
-cask "brave-browser@beta"
-cask "bruno"
-cask "clop"
-cask "contexts"
-cask "coteditor"
-cask "daisydisk"
-cask "db-browser-for-sqlite"
-cask "dbeaver-community"
-cask "firefox@developer-edition"
-cask "gcloud-cli"
-cask "ghostty"
-cask "gimp"
-cask "hex-fiend"
-cask "iina"
-cask "inkscape"
-cask "iterm2"
-cask "karabiner-elements"
-cask "kitty"
-cask "libreoffice"
-cask "lm-studio"
-cask "logitune"
-cask "mediainfo"
-cask "mitmproxy"
-cask "obsidian"
-cask "orbstack"
-cask "p4v"
-cask "pgadmin4"
-cask "powershell"
-cask "raycast"
-cask "secretive"
-cask "shottr"
-cask "spotify"
-cask "steermouse"
-cask "swiftdefaultappsprefpane"
-cask "upscayl"
-cask "utm"
-cask "visual-studio-code"
-cask "vlc"
-cask "vnc-viewer"
-cask "wezterm@nightly"
-cask "wireshark-app"
-cask "yubico-authenticator"
-cask "zen"
-
-mas "Amphetamine", id: 937984704
-mas "Balance Lock", id: 1019371109
-mas "Bitwarden", id: 1352778147
-mas "Brother P-touch Editor", id: 1453365242
-mas "Color Picker", id: 1545870783
-mas "CrystalFetch", id: 6454431289 # Download Windows images from microsoft.com
-mas "Discovery", id: 1381004916
-mas "Draw Things", id: 6444050820
-mas "Microsoft Remote Desktop", id: 1295203466
-mas "Xcode", id: 497799835
-
-if is_work then
+# work CLI (cross-platform; installs on work macOS and work Linux)
+if is_work
   tap "heroku/brew"
   brew "heroku/brew/heroku"
 
@@ -290,66 +204,172 @@ if is_work then
   brew "azure-cli"
   brew "bitwarden-cli"
   brew "step"
-
-  cask "anypointstudio"
-  cask "deepl"
-  cask "firefox@nightly"
-  cask "google-chrome"
-  cask "jabra-direct"
-  cask "keepassxc"
-  cask "microsoft-azure-storage-explorer"
-  cask "microsoft-edge"
-  cask "miro"
-  cask "mongodb-compass"
-  cask "postman"
-  cask "slack"
 end
 
-if is_home then
-  tap "cloudflare/cloudflare"
-  cask "cf-terraforming"
+# =============================================================================
+# macOS only (formulae requiring macOS, casks, Mac App Store)
+# =============================================================================
+if OS.mac?
+  # mas (Mac App Store CLI)
+  brew "mas"
 
-  brew "ansible"
-  brew "esptool"
-  brew "hcloud"
-  brew "rclone"
-  brew "spicetify-cli"
-  brew "wireguard-tools"
+  # homebrew autoupdate (launchd-based)
+  tap "domt4/autoupdate"
 
-  # currently manually installed prerelease version: cask "freecad"
-  cask "1password"
-  cask "1password-cli"
-  cask "android-platform-tools"
-  cask "autodesk-fusion"
-  cask "balenaetcher"
-  cask "bambu-connect"
-  cask "calibre"
-  cask "discord"
-  cask "kicad"
-  cask "macfuse"
-  cask "microsoft-auto-update"
-  cask "microsoft-excel"
-  cask "moonlight"
-  cask "mqtt-explorer"
-  cask "openscad"
-  cask "orcaslicer"
-  cask "plex"
-  cask "raspberry-pi-imager"
-  cask "signal"
-  cask "steam"
-  cask "syncthing-app"
-  cask "tailscale-app"
-  cask "thunderbird@beta"
-  cask "tor-browser"
-  cask "veracrypt"
+  # felixkratz tools (status bar + window borders)
+  tap "felixkratz/formulae"
+  brew "felixkratz/formulae/borders"
+  brew "felixkratz/formulae/sketchybar"
 
-  mas "1Password for Safari", id: 1569813296
-  mas "Microsoft Word", id: 462054704
-  mas "Goodnotes", id: 1444383602
-  mas "Home Assistant", id: 1099568401
-  mas "OneDrive", id: 823766827
-  mas "Telegram", id: 747648890
-  mas "WireGuard", id: 1451685025
+  # rift (BSP tiling window manager)
+  tap "acsandmann/tap"
+  brew "acsandmann/tap/rift"
+
+  # AI (Apple Silicon MLX)
+  tap "jundot/omlx", "https://github.com/jundot/omlx"
+  brew "jundot/omlx/omlx"
+  cask "claude-code@latest"
+  cask "codex"
+
+  # macOS-only CLI (hard macOS requirement)
+  brew "age-plugin-se" # Secure Enclave age plugin
+  brew "iproute2mac"
+  brew "pinentry-mac"
+  brew "pngpaste"
+
+  # fonts
+  cask "font-iosevka"
+  cask "font-liberation"
+  cask "font-iosevka-nerd-font"
+  cask "font-monocraft"
+  cask "font-roboto"
+  cask "font-roboto-mono"
+  cask "font-roboto-serif"
+  cask "font-sketchybar-app-font"
+  cask "font-symbols-only-nerd-font"
+
+  # casks
+  cask "android-studio"
+  cask "app-tamer"
+  cask "avidemux"
+  cask "brave-browser@beta"
+  cask "bruno"
+  cask "clop"
+  cask "contexts"
+  cask "coteditor"
+  cask "daisydisk"
+  cask "db-browser-for-sqlite"
+  cask "dbeaver-community"
+  cask "firefox@developer-edition"
+  cask "gcloud-cli"
+  cask "ghostty"
+  cask "gimp"
+  cask "hex-fiend"
+  cask "iina"
+  cask "inkscape"
+  cask "iterm2"
+  cask "karabiner-elements"
+  cask "kitty"
+  cask "libreoffice"
+  cask "lm-studio"
+  cask "logitune"
+  cask "mediainfo"
+  cask "mitmproxy"
+  cask "obsidian"
+  cask "orbstack"
+  cask "p4v"
+  cask "pgadmin4"
+  cask "powershell"
+  cask "raycast"
+  cask "secretive"
+  cask "shottr"
+  cask "spotify"
+  cask "steermouse"
+  cask "swiftdefaultappsprefpane"
+  cask "upscayl"
+  cask "utm"
+  cask "visual-studio-code"
+  cask "vlc"
+  cask "vnc-viewer"
+  cask "wezterm@nightly"
+  cask "wireshark-app"
+  cask "yubico-authenticator"
+  cask "zen"
+
+  mas "Amphetamine", id: 937984704
+  mas "Balance Lock", id: 1019371109
+  mas "Bitwarden", id: 1352778147
+  mas "Brother P-touch Editor", id: 1453365242
+  mas "Color Picker", id: 1545870783
+  mas "CrystalFetch", id: 6454431289 # Download Windows images from microsoft.com
+  mas "Discovery", id: 1381004916
+  mas "Draw Things", id: 6444050820
+  mas "Microsoft Remote Desktop", id: 1295203466
+  mas "Xcode", id: 497799835
+
+  # work GUI apps (macOS only)
+  if is_work
+    cask "anypointstudio"
+    cask "deepl"
+    cask "firefox@nightly"
+    cask "google-chrome"
+    cask "jabra-direct"
+    cask "keepassxc"
+    cask "microsoft-azure-storage-explorer"
+    cask "microsoft-edge"
+    cask "miro"
+    cask "mongodb-compass"
+    cask "postman"
+    cask "slack"
+  end
+
+  # home (personal, always macOS)
+  if is_home
+    tap "cloudflare/cloudflare"
+    cask "cf-terraforming"
+
+    brew "ansible"
+    brew "esptool"
+    brew "hcloud"
+    brew "rclone"
+    brew "spicetify-cli"
+    brew "wireguard-tools"
+
+    # currently manually installed prerelease version: cask "freecad"
+    cask "1password"
+    cask "1password-cli"
+    cask "android-platform-tools"
+    cask "autodesk-fusion"
+    cask "balenaetcher"
+    cask "bambu-connect"
+    cask "calibre"
+    cask "discord"
+    cask "kicad"
+    cask "macfuse"
+    cask "microsoft-auto-update"
+    cask "microsoft-excel"
+    cask "moonlight"
+    cask "mqtt-explorer"
+    cask "openscad"
+    cask "orcaslicer"
+    cask "plex"
+    cask "raspberry-pi-imager"
+    cask "signal"
+    cask "steam"
+    cask "syncthing-app"
+    cask "tailscale-app"
+    cask "thunderbird@beta"
+    cask "tor-browser"
+    cask "veracrypt"
+
+    mas "1Password for Safari", id: 1569813296
+    mas "Microsoft Word", id: 462054704
+    mas "Goodnotes", id: 1444383602
+    mas "Home Assistant", id: 1099568401
+    mas "OneDrive", id: 823766827
+    mas "Telegram", id: 747648890
+    mas "WireGuard", id: 1451685025
+  end
 end
 
 # vim: ft=ruby
