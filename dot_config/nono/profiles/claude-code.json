@@ -10,7 +10,9 @@
     "access": "readwrite"
   },
   "filesystem": {
-    "allow": [],
+    "allow": [
+      "$HOME/.codex"
+    ],
     "read": [
       "$HOME/.global_gitignore",
       "$HOME/.agents",
