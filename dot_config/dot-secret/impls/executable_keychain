@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# macOS Keychain backend for dot-secret.
+#
+# Convention: each secret is a generic-password item with
+#
+#   service = dot-secret.<name>, account = $USER
+#
+# The service is derived from the secret name alone, so this script carries no
+# store-specific details and is safe to keep unencrypted in a public repo.
+# Reads are gated by the login keychain ACL (Touch ID / keychain unlock).
+
+account="${USER:?USER is not set}"
+prefix="dot-secret."
+
+usage() {
+  cat >&2 <<'EOF'
+usage: dot-secret {get NAME|set NAME|list}
+EOF
+}
+
+service_for() {
+  printf '%s%s\n' "$prefix" "$1"
+}
+
+case "${1:-}" in
+  list)
+    [[ $# -eq 1 ]] || { usage; exit 2; }
+    # Keychain has no native "list by service prefix"; scrape service names
+    # (metadata only — this does not read or prompt for the secrets).
+    security dump-keychain 2>/dev/null \
+      | sed -n 's/^[[:space:]]*"svce"<blob>="dot-secret\.\(.*\)"$/\1/p' \
+      | sort -u
+    ;;
+  get)
+    [[ $# -eq 2 ]] || { usage; exit 2; }
+    exec security find-generic-password -a "$account" -s "$(service_for "$2")" -w
+    ;;
+  set)
+    [[ $# -eq 2 ]] || { usage; exit 2; }
+    exec security add-generic-password -a "$account" -s "$(service_for "$2")" -U -w
+    ;;
+  *)
+    usage
+    exit 2
+    ;;
+esac
