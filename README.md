@@ -4,7 +4,7 @@ Personal configuration files, managed with [chezmoi](https://chezmoi.io). Uses G
 
 ## Setup
 
-Prerequisites: `chezmoi`, `age`, `age-plugin-se`, `age-plugin-yubikey`.
+Prerequisite: **[Homebrew](https://brew.sh)** — everything else is installed from it (see [Provisioning a new machine](#provisioning-a-new-machine)).
 
 One thing in this repo is encrypted with [age](https://age-encryption.org), decrypting against the identity at `~/.config/chezmoi/age-identity.txt`:
 
@@ -14,38 +14,27 @@ The single inviolable rule: **the identity file must exist at that path before `
 
 `dot-secret`'s runtime backends are not encrypted — they are generic, convention-based scripts that carry no store-specific details (see [Runtime secret access](#runtime-secret-access)).
 
-### Adding a new machine
+### Provisioning a new machine
 
-The SE key is hardware-bound and cannot be ferried over, so it has to be generated on the new machine and that machine has to be added as a recipient on an existing one before encrypted files can flow.
+The age identity must exist at `~/.config/chezmoi/age-identity.txt` before apply. It is generated per-machine (it cannot be copied) and registered as a recipient elsewhere.
 
-1. **On the new machine**, generate the SE identity:
+1. Install [Homebrew](https://brew.sh), then bootstrap: `brew install chezmoi age`
 
-   ```bash
-   mkdir -p ~/.config/chezmoi
-   age-plugin-se keygen -o ~/.config/chezmoi/age-identity.txt
-   ```
+2. Create `~/.config/chezmoi/age-identity.txt` — pick one:
 
-   If carrying the YubiKey over, also drop its identity stub at `~/.config/chezmoi/age-identity-yubikey.txt` (run `age-plugin-yubikey` to print it).
+   - **Secure Enclave** — `age-plugin-se keygen -o ~/.config/chezmoi/age-identity.txt`
+   - **YubiKey** — write the stub printed by `age-plugin-yubikey`
+   - **Password-backed** — `age-keygen | age -p -o ~/.config/chezmoi/age-identity.txt` (passphrase-encrypted key; age prompts for it on apply)
 
-2. **On an existing machine**, add the new machine as a recipient and re-encrypt:
+3. Register it as a recipient on an existing machine: append the recipient line to `.chezmoisecrets-recipients.txt`, run `chezmoi-secrets edit` (save to re-encrypt), commit, push. _First machine? Add the line in your local clone instead, then seed secrets with `chezmoi-secrets edit` after step 4._
 
-   - Append the new SE recipient line (from the new machine's identity file) to `.chezmoisecrets-recipients.txt`.
-   - Re-encrypt static secrets: `chezmoi-secrets edit`, save without changes.
-   - Commit and push.
+4. Clone and apply: `chezmoi init --apply git@github.com:USER/dotfiles.git`
 
-3. **Back on the new machine**, clone and apply in one command:
+5. Install packages: `brew bundle --file ~/.local/share/chezmoi/Brewfile`
 
-   ```bash
-   chezmoi init --apply git@github.com:USER/dotfiles.git
-   ```
+6. Set fish as login shell: `command -v fish | sudo tee -a /etc/shells && chsh -s "$(command -v fish)"`
 
-   The identity from step 1 is already on disk, so every encrypted file decrypts as chezmoi processes it.
-
-4. **Set up `dot-secret`** (see [Runtime secret access](#runtime-secret-access)): write the local backend selector, e.g. `echo onepassword > ~/.config/dot-secret/backend`, and make sure the machine's secret store holds the keys under that backend's convention.
-
-### First-time setup (no existing machine yet)
-
-Skip step 2 above. After step 1, add both recipient lines (SE + YubiKey) to `.chezmoisecrets-recipients.txt` directly in your local clone, run `chezmoi init --apply`, then seed initial secrets with `chezmoi-secrets edit`.
+7. Select the `dot-secret` backend: `echo onepassword > ~/.config/dot-secret/backend` (see [Runtime secret access](#runtime-secret-access)).
 
 ## Secrets management
 
