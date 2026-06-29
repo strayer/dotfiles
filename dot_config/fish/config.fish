@@ -36,8 +36,10 @@ fish_add_path "$HOME/.local/bin"
 # needed here. The shims prefer ~/dev/rift/target/release when it exists and
 # fall back to Homebrew otherwise — a `cargo clean` switches back automatically.
 
-# more up to date cURL
-fish_add_path /opt/homebrew/opt/curl/bin
+# more up to date cURL (keg-only on macOS; not wanted on Linux)
+if test "$os" = Darwin; and set -q HOMEBREW_PREFIX; and test -d "$HOMEBREW_PREFIX/opt/curl/bin"
+  fish_add_path "$HOMEBREW_PREFIX/opt/curl/bin"
+end
 
 # Homebrew
 if type -q brew
