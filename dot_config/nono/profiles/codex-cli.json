@@ -1,4 +1,5 @@
 {
+  "$schema": "./nono-profile.schema.json",
   "extends": "always-further/codex",
   "meta": {
     "name": "codex-cli"
@@ -15,6 +16,9 @@
       "$HOME/.global_gitignore",
       "$HOME/.bin/secretive-ssh-keygen",
       "$HOME/.config/gh",
+      "$HOME/.config/mise",
+      "$HOME/.local/share/mise",
+      "$HOME/.local/state/mise",
       "$HOME/.ssh/known_hosts"
     ],
     "bypass_protection": [
