@@ -1,7 +1,20 @@
-{{- if eq .chezmoi.hostname "CO-MBP-KC9KQV64V3" -}}
-- When creating Pull Requests, only write test plans if the project documentation (README, CLAUDE.md, contribution guidelines, pull request templates, ...) explicity request it.
+# Sandbox
 
-# Git CLI caveats
+This machine sometimes runs Claude Code inside a **nono** security sandbox that blocks access to files and network outside an allow-list. Not every session uses it, so first confirm it's active before assuming: a permission error (`Operation not permitted`, `EPERM`, `EACCES`) on a path outside the working directory is the signal. Use the `nono-sandbox` skill and `nono why <path>` to diagnose.
 
-Authentication to org-127120047@github.com requires SSH certificates managed through Smallstep CLI. If access to those repositories fails with "Permission denied (public key)", request a new certificate with `step ssh login`.
-{{- end -}}
+When something is blocked, do not try to reach the blocked resource by another route — no alternate paths, copied files, `sudo`, or swapping in a different tool that reads the same data. That is circumventing the sandbox and is not allowed. Instead:
+
+1. Check whether the command actually needs the blocked data. Many tools read a path at startup out of habit, not because the current subcommand needs it. If it isn't needed, run the tool so it never touches that path.
+2. If the data genuinely is required, stop and tell the user which path is blocked and what they need to do. Granting access is a one-time action only they can take (e.g. re-authenticating, or promoting a nono profile) — ask them rather than working around it.
+
+Example of point 1: `terraform fmt` only formats files and needs no credentials, but Terraform reads `~/.terraform.d` (a credential directory the sandbox blocks) on startup. Run `TF_CLI_CONFIG_FILE=/dev/null terraform fmt` so it skips that read.
+
+# Web fetching tool preference
+
+Prefer my own skills over the built-in `WebFetch` and `WebSearch` tools. Use the `scrape` skill for any web page that needs content extraction, and the `research` skill for open-ended web research with cited sources. For plain files like `.md`, `.txt`, shell scripts, JSON, or OpenAPI specs where no extraction is needed, use `curl -s URL` instead.
+{{- if eq .chezmoi.hostname "CO-MBP-KC9KQV64V3" }}
+
+# GitHub auth (work)
+
+Access to `org-127120047@github.com` requires an SSH certificate from Smallstep that expires daily. If a `git` or `gh` operation against that host fails with `Permission denied (public key)`, the certificate has most likely expired — do not attempt other authentication methods or workarounds. Tell the user to run `step ssh login` (it opens a browser and must run outside the sandbox), then retry the operation once they confirm it's done.
+{{- end }}
