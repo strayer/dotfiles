@@ -12,7 +12,8 @@
   },
   "filesystem": {
     "allow": [
-      "$HOME/.codex"
+      "$HOME/.codex",
+      "$HOME/.cache/uv"
     ],
     "read": [
       "$HOME/.global_gitignore",

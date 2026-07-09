@@ -11,7 +11,9 @@
     "access": "readwrite"
   },
   "filesystem": {
-    "allow": [],
+    "allow": [
+      "$HOME/.cache/uv"
+    ],
     "read": [
       "$HOME/.global_gitignore",
       "$HOME/.bin/secretive-ssh-keygen",
