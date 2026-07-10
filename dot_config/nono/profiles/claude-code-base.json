@@ -1,6 +1,6 @@
 {
   "$schema": "./nono-profile.schema.json",
-  "extends": "always-further/claude",
+  "extends": ["always-further/claude", "prek"],
   "meta": {
     "name": "claude-code-base"
   },

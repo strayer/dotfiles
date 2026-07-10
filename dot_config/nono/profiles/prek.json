@@ -1,0 +1,19 @@
+{
+  "$schema": "./nono-profile.schema.json",
+  "meta": {
+    "name": "prek",
+    "description": "Grant prek pre-commit runner access to its cache"
+  },
+  "filesystem": {
+    "allow_file": [
+      "$HOME/.cache/prek/prek.log",
+      "$HOME/.cache/prek/.lock"
+    ],
+    "read": [
+      "$HOME/.cache/prek"
+    ],
+    "write": [
+      "$HOME/.cache/prek/patches"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 {
   "$schema": "./nono-profile.schema.json",
-  "extends": "always-further/codex",
+  "extends": ["always-further/codex", "prek"],
   "meta": {
     "name": "codex-cli-base"
   },
