@@ -1,0 +1,16 @@
+{
+  "extends": "claude-code-base",
+  "meta": {
+    "name": "claude-code-docker"
+  },
+  "filesystem": {
+    "allow": [
+      "/var/run/docker.sock",
+      "$HOME/.orbstack/run/docker.sock",
+      "$HOME/.docker"
+    ],
+    "bypass_protection": [
+      "$HOME/.docker"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "extends": "codex-cli-base",
+  "meta": {
+    "name": "codex-cli-docker"
+  },
+  "filesystem": {
+    "allow": [
+      "/var/run/docker.sock",
+      "$HOME/.orbstack/run/docker.sock",
+      "$HOME/.docker"
+    ],
+    "bypass_protection": [
+      "$HOME/.docker"
+    ]
+  }
+}

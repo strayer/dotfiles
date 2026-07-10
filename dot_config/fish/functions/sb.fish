@@ -1,9 +1,14 @@
 function sb --description "Run commands in a nono sandbox"
     set -l sb_args
     set -l cmd_idx 0
+    set -l docker 0
 
     for i in (seq (count $argv))
         switch $argv[$i]
+            case --docker
+                # sb-level switch, not a nono flag: selects the docker-enabled
+                # profile variant for coding agents. Don't forward to nono run.
+                set docker 1
             case '-*'
                 set -a sb_args $argv[$i]
             case '*'
@@ -21,7 +26,10 @@ function sb --description "Run commands in a nono sandbox"
         echo ""
         echo "Any other command runs in a plain nono sandbox."
         echo ""
-        echo "Sandbox options (passed to nono run) go before the command."
+        echo "Options (go before the command):"
+        echo "  --docker   Use the docker-enabled profile (claude/codex only);"
+        echo "             default profiles block the container socket."
+        echo "  Other -... flags are passed through to nono run."
         return 1
     end
 
@@ -67,8 +75,10 @@ function sb --description "Run commands in a nono sandbox"
                     set -a extra_args --read-file=(string replace '~' "$HOME" "$helper")
                 end
             end
+            set -l profile claude-code
+            test $docker -eq 1; and set profile claude-code-docker
             nono run \
-                --profile claude-code \
+                --profile $profile \
                 --allow-cwd \
                 $sb_args \
                 $extra_args \
@@ -76,17 +86,23 @@ function sb --description "Run commands in a nono sandbox"
                 -- claude $cmd_args
 
         case codex
-            # codex-cli extends the official always-further/codex pack (which
-            # grants ~/.codex auth + ~/.agents) with the same extras as
-            # claude-code (workdir, ~/.global_gitignore, secretive, gh).
+            # codex-cli (and -docker) build on codex-cli-base, which extends the
+            # official always-further/codex pack (~/.codex auth) with the same
+            # extras as claude-code (workdir, ~/.global_gitignore, secretive, gh).
+            # The base carries no container rule; the default leaf denies the
+            # docker socket, the -docker leaf allows it.
+            set -l profile codex-cli
+            test $docker -eq 1; and set profile codex-cli-docker
             nono run \
-                --profile codex-cli \
+                --profile $profile \
                 --allow-cwd \
                 $sb_args \
                 $secret_args \
                 -- codex $cmd_args
 
         case '*'
+            test $docker -eq 1
+            and echo "sb: --docker only applies to the claude/codex agents; ignoring." >&2
             nono run --allow-cwd $sb_args -- $cmd $cmd_args
     end
 end

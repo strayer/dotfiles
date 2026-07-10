@@ -1,0 +1,33 @@
+{
+  "$schema": "./nono-profile.schema.json",
+  "extends": "always-further/claude",
+  "meta": {
+    "name": "claude-code-base"
+  },
+  "groups": {
+    "include": []
+  },
+  "workdir": {
+    "access": "readwrite"
+  },
+  "filesystem": {
+    "allow": [
+      "$HOME/.codex",
+      "$HOME/.cache/uv"
+    ],
+    "read": [
+      "$HOME/.global_gitignore",
+      "$HOME/.agents",
+      "$HOME/.bin/secretive-ssh-keygen",
+      "$HOME/.config/gh",
+      "$HOME/.config/mise",
+      "$HOME/.config/uv/uv.toml",
+      "$HOME/.local/share/mise",
+      "$HOME/.local/state/mise",
+      "$HOME/.ssh/known_hosts"
+    ],
+    "bypass_protection": [
+      "$HOME/.ssh/known_hosts"
+    ]
+  }
+}
