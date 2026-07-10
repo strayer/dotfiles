@@ -41,18 +41,56 @@ func getCurrentSSID(airportDict: [String: Any]?) -> String {
   return fallback
 }
 
+/// VPN/tunnel interfaces (Tailscale exit nodes, IKEv2, PPP) can become the
+/// primary interface by installing a default route, masking the physical link.
+func isVirtualInterface(_ name: String) -> Bool {
+  ["utun", "ipsec", "ppp", "tun", "tap"].contains { name.hasPrefix($0) }
+}
+
+/// Resolve the underlying physical interface by walking the user's service
+/// order and returning the first non-virtual service with active IPv4 state.
+func resolvePhysicalInterface(store: SCDynamicStore) -> String? {
+  guard
+    let setupDict = SCDynamicStoreCopyValue(store, "Setup:/Network/Global/IPv4" as CFString)
+      as? [String: Any],
+    let serviceOrder = setupDict["ServiceOrder"] as? [String]
+  else {
+    return nil
+  }
+  for serviceID in serviceOrder {
+    guard
+      let serviceDict = SCDynamicStoreCopyValue(
+        store, "State:/Network/Service/\(serviceID)/IPv4" as CFString) as? [String: Any],
+      let iface = serviceDict["InterfaceName"] as? String,
+      !isVirtualInterface(iface)
+    else { continue }
+    return iface
+  }
+  return nil
+}
+
 /// Detect current network type and SSID from SCDynamicStore state.
 func detectNetwork(store: SCDynamicStore) -> (type: String, ssid: String) {
   // 1. Read primary interface
   guard
     let globalDict = SCDynamicStoreCopyValue(store, "State:/Network/Global/IPv4" as CFString)
       as? [String: Any],
-    let primaryInterface = globalDict["PrimaryInterface"] as? String
+    var primaryInterface = globalDict["PrimaryInterface"] as? String
   else {
     return ("disconnected", "")
   }
 
   debug("Primary interface: \(primaryInterface)")
+
+  if isVirtualInterface(primaryInterface) {
+    if let physical = resolvePhysicalInterface(store: store) {
+      debug("Primary is a tunnel; underlying physical interface: \(physical)")
+      primaryInterface = physical
+    } else {
+      debug("Primary is a tunnel; no underlying physical interface found")
+      return ("disconnected", "")
+    }
+  }
 
   // 2. Read AirPort state for hotspot detection and SSID fallback
   let airportDict = SCDynamicStoreCopyValue(
