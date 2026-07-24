@@ -3,6 +3,14 @@
 # Default config:
 # https://raw.githubusercontent.com/acsandmann/rift/refs/heads/main/rift.default.toml
 
+# Keybinding scheme: niri's structure with swapped modifiers.
+#   Alt              = focus / navigate
+#   Alt + Shift      = move things (windows, columns, to workspaces)
+#   Alt + Ctrl       = secondary (displays, window height, fullscreen, unjoin, center)
+#   Ctrl + Shift     = move window to display
+#   Alt + , / .      = consume/expel window left/right (niri's Mod+[ / Mod+])
+#   with Shift / Ctrl on , / . = resize column width / stack height (< narrower, > wider)
+
 [settings]
 animate = false  # disable animations for now; https://github.com/acsandmann/rift/issues/269
 mouse_follows_focus = false
@@ -36,6 +44,17 @@ vertical = 7.0
 outer = { top = 5.0, left = 5.0, bottom = 5.0, right = 5.0 }
 inner = { horizontal = 7.0, vertical = 7.0 }
 
+# Scrolling layout (niri-style columns), switched per-workspace via Raycast scripts
+[settings.layout.scrolling]
+column_width_ratio = 0.5     # niri's default-column-width
+min_column_width_ratio = 0.25
+max_column_width_ratio = 1.0 # allow full-width columns like niri
+
+[settings.layout.scrolling.gestures]
+enabled = true
+fingers = 3
+propagate_to_workspace_swipe = true # overscroll past the strip's end rolls into next/prev workspace
+
 [virtual_workspaces]
 enabled = true
 default_workspace_count = 16
@@ -53,34 +72,53 @@ app_rules = [
   { app_id = "cc.ffitch.shottr", floating = true },
 ]
 
-# Modifier combinations for cleaner bindings
-[modifier_combinations]
-comb1 = "Alt + Shift"
-comb2 = "Alt + Ctrl"
-comb3 = "Ctrl + Shift"
-
 [keys]
 # Activate/deactivate rift on current space (REQUIRED to start managing windows)
 "Alt + Z" = "toggle_space_activated"
 
-# Layout toggle (equivalent to alt-slash in AeroSpace)
+# Layout toggle in traditional mode (equivalent to alt-slash in AeroSpace)
 "Alt + Slash" = "toggle_orientation"
 
-# Focus navigation (vim-style hjkl)
+# Workspace back-and-forth
+"Alt + Tab" = "switch_to_last_workspace"
+
+# Focus navigation (scrolling: H/L across columns, J/K within a column's stack)
 "Alt + H" = { move_focus = "left" }
 "Alt + J" = { move_focus = "down" }
 "Alt + K" = { move_focus = "up" }
 "Alt + L" = { move_focus = "right" }
 
-# Move windows (vim-style hjkl)
-"comb1 + H" = { move_node = "left" }
-"comb1 + J" = { move_node = "down" }
-"comb1 + K" = { move_node = "up" }
-"comb1 + L" = { move_node = "right" }
+# Workspace prev/next (niri Mod+U/I; U = next like niri's focus-workspace-down)
+"Alt + U" = "next_workspace"
+"Alt + I" = "prev_workspace"
 
-# Resize windows
-"comb1 + Minus" = "resize_window_shrink"
-"comb1 + Equal" = "resize_window_grow"
+# Move windows/columns (scrolling: H/L moves the column, J/K moves within the stack)
+"Alt + Shift + H" = { move_node = "left" }
+"Alt + Shift + J" = { move_node = "down" }
+"Alt + Shift + K" = { move_node = "up" }
+"Alt + Shift + L" = { move_node = "right" }
+
+# Carry window to prev/next workspace
+"Alt + Shift + U" = { move_window_to_workspace = "next" }
+"Alt + Shift + I" = { move_window_to_workspace = "prev" }
+
+# Consume/expel window left/right (niri Mod+[ / Mod+]; think < and > on the keycaps)
+# Standalone window joins the neighbouring column; stacked window pops out into its own.
+"Alt + Comma" = { consume_or_expel_window = "left" }
+"Alt + Period" = { consume_or_expel_window = "right" }
+
+# Break a whole stack apart
+"Alt + Ctrl + E" = "unjoin_windows"
+
+# Toggle stack mode (closest to accordion)
+"Alt + S" = "toggle_stack"
+
+# Resize on comma/period (think < narrower, > wider):
+# column width on Alt+Shift, window height (within a stack) on Alt+Ctrl
+"Alt + Shift + Comma" = { resize_window_shrink = "horizontal" }
+"Alt + Shift + Period" = { resize_window_grow = "horizontal" }
+"Alt + Ctrl + Comma" = { resize_window_shrink = "vertical" }
+"Alt + Ctrl + Period" = { resize_window_grow = "vertical" }
 
 # Workspace switching - numeric (1-9)
 "Alt + 1" = { switch_to_workspace = 0 }
@@ -103,49 +141,42 @@ comb3 = "Ctrl + Shift"
 "Alt + D" = { switch_to_workspace = 15 }
 
 # Move window to workspace - numeric (1-9)
-"comb1 + 1" = { move_window_to_workspace = 0 }
-"comb1 + 2" = { move_window_to_workspace = 1 }
-"comb1 + 3" = { move_window_to_workspace = 2 }
-"comb1 + 4" = { move_window_to_workspace = 3 }
-"comb1 + 5" = { move_window_to_workspace = 4 }
-"comb1 + 6" = { move_window_to_workspace = 5 }
-"comb1 + 7" = { move_window_to_workspace = 6 }
-"comb1 + 8" = { move_window_to_workspace = 7 }
-"comb1 + 9" = { move_window_to_workspace = 8 }
+"Alt + Shift + 1" = { move_window_to_workspace = 0 }
+"Alt + Shift + 2" = { move_window_to_workspace = 1 }
+"Alt + Shift + 3" = { move_window_to_workspace = 2 }
+"Alt + Shift + 4" = { move_window_to_workspace = 3 }
+"Alt + Shift + 5" = { move_window_to_workspace = 4 }
+"Alt + Shift + 6" = { move_window_to_workspace = 5 }
+"Alt + Shift + 7" = { move_window_to_workspace = 6 }
+"Alt + Shift + 8" = { move_window_to_workspace = 7 }
+"Alt + Shift + 9" = { move_window_to_workspace = 8 }
 
 # Move window to workspace - named (C, M, O, P, T, W, D)
-"comb1 + C" = { move_window_to_workspace = 9 }
-"comb1 + M" = { move_window_to_workspace = 10 }
-"comb1 + O" = { move_window_to_workspace = 11 }
-"comb1 + P" = { move_window_to_workspace = 12 }
-"comb1 + T" = { move_window_to_workspace = 13 }
-"comb1 + W" = { move_window_to_workspace = 14 }
-"comb1 + D" = { move_window_to_workspace = 15 }
+"Alt + Shift + C" = { move_window_to_workspace = 9 }
+"Alt + Shift + M" = { move_window_to_workspace = 10 }
+"Alt + Shift + O" = { move_window_to_workspace = 11 }
+"Alt + Shift + P" = { move_window_to_workspace = 12 }
+"Alt + Shift + T" = { move_window_to_workspace = 13 }
+"Alt + Shift + W" = { move_window_to_workspace = 14 }
+"Alt + Shift + D" = { move_window_to_workspace = 15 }
 
-# Workspace back-and-forth
-"Alt + Tab" = "switch_to_last_workspace"
+# Displays: focus on Alt+Ctrl, move window on Ctrl+Shift
+"Alt + Ctrl + H" = { focus_display = "left" }
+"Alt + Ctrl + J" = { focus_display = "down" }
+"Alt + Ctrl + K" = { focus_display = "up" }
+"Alt + Ctrl + L" = { focus_display = "right" }
+"Ctrl + Shift + H" = { move_window_to_display = { selector = "left" } }
+"Ctrl + Shift + J" = { move_window_to_display = { selector = "down" } }
+"Ctrl + Shift + K" = { move_window_to_display = { selector = "up" } }
+"Ctrl + Shift + L" = { move_window_to_display = { selector = "right" } }
 
-# Toggle floating
-"comb1 + Space" = "toggle_window_floating"
+# Floating (niri Mod+V / Mod+Shift+V)
+"Alt + V" = "toggle_window_floating"
+"Alt + Ctrl + V" = "toggle_focus_floating" # briefly bring focus to floating window
 
-# Fullscreen
-"comb1 + F" = "toggle_fullscreen_within_gaps"
-"Alt + F" = "toggle_fullscreen"
+# Fullscreen (Alt+F ~ niri's maximize-column, Alt+Ctrl+F = real fullscreen)
+"Alt + F" = "toggle_fullscreen_within_gaps"
+"Alt + Ctrl + F" = "toggle_fullscreen"
 
-# Join window with adjacent
-"comb2 + H" = { join_window = "left" }
-"comb2 + J" = { join_window = "down" }
-"comb2 + K" = { join_window = "up" }
-"comb2 + L" = { join_window = "right" }
-
-# Unjoin windows
-"comb2 + E" = "unjoin_windows"
-
-# Move window to display
-"comb3 + H" = { move_window_to_display = { selector = "left" } }
-"comb3 + J" = { move_window_to_display = { selector = "down" } }
-"comb3 + K" = { move_window_to_display = { selector = "up" } }
-"comb3 + L" = { move_window_to_display = { selector = "right" } }
-
-# Toggle stack mode (closest to accordion)
-"Alt + Comma" = "toggle_stack"
+# Scrolling: re-center the focused column
+"Alt + Ctrl + C" = "center_selection"
