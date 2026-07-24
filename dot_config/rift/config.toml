@@ -89,8 +89,8 @@ app_rules = [
 "Alt + L" = { move_focus = "right" }
 
 # Workspace prev/next (niri Mod+U/I; U = next like niri's focus-workspace-down)
-"Alt + U" = "next_workspace"
-"Alt + I" = "prev_workspace"
+# "Alt + U" = "next_workspace"
+# "Alt + I" = "prev_workspace"
 
 # Move windows/columns (scrolling: H/L moves the column, J/K moves within the stack)
 "Alt + Shift + H" = { move_node = "left" }
