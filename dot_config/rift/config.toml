@@ -111,7 +111,7 @@ app_rules = [
 "Alt + Ctrl + E" = "unjoin_windows"
 
 # Toggle stack mode (closest to accordion)
-"Alt + S" = "toggle_stack"
+# "Alt + S" = "toggle_stack"
 
 # Resize on comma/period (think < narrower, > wider):
 # column width on Alt+Shift, window height (within a stack) on Alt+Ctrl
