@@ -10,6 +10,11 @@ npm.package_manager = "pnpm"
 "npm:vscode-langservers-extracted" = "latest"
 "npm:svgexport" = "latest"
 "npm:ccusage" = "latest"
+{{- if get . "headless" }}
+# official Obsidian Sync headless client (open beta). Headless-only: desktop
+# Sync and headless sync must never run on the same device, Macs use the app
+"npm:obsidian-headless" = "latest"
+{{- end }}
 {{- if eq .chezmoi.hostname "CO-MBP-KC9KQV64V3" }}
 maven = "latest"
 "github:StackGuardian/sg-cli" = "latest"
