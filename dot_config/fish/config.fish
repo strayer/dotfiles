@@ -78,6 +78,11 @@ end
 # Disable eternal terminal telemetry
 set -gx ET_NO_TELEMETRY 1
 
+# Disable Claude Code telemetry. Lives in the shell env (not settings.json) so
+# it can be unset per invocation — it breaks Claude Code remote control:
+#   env -u DISABLE_TELEMETRY -u DO_NOT_TRACK claude
+set -gx DISABLE_TELEMETRY 1
+
 if status --is-interactive
   function ls
     if type -q gls
