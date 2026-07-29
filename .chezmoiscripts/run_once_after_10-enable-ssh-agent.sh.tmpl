@@ -1,0 +1,8 @@
+{{ if get . "headless" -}}
+#!/bin/sh
+# Enable the per-user ssh-agent on headless boxes (unit deployed from
+# dot_config/systemd/user/ssh-agent.service). Deliberately no linger:
+# the agent — and the unlocked keys — die with the last user session.
+set -eu
+systemctl --user enable --now ssh-agent.service
+{{ end -}}

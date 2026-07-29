@@ -5,3 +5,8 @@ CLAUDE.md
 {{/* macOS-only: symlink pnpm's native config dir to the XDG location */ -}}
 Library/Preferences/pnpm/config.yaml
 {{- end }}
+
+{{ if not (get . "headless") -}}
+{{/* per-user ssh-agent only on headless Linux boxes */ -}}
+.config/systemd/user/ssh-agent.service
+{{- end }}

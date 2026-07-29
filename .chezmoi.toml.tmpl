@@ -1,3 +1,9 @@
+{{- $headless := false -}}
+{{- if eq .chezmoi.os "linux" -}}
+{{-   if not (contains "microsoft" (.chezmoi.kernel.osrelease | lower)) -}}
+{{-     $headless = true -}}
+{{-   end -}}
+{{- end -}}
 encryption = "age"
 
 [age]
@@ -7,3 +13,10 @@ encryption = "age"
 [secret]
     command = "{{ .chezmoi.sourceDir }}/dot_bin/executable_chezmoi-secrets"
     args = ["get"]
+
+[data]
+    # Headless server = Linux that isn't WSL (no Linux desktops in this fleet).
+    # New config data only lands after `chezmoi init` — templates therefore
+    # read it via `get . "headless"` so machines that haven't re-inited yet
+    # safely default to false instead of erroring.
+    headless = {{ $headless }}
