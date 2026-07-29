@@ -4,6 +4,7 @@
     "commit": "",
     "pr": ""
   },
+  "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
       "Bash(npx lint-staged:*)",
@@ -26,8 +27,11 @@
     "command": "~/.claude/claude-statusline",
     "padding": 0
   },
+  "tui": "fullscreen",
+  "editorMode": "vim",
+  "autoCompactEnabled": false,
+  "agentPushNotifEnabled": true,
   "env": {
-    "DISABLE_TELEMETRY": "1",
     "DISABLE_FEEDBACK_COMMAND": "1",
     "DISABLE_ERROR_REPORTING": "1",
     "DISABLE_AUTOUPDATER": "1"
