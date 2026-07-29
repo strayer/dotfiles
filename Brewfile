@@ -21,6 +21,8 @@ brew "agent-browser"
 brew "nono"
 brew "llm"
 brew "opencode"
+cask "claude-code@latest"  # cask has linux binaries (x86_64 + arm64)
+cask "codex"               # same
 
 # linters, formatters, LSPs
 brew "ansible-lint"
@@ -212,8 +214,6 @@ if OS.mac?
   tap "jundot/omlx", "https://github.com/jundot/omlx"
   brew "jundot/omlx/omlx"
   brew "ollama"
-  cask "claude-code@latest"
-  cask "codex"
 
   # macOS-only CLI (hard macOS requirement)
   brew "age-plugin-se" # Secure Enclave age plugin
