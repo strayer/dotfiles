@@ -8,10 +8,6 @@ is_home = (hostname == "yobuko")                                   # personal (a
 # Universal CLI tools (macOS + Linux via Linuxbrew)
 # =============================================================================
 
-# speedtest-cli
-tap "teamookla/speedtest"
-brew "teamookla/speedtest/speedtest"
-
 # curlie
 tap "rs/tap"
 brew "rs/tap/curlie"
@@ -20,14 +16,9 @@ brew "rs/tap/curlie"
 tap "homeport/tap"
 brew "homeport/tap/dyff"
 
-# litra cli
-tap "timrogers/tap"
-brew "litra"
-
 # AI
 brew "agent-browser"
 brew "nono"
-brew "gemini-cli"
 brew "llm"
 brew "opencode"
 
@@ -47,7 +38,6 @@ brew "shfmt"
 brew "stylua"
 brew "taplo"
 brew "terraform-ls"
-brew "tflint"
 brew "vtsls"
 brew "yaml-language-server"
 brew "yamllint"
@@ -104,7 +94,6 @@ brew "htop"
 brew "httpie"
 brew "httping"
 brew "httpstat"
-brew "influxdb"
 brew "iperf"
 brew "iperf3"
 brew "jpegoptim"
@@ -118,7 +107,6 @@ brew "mpv"
 brew "mtr"
 brew "ncdu"
 brew "netcat"
-brew "ollama"
 brew "openjdk"
 brew "openssh"
 brew "optipng"
@@ -152,7 +140,6 @@ brew "starship"
 brew "svgo"
 brew "taglib"
 brew "tealdeer"
-brew "telnet"
 brew "testssl"
 brew "tmux"
 brew "trivy"
@@ -160,7 +147,6 @@ brew "uv"
 brew "watch"
 brew "wget"
 brew "xh"
-brew "yarn"
 brew "yazi"
 brew "yq"
 brew "yt-dlp"
@@ -182,10 +168,6 @@ brew "lazygit"
 
 # container stuff
 brew "dive"
-
-# keyboard-related
-brew "platformio"
-brew "dfu-util"
 
 # work CLI (cross-platform; installs on work macOS and work Linux)
 if is_work
@@ -229,6 +211,7 @@ if OS.mac?
   # AI (Apple Silicon MLX)
   tap "jundot/omlx", "https://github.com/jundot/omlx"
   brew "jundot/omlx/omlx"
+  brew "ollama"
   cask "claude-code@latest"
   cask "codex"
 
@@ -237,6 +220,15 @@ if OS.mac?
   brew "iproute2mac"
   brew "pinentry-mac"
   brew "pngpaste"
+  brew "telnet"  # the formula is macOS-only; Linux gets inetutils via apt
+
+  # litra cli
+  tap "timrogers/tap"
+  brew "litra"
+
+  # keyboard-related
+  brew "platformio"
+  brew "dfu-util"
 
   # fonts
   cask "font-iosevka"
@@ -280,7 +272,6 @@ if OS.mac?
   cask "orbstack"
   cask "p4v"
   cask "pgadmin4"
-  cask "powershell"
   cask "raycast"
   cask "secretive"
   cask "shottr"
