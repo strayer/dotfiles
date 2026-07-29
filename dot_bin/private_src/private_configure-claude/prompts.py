@@ -36,6 +36,15 @@ def prompt_bedrock_auth() -> str:
     return choice
 
 
+def prompt_removed_action() -> str:
+    """Ask what to do with values missing from the new configuration."""
+    return Prompt.ask(
+        "Keep these values, remove them, or abort",
+        choices=["keep", "remove", "abort"],
+        default="keep",
+    )
+
+
 def collect_vertex_variables(auth_method: str, cached_values: dict | None) -> dict:
     """Collect required Vertex variables from user, using cached values as defaults."""
     console.print("\n[bold]Vertex AI Configuration[/bold]")

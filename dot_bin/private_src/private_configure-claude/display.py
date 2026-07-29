@@ -49,6 +49,33 @@ def display_current_status(
     console.print()
 
 
+def display_removed_values(removed: list[tuple[tuple, object]]) -> None:
+    """Display settings values that the new configuration would remove."""
+    lines = []
+    for path, value in removed:
+        key = ".".join(str(part) for part in path)
+        if isinstance(value, (dict, list)):
+            json_str = json.dumps(value, indent=2)
+            indented = "\n".join(f"    {line}" for line in json_str.split("\n"))
+            lines.append(f"  [cyan]{key}[/cyan]:\n{indented}")
+        else:
+            lines.append(f"  [cyan]{key}[/cyan]: {value}")
+
+    panel = Panel(
+        "\n".join(lines),
+        title="[bold]Values Not Part of the New Configuration[/bold]",
+        border_style="yellow",
+        padding=(1, 2),
+    )
+    console.print()
+    console.print(panel)
+
+
+def display_aborted() -> None:
+    """Display abort message when the user declines to write settings."""
+    console.print("\n[yellow]Aborted[/yellow] — no changes written")
+
+
 def display_success(provider: str, auth_method: str) -> None:
     """Display success message after configuration."""
     if auth_method and auth_method != "none":

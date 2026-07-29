@@ -80,6 +80,62 @@ def write_settings(settings: dict, settings_path: Path | None = None) -> None:
         f.write("\n")  # Trailing newline
 
 
+def find_removed(
+    current: dict | None,
+    new: dict,
+    prefix: tuple = (),
+) -> list[tuple[tuple, object]]:
+    """
+    Find values present in current settings but missing from the new settings.
+
+    Returns a list of (path, value) tuples, where path is a tuple of keys.
+    For lists (e.g. permissions.allow), only the missing entries are reported.
+    """
+    removed: list[tuple[tuple, object]] = []
+    if not current:
+        return removed
+
+    for key, value in current.items():
+        path = prefix + (key,)
+        if key not in new:
+            removed.append((path, value))
+        elif isinstance(value, dict) and isinstance(new[key], dict):
+            removed.extend(find_removed(value, new[key], path))
+        elif isinstance(value, list) and isinstance(new[key], list):
+            missing = [v for v in value if v not in new[key]]
+            if missing:
+                removed.append((path, missing))
+
+    return removed
+
+
+def provider_managed_paths() -> set[tuple]:
+    """
+    Settings paths the script intentionally adds/removes when switching
+    providers — their removal is expected and should not be reported.
+    """
+    env_keys = {"ANTHROPIC_VERTEX_PROJECT_ID", "ANTHROPIC_VERTEX_BASE_URL", "AWS_PROFILE"}
+    for provider_config in PROVIDER_CONFIGS.values():
+        env_keys.update(provider_config["common_env"])
+        for auth_config in provider_config["auth"].values():
+            env_keys.update(auth_config["env"])
+
+    return {("apiKeyHelper",)} | {("env", key) for key in env_keys}
+
+
+def restore_removed(settings: dict, removed: list[tuple[tuple, object]]) -> None:
+    """Merge removed values back into settings (in place)."""
+    for path, value in removed:
+        target = settings
+        for key in path[:-1]:
+            target = target.setdefault(key, {})
+        leaf = path[-1]
+        if isinstance(value, list) and isinstance(target.get(leaf), list):
+            target[leaf].extend(v for v in value if v not in target[leaf])
+        else:
+            target[leaf] = value
+
+
 def detect_provider(settings: dict | None) -> Provider | None:
     """Detect current provider from settings. Returns 'vertex', 'bedrock', or None."""
     if not settings:

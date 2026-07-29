@@ -10,20 +10,29 @@ from cache import (
     write_cache,
 )
 from config import Provider
-from display import display_current_status, display_success
+from display import (
+    display_aborted,
+    display_current_status,
+    display_removed_values,
+    display_success,
+)
 from prompts import (
     collect_bedrock_variables,
     collect_vertex_variables,
     prompt_bedrock_auth,
     prompt_provider,
+    prompt_removed_action,
     prompt_vertex_auth,
 )
 from settings import (
     build_settings,
     detect_auth_method,
     detect_provider,
+    find_removed,
     get_preserved_settings,
+    provider_managed_paths,
     read_settings,
+    restore_removed,
     write_settings,
 )
 
@@ -83,11 +92,23 @@ def main() -> None:
     for key, value in preserved.items():
         new_settings[key] = value
 
-    # 8. Write settings
+    # 8. Show values the new configuration would drop and let the user decide
+    managed = provider_managed_paths()
+    removed = [r for r in find_removed(current, new_settings) if r[0] not in managed]
+    if removed:
+        display_removed_values(removed)
+        action = prompt_removed_action()
+        if action == "abort":
+            display_aborted()
+            return
+        if action == "keep":
+            restore_removed(new_settings, removed)
+
+    # 9. Write settings
     write_settings(new_settings)
     display_success(provider, auth_method)
 
-    # 9. Update cache with new values (preserve all other cached configs)
+    # 10. Update cache with new values (preserve all other cached configs)
     if provider not in cache:
         cache[provider] = {}
     if auth_method != "none":
