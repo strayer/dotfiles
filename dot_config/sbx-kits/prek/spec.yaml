@@ -44,9 +44,9 @@ setup:
         URL="https://github.com/j178/prek/releases/download/v${PREK_VERSION}/prek-${TRIPLE}.tar.gz"
         curl --proto '=https' --tlsv1.2 -fsSL -o /tmp/prek.tgz "$URL"
         echo "${SHA256}  /tmp/prek.tgz" | sha256sum -c -
-        tar -C /tmp -xzf /tmp/prek.tgz prek
-        install -m 0755 /tmp/prek /usr/local/bin/prek
-        rm -f /tmp/prek /tmp/prek.tgz
+        tar -C /tmp -xzf /tmp/prek.tgz "prek-${TRIPLE}/prek"
+        install -m 0755 "/tmp/prek-${TRIPLE}/prek" /usr/local/bin/prek
+        rm -rf "/tmp/prek-${TRIPLE}" /tmp/prek.tgz
         prek --version
       user: "0"
       description: "Install prek v0.4.14, version+digest pinned"
