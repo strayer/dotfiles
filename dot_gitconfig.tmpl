@@ -1,18 +1,20 @@
+{{- /* email + signing key come from .chezmoidata/git.yaml, shared with the
+     git-ssh-sign sandbox kit so both sign with the same key */ -}}
+{{- $id := get .git.identities .chezmoi.hostname -}}
 [user]
-{{- if eq .chezmoi.hostname "CO-MBP-KC9KQV64V3" }}
-  email = s.grunewaldt@westfalen.com
-  name = Sven Grunewaldt
-  signingkey = key::ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBA+D0pXmFqtUvuGdiqVXvw4EvSqfANnjD9BIXx0SOHpf9l87p53ZmOqxrMJPhxPDq13cVntjIE+YbgbUyzTwN+Q=
-{{- else if get . "headless" }}
+{{- if get . "headless" }}
   email = strayer@olle-orks.org
   name = Sven Grunewaldt
   # per-box identity key, registered on GitHub for auth + signing; the agent
   # serves it after first use per login period (AddKeysToAgent)
   signingkey = ~/.ssh/id_ed25519.pub
+{{- else if $id }}
+  email = {{ $id.email }}
+  name = Sven Grunewaldt
+  signingkey = key::{{ $id.signingkey }}
 {{- else }}
   email = strayer@olle-orks.org
   name = Sven Grunewaldt
-  signingkey = key::ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAVF4SCCpZtP7M3y2fVyw7y3VlehamxzSk5dI2CTuZ/FBfuClGKaKr3BV4BfxAC0RXsm78etHaChbQAUi91N0ds=
 {{- end }}
 
 [commit]

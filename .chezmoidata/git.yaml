@@ -1,0 +1,18 @@
+# Per-host git identity. Single source of truth for the SSH signing key —
+# consumed by dot_gitconfig.tmpl (user.email / user.signingkey) and by
+# dot_config/sbx-kits/git-ssh-sign/spec.yaml.tmpl, which pins the same key
+# inside Docker Sandboxes instead of guessing at `ssh-add -L | head -n 1`.
+#
+# signingkey holds the bare "<type> <blob>" public key; templates add the
+# "key::" prefix where git wants it. Keyed by hostname; hosts with no entry
+# here (headless Linux boxes) keep their own arrangement.
+git:
+  identities:
+    CO-MBP-KC9KQV64V3:
+      email: s.grunewaldt@westfalen.com
+      # Secretive, Secure Enclave
+      signingkey: "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBA+D0pXmFqtUvuGdiqVXvw4EvSqfANnjD9BIXx0SOHpf9l87p53ZmOqxrMJPhxPDq13cVntjIE+YbgbUyzTwN+Q="
+    yobuko:
+      email: strayer@olle-orks.org
+      # Secretive, Secure Enclave: git-signing@secretive.yobuko.local
+      signingkey: "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAVF4SCCpZtP7M3y2fVyw7y3VlehamxzSk5dI2CTuZ/FBfuClGKaKr3BV4BfxAC0RXsm78etHaChbQAUi91N0ds="

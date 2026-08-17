@@ -8,14 +8,17 @@
 # Requires `github.com/docker/` in the kit.allowedSources setting. Tracking
 # main for now; pin by replacing ref=main with ref=<commit-sha>.
 #
+# git-ssh-sign is a local fork under ~/.config/sbx-kits: upstream signs with
+# `ssh-add -L | head -n 1`, which picks the wrong key out of a multi-key agent.
+#
 # No default-kits setting exists in sbx yet — replace this function once
 # https://github.com/docker/sbx-releases/issues/341 lands.
 function sbx-run --wraps 'sbx run' --description 'sbx run with default kits (git-ssh-sign, github-ssh, mise, prek, claude-settings)'
     set -l repo 'git+https://github.com/docker/sbx-kits-contrib.git#ref=main&dir='
     sbx run \
-        --kit "$repo"git-ssh-sign \
         --kit "$repo"github-ssh \
         --kit "$repo"mise \
+        --kit $HOME/.config/sbx-kits/git-ssh-sign \
         --kit $HOME/.config/sbx-kits/prek \
         --kit $HOME/.config/sbx-kits/claude-settings \
         $argv

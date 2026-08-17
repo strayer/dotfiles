@@ -3,12 +3,12 @@
 # Installed by ~/.bin/install-ssh-agent-multiplexer.sh; work machine only
 # (gated in .chezmoiignore).
 #
-# Both agents are read-only targets, deliberately in this order: Docker's
-# git-ssh-sign kit configures the sandbox signing key from
-# `ssh-add -L | head -n 1`, so the Secretive signing key must be listed
-# before the Smallstep certificate. Because there is no add_target, adding
-# keys through the mux fails by design — `step ssh login` must talk to the
-# launchd agent directly (see the step wrapper in fish functions).
+# Both agents are read-only targets. Order no longer matters for signing —
+# the local git-ssh-sign kit (dot_config/sbx-kits/git-ssh-sign) pins the key
+# from .chezmoidata/git.yaml instead of taking `ssh-add -L | head -n 1` like
+# upstream does. Because there is no add_target, adding keys through the mux
+# fails by design — `step ssh login` must talk to the launchd agent directly
+# (see the step wrapper in fish functions).
 targets = [
     # Secretive: Secure Enclave git signing key
     "${HOME}/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh",
