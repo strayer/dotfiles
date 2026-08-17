@@ -43,11 +43,11 @@ setup:
     # per-arch SHA256 from the release's checksums.txt.
     - command: |
         set -euo pipefail
-        VERSION=1.1.0
+        VERSION=1.2.0
         ARCH=$(dpkg --print-architecture)
         case "$ARCH" in
-          amd64) SHA256="4d1cd8fe5a2a54b3f6421e329ad6e6b6865bc1d33f8b1a5a49c345e5ce152d15" ;;
-          arm64) SHA256="4b19159969a1d8cffdb3bb0c84cbd4b7add09c37ab8f631e091ce629f55079fd" ;;
+          amd64) SHA256="42390ef65360c40b0271559f65fb1223c6593bf633e3b62dda470092996b74e6" ;;
+          arm64) SHA256="934d0a440bbdf03ec10ecb870a8c2b0adbba61f6a6ed2cbc2a90881b149e377b" ;;
           *) echo "unsupported arch: $ARCH" >&2; exit 1 ;;
         esac
         URL="https://github.com/strayer/claude-code-statusline/releases/download/v${VERSION}/claude-statusline-linux-${ARCH}"
@@ -56,4 +56,4 @@ setup:
         chmod 0755 /usr/local/bin/claude-statusline
         echo '{}' | /usr/local/bin/claude-statusline >/dev/null
       user: "0"
-      description: "Install claude-statusline v1.1.0, version+digest pinned"
+      description: "Install claude-statusline v1.2.0, version+digest pinned"
