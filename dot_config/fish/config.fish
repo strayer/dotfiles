@@ -13,6 +13,22 @@ if test $hostname = "yobuko" -a $USER = "strayer"
   end
 end
 
+if test $host = "CO-MBP-KC9KQV64V3"
+  # ssh-agent-multiplexer merges Secretive (git signing key) and the launchd
+  # agent (Smallstep cert) so agent forwarding — e.g. Docker Sandboxes —
+  # exposes both. Falls back to the launchd agent if the mux isn't running.
+  # Note: this socket is read-only; `step` is wrapped in functions/step.fish.
+  if test -S "$HOME/.ssh/ssh-agent-multiplexer.sock"
+    set -gx SSH_AUTH_SOCK $HOME/.ssh/ssh-agent-multiplexer.sock
+  else if status --is-interactive
+    set_color yellow
+    echo "WARNING: ssh-agent-multiplexer socket missing — agent forwarding won't see the git signing key."
+    echo "  Installed? Check: launchctl list local.ssh-agent-multiplexer; log: ~/Library/Logs/ssh-agent-multiplexer.log"
+    echo "  New machine? Run: install-ssh-agent-multiplexer.sh"
+    set_color normal
+  end
+end
+
 # Android
 if test -d $HOME/Library/Android/sdk
   set -gx ANDROID_HOME "$HOME/Library/Android/sdk"

@@ -10,3 +10,10 @@ Library/Preferences/pnpm/config.yaml
 {{/* per-user ssh-agent only on headless Linux boxes */ -}}
 .config/systemd/user/ssh-agent.service
 {{- end }}
+
+{{ if ne .chezmoi.hostname "CO-MBP-KC9KQV64V3" -}}
+{{/* ssh-agent-multiplexer: only the work Mac needs Secretive + Smallstep cert behind one socket */ -}}
+.bin/install-ssh-agent-multiplexer.sh
+.config/ssh-agent-multiplexer
+.config/fish/functions/step.fish
+{{- end }}

@@ -1,0 +1,21 @@
+# ssh-agent-multiplexer — merges both SSH agents on the work Mac behind one
+# socket so agent forwarding (e.g. Docker Sandboxes) exposes both keys.
+# Installed by ~/.bin/install-ssh-agent-multiplexer.sh; work machine only
+# (gated in .chezmoiignore).
+#
+# Both agents are read-only targets, deliberately in this order: Docker's
+# git-ssh-sign kit configures the sandbox signing key from
+# `ssh-add -L | head -n 1`, so the Secretive signing key must be listed
+# before the Smallstep certificate. Because there is no add_target, adding
+# keys through the mux fails by design — `step ssh login` must talk to the
+# launchd agent directly (see the step wrapper in fish functions).
+targets = [
+    # Secretive: Secure Enclave git signing key
+    "${HOME}/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh",
+    # Default launchd ssh-agent: daily Smallstep cert from `step ssh login`.
+    # Expanded from launchd's environment by the LaunchAgent wrapper — the
+    # real path changes every boot.
+    "${SSH_AUTH_SOCK}",
+]
+
+listen = "${HOME}/.ssh/ssh-agent-multiplexer.sock"
