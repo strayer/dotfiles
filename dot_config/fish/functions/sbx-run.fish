@@ -10,12 +10,13 @@
 #
 # No default-kits setting exists in sbx yet — replace this function once
 # https://github.com/docker/sbx-releases/issues/341 lands.
-function sbx-run --wraps 'sbx run' --description 'sbx run with default kits (git-ssh-sign, github-ssh, mise, prek)'
+function sbx-run --wraps 'sbx run' --description 'sbx run with default kits (git-ssh-sign, github-ssh, mise, prek, claude-settings)'
     set -l repo 'git+https://github.com/docker/sbx-kits-contrib.git#ref=main&dir='
     sbx run \
         --kit "$repo"git-ssh-sign \
         --kit "$repo"github-ssh \
         --kit "$repo"mise \
         --kit $HOME/.config/sbx-kits/prek \
+        --kit $HOME/.config/sbx-kits/claude-settings \
         $argv
 end

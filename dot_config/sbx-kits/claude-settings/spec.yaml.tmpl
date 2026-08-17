@@ -1,0 +1,59 @@
+{{- /* Personal Claude Code preferences for Docker Sandboxes, generated from
+     configure-claude's base-settings.json (single source of truth — edit
+     that file, then `chezmoi apply` regenerates this kit).
+     Stripped keys: $schema (schema pointer), permissions (sandboxes run in
+     bypassPermissions mode, the allowlist is dead weight). statusLine stays
+     in deliberately — it doubles as a canary: if Claude Code ever stops
+     loading managed-settings.d, the missing statusline makes it obvious. */ -}}
+{{- $base := include "dot_bin/private_src/private_configure-claude/base-settings.json" | fromJson -}}
+{{- $prefs := omit $base "$schema" "permissions" -}}
+{{- /* In the sandbox the binary lives on PATH (/usr/local/bin), not in
+     ~/.claude like on the host. */ -}}
+{{- $_ := set (get $prefs "statusLine") "command" "claude-statusline" -}}
+schemaVersion: "2"
+kind: mixin
+name: claude-settings
+displayName: Claude Code personal settings
+description: >-
+  Installs personal Claude Code preferences as a managed-settings drop-in
+  (/etc/claude-code/managed-settings.d/), outside the sandbox-managed config
+  paths — no races with the sandbox's own ~/.claude/settings.json handling,
+  and proxy-managed OAuth keeps working since the built-in claude agent is
+  untouched. Also installs the claude-statusline binary when a Linux build
+  is available. Inert on non-claude agents.
+permissions:
+  network:
+    allow:
+      # install-time fetch of the statusline binary from GitHub releases
+      - github.com
+      - objects.githubusercontent.com
+      - release-assets.githubusercontent.com
+setup:
+  install:
+    - command: |
+        set -e
+        mkdir -p /etc/claude-code/managed-settings.d
+        cat > /etc/claude-code/managed-settings.d/50-preferences.json <<'EOF'
+{{ $prefs | toPrettyJson | indent 8 }}
+        EOF
+      user: "0"
+      description: Install personal Claude Code preferences as a managed-settings drop-in
+    # Pinned, digest-verified statusline binary (strayer/claude-code-statusline;
+    # Linux builds exist since v1.1.0). To bump: change VERSION and the
+    # per-arch SHA256 from the release's checksums.txt.
+    - command: |
+        set -euo pipefail
+        VERSION=1.1.0
+        ARCH=$(dpkg --print-architecture)
+        case "$ARCH" in
+          amd64) SHA256="4d1cd8fe5a2a54b3f6421e329ad6e6b6865bc1d33f8b1a5a49c345e5ce152d15" ;;
+          arm64) SHA256="4b19159969a1d8cffdb3bb0c84cbd4b7add09c37ab8f631e091ce629f55079fd" ;;
+          *) echo "unsupported arch: $ARCH" >&2; exit 1 ;;
+        esac
+        URL="https://github.com/strayer/claude-code-statusline/releases/download/v${VERSION}/claude-statusline-linux-${ARCH}"
+        curl --proto '=https' --tlsv1.2 -fsSL -o /usr/local/bin/claude-statusline "$URL"
+        echo "${SHA256}  /usr/local/bin/claude-statusline" | sha256sum -c -
+        chmod 0755 /usr/local/bin/claude-statusline
+        echo '{}' | /usr/local/bin/claude-statusline >/dev/null
+      user: "0"
+      description: "Install claude-statusline v1.1.0, version+digest pinned"
