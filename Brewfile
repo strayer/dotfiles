@@ -8,14 +8,6 @@ is_home = (hostname == "yobuko")                                   # personal (a
 # Universal CLI tools (macOS + Linux via Linuxbrew)
 # =============================================================================
 
-# curlie
-tap "rs/tap"
-brew "rs/tap/curlie"
-
-# dyff
-tap "homeport/tap"
-brew "homeport/tap/dyff"
-
 # AI
 brew "agent-browser"
 brew "nono"
@@ -29,6 +21,7 @@ brew "ansible-lint"
 brew "basedpyright"
 brew "bash-language-server"
 brew "dockerfile-language-server"
+brew "gopls"
 brew "hadolint"
 brew "lua-language-server"
 brew "markdownlint-cli"
@@ -40,6 +33,8 @@ brew "shfmt"
 brew "stylua"
 brew "taplo"
 brew "terraform-ls"
+brew "tflint"
+brew "tofu-ls"
 brew "vtsls"
 brew "yaml-language-server"
 brew "yamllint"
@@ -124,6 +119,7 @@ brew "pixz"
 brew "pnpm"
 brew "powershell"
 brew "pre-commit"
+brew "prek"
 brew "prettyping"
 brew "procs"
 brew "pwgen"
@@ -173,17 +169,11 @@ brew "dive"
 
 # work CLI (cross-platform; installs on work macOS and work Linux)
 if is_work
-  tap "heroku/brew"
-  brew "heroku/brew/heroku"
-
   tap "minamijoyo/tfupdate"
-  brew "minamijoyo/tfupdate/tfupdate"
+  brew "minamijoyo/tfupdate/tfupdate", trusted: true
 
   tap "garethgeorge/backrest-tap"
-  brew "garethgeorge/backrest-tap/backrest"
-
-  tap "azure/functions"
-  brew "azure/functions/azure-functions-core-tools@4"
+  brew "garethgeorge/backrest-tap/backrest", trusted: true
 
   brew "azcopy"
   brew "azure-cli"
@@ -199,21 +189,23 @@ if OS.mac?
   brew "mas"
 
   # homebrew autoupdate (launchd-based)
-  tap "domt4/autoupdate"
+  tap "domt4/autoupdate", trusted: { command: "autoupdate" }
 
   # felixkratz tools (status bar + window borders)
   tap "felixkratz/formulae"
-  brew "felixkratz/formulae/borders"
-  brew "felixkratz/formulae/sketchybar"
+  brew "felixkratz/formulae/borders", trusted: true
+  brew "felixkratz/formulae/sketchybar", trusted: true
 
   # rift (BSP tiling window manager)
   tap "acsandmann/tap"
-  brew "acsandmann/tap/rift"
+  brew "acsandmann/tap/rift", trusted: true
 
-  # AI (Apple Silicon MLX)
-  tap "jundot/omlx", "https://github.com/jundot/omlx"
-  brew "jundot/omlx/omlx"
+  # AI
   brew "ollama"
+
+  # sbx (Docker Sandboxes, agent sandbox launcher; arm64 macOS 14+ only)
+  tap "docker/tap", trusted: { cask: "sbx" }
+  cask "sbx"
 
   # macOS-only CLI (hard macOS requirement)
   brew "age-plugin-se" # Secure Enclave age plugin
@@ -223,7 +215,6 @@ if OS.mac?
   brew "telnet"  # the formula is macOS-only; Linux gets inetutils via apt
 
   # litra cli
-  tap "timrogers/tap"
   brew "litra"
 
   # keyboard-related
@@ -247,6 +238,8 @@ if OS.mac?
   cask "avidemux"
   cask "brave-browser@beta"
   cask "bruno"
+  cask "chatgpt"  # replaces discontinued codex-app; Codex agent management lives here now
+  cask "claude"  # Claude desktop app (claude-code@latest above is the CLI)
   cask "clop"
   cask "contexts"
   cask "coteditor"
@@ -295,9 +288,10 @@ if OS.mac?
   mas "Color Picker", id: 1545870783
   mas "CrystalFetch", id: 6454431289 # Download Windows images from microsoft.com
   mas "Discovery", id: 1381004916
-  mas "Draw Things", id: 6444050820
   mas "Microsoft Remote Desktop", id: 1295203466
-  mas "Xcode", id: 497799835
+  mas "Negative", id: 1378123825 # document/PDF reader with color inversion for reading in the dark
+  mas "uBlock Origin Lite", id: 6745342698
+  # mas "Xcode", id: 497799835 # exclude for now, using beta because of beta macOS
 
   # work GUI apps (macOS only)
   if is_work
@@ -317,9 +311,6 @@ if OS.mac?
 
   # home (personal, always macOS)
   if is_home
-    tap "cloudflare/cloudflare"
-    cask "cf-terraforming"
-
     brew "ansible"
     brew "esptool"
     brew "hcloud"
@@ -327,22 +318,21 @@ if OS.mac?
     brew "spicetify-cli"
     brew "wireguard-tools"
 
-    # currently manually installed prerelease version: cask "freecad"
     cask "1password"
     cask "1password-cli"
     cask "android-platform-tools"
-    cask "autodesk-fusion"
     cask "balenaetcher"
     cask "bambu-connect"
     cask "calibre"
     cask "discord"
+    cask "freecad"
     cask "kicad"
     cask "macfuse"
     cask "microsoft-auto-update"
     cask "microsoft-excel"
     cask "moonlight"
     cask "mqtt-explorer"
-    cask "openscad"
+    cask "openscad@snapshot"
     cask "orcaslicer"
     cask "plex"
     cask "raspberry-pi-imager"
@@ -355,12 +345,13 @@ if OS.mac?
     cask "veracrypt"
 
     mas "1Password for Safari", id: 1569813296
+    mas "AusweisApp", id: 948660805
     mas "Microsoft Word", id: 462054704
     mas "Goodnotes", id: 1444383602
     mas "Home Assistant", id: 1099568401
     mas "OneDrive", id: 823766827
     mas "Telegram", id: 747648890
-    mas "WireGuard", id: 1451685025
+    mas "WhatsApp", id: 310633997
   end
 end
 
