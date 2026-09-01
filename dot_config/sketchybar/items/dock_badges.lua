@@ -25,11 +25,30 @@ local function item_name(app)
 end
 
 local function styled(app, badge)
+  local theme_colors = colors.get_colors()
   local config = colors.get_item_colors()
+  -- Red-tinted inner chip, mirroring the workspace chips exactly (same box:
+  -- height 24 / radius 16, same 14pt Bold text next to 16pt app glyphs, same
+  -- inner gap - just app-glyph-then-count instead of number-then-glyphs).
+  -- Neutral app icon, count in full red: attention without the alarm of a
+  -- solid critical-red chip. Badges without a count ("•") show icon-only.
+  local is_dot = not badge:match("%w")
   config.icon.string = icons.get_app_icon(app)
   config.icon.font = { family = settings.font.app_icons, style = "Regular", size = 16.0 }
+  config.icon.color = theme_colors.item_primary
+  config.icon.padding_left = 8
+  config.icon.padding_right = is_dot and 8 or 2
   config.label.string = badge
-  config.label.padding_left = 2
+  config.label.drawing = not is_dot
+  config.label.color = theme_colors.badge_primary
+  config.label.font = { family = settings.font.numbers, style = "Bold", size = 14.0 }
+  config.label.padding_left = 4
+  config.label.padding_right = 8
+  config.background = {
+    color = theme_colors.badge_background,
+    corner_radius = 16,
+    height = 24,
+  }
   return config
 end
 
@@ -77,7 +96,7 @@ local function apply(badges)
     for _, app in ipairs(apps) do
       table.insert(moves, "--move " .. items[app].name .. " after right.dock_badges")
     end
-    sbar.exec("sketchybar " .. table.concat(moves, " "))
+    sbar.exec(settings.sketchybar_bin .. " " .. table.concat(moves, " "))
   end
 end
 

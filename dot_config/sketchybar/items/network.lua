@@ -38,7 +38,7 @@ local function update_network()
       end
     end
 
-    local config = colors.get_item_colors({ state = state })
+    local config = colors.get_item_colors({ state = state, accent = "network" })
     config.label.string = label_text
     network:set(config)
   end)

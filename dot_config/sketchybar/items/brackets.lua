@@ -6,9 +6,12 @@ local settings = require("lib.settings")
 local M = {}
 
 local function get_bracket_config()
+  local theme_colors = colors.get_colors()
   return {
     background = {
-      color = colors.with_alpha(0x000000, 0.3),
+      color = theme_colors.pill_background,
+      border_color = theme_colors.pill_border,
+      border_width = 1,
       height = settings.layout.pill_height,
       corner_radius = 9999,
     },
@@ -42,16 +45,21 @@ end
 
 -- Subscribe to theme changes to update bracket colors
 -- Use a hidden item to handle theme changes for brackets
-local bracket_handler = sbar.add("item", "bracket_theme_handler", { drawing = false })
-bracket_handler:subscribe("theme_change", function()
-  local bracket_color = colors.with_alpha(0x000000, 0.3)
+-- (theme_colors_updated fires after lib/colors has refreshed, unlike raw theme_change)
+local bracket_handler = sbar.add("item", "bracket_theme_handler", { drawing = false, updates = true })
+bracket_handler:subscribe("theme_colors_updated", function()
+  local theme_colors = colors.get_colors()
+  local bracket_background = {
+    color = theme_colors.pill_background,
+    border_color = theme_colors.pill_border,
+  }
 
   sbar.set("left_pill", {
-    background = { color = bracket_color },
+    background = bracket_background,
   })
 
   sbar.set("right_pill", {
-    background = { color = bracket_color },
+    background = bracket_background,
   })
 end)
 

@@ -66,8 +66,8 @@ local function update_battery()
     -- Generate progress bar
     local progress_bar = utils.generate_unicode_bar(battery_percent, 8)
 
-    -- Get base colors with state
-    local config = colors.get_item_colors({ state = state })
+    -- Get base colors with state (accent shows when state is nil)
+    local config = colors.get_item_colors({ state = state, accent = "battery" })
     -- Add battery-specific properties
     utils.merge_tables(config, {
       icon = { string = battery_icon },

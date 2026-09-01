@@ -159,8 +159,26 @@ function M.update_theme_colors()
       bar_background = M.with_alpha(0x000000, 0.3),
       item_background = M.transparent,
       highlighted_item_background = M.with_alpha(catppuccin_latte.surface0, 0.8),
-      item_primary = catppuccin_latte.crust,
+      item_primary = catppuccin_latte.text,
+      item_muted = catppuccin_latte.overlay0,
       highlighted_item_primary = catppuccin_latte.blue,
+      pill_background = M.with_alpha(catppuccin_latte.mantle, 0.88),
+      pill_border = M.with_alpha(catppuccin_latte.surface1, 0.7),
+      focused_workspace_background = catppuccin_latte.mauve,
+      focused_workspace_primary = catppuccin_latte.base,
+      badge_background = M.with_alpha(catppuccin_latte.red, 0.15),
+      badge_primary = catppuccin_latte.red,
+      accents = {
+        chevron = catppuccin_latte.mauve,
+        layout = catppuccin_latte.teal,
+        updates = catppuccin_latte.peach,
+        network = catppuccin_latte.sapphire,
+        network_type = catppuccin_latte.sky,
+        battery = catppuccin_latte.green,
+        volume = catppuccin_latte.mauve,
+        clock = catppuccin_latte.lavender,
+        mealplan = catppuccin_latte.pink,
+      },
     }
   else
     -- Dark theme colors (Catppuccin Mocha)
@@ -171,7 +189,25 @@ function M.update_theme_colors()
       item_background = M.transparent,
       highlighted_item_background = M.with_alpha(catppuccin_mocha.surface0, 0.7),
       item_primary = catppuccin_mocha.subtext1,
+      item_muted = catppuccin_mocha.overlay0,
       highlighted_item_primary = catppuccin_mocha.text,
+      pill_background = M.with_alpha(catppuccin_mocha.mantle, 0.88),
+      pill_border = M.with_alpha(catppuccin_mocha.surface1, 0.6),
+      focused_workspace_background = catppuccin_mocha.mauve,
+      focused_workspace_primary = catppuccin_mocha.crust,
+      badge_background = M.with_alpha(catppuccin_mocha.red, 0.22),
+      badge_primary = catppuccin_mocha.red,
+      accents = {
+        chevron = catppuccin_mocha.mauve,
+        layout = catppuccin_mocha.teal,
+        updates = catppuccin_mocha.peach,
+        network = catppuccin_mocha.sapphire,
+        network_type = catppuccin_mocha.sky,
+        battery = catppuccin_mocha.green,
+        volume = catppuccin_mocha.mauve,
+        clock = catppuccin_mocha.lavender,
+        mealplan = catppuccin_mocha.pink,
+      },
     }
   end
 end
@@ -205,6 +241,8 @@ function M.get_current_theme()
 end
 
 -- Helper function to get standard item color configuration
+-- options.accent: name of an accent slot (see theme_colors.accents) - colors the icon only
+-- options.state: "critical" | "warning" | "highlighted" - overrides accent
 function M.get_item_colors(options)
   local current_theme_colors = M.get_colors()
   local config = {
@@ -215,6 +253,10 @@ function M.get_item_colors(options)
 
   -- Handle semantic states
   if options then
+    if options.accent and current_theme_colors.accents[options.accent] then
+      config.icon.color = current_theme_colors.accents[options.accent]
+    end
+
     if options.state == "critical" then
       config.icon.color = current_theme_colors.critical
       config.label.color = current_theme_colors.critical

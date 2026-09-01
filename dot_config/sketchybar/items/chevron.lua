@@ -84,10 +84,9 @@ else
 
   -- Get current theme colors
   local theme_colors = colors.get_colors()
-  local mocha_palette = colors.get_palette("mocha")
 
-  -- Use consistent mauve color from mocha palette for both themes
-  local label_color = mocha_palette.mauve
+  -- Use the theme-aware chevron accent (mauve in both palettes)
+  local label_color = theme_colors.accents.chevron
 
   chevron:set({
     icon = {
@@ -112,8 +111,7 @@ else
   -- Subscribe to theme updates to maintain color consistency
   chevron:subscribe("theme_colors_updated", function()
     local updated_theme_colors = colors.get_colors()
-    local updated_mocha_palette = colors.get_palette("mocha")
-    local updated_label_color = updated_mocha_palette.mauve
+    local updated_label_color = updated_theme_colors.accents.chevron
 
     chevron:set({
       icon = { color = updated_label_color },

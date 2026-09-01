@@ -44,5 +44,10 @@ M.update_freq = {
 M.hostname = "{{ .chezmoi.hostname }}"
 M.is_work_machine = M.hostname == "CO-MBP-KC9KQV64V3"
 
+-- Absolute path for shelling back out to sketchybar via sbar.exec:
+-- the launchd service PATH (/usr/bin:/bin:/usr/sbin:/sbin) does not
+-- include /opt/homebrew/bin, so a bare `sketchybar` silently fails.
+M.sketchybar_bin = "/opt/homebrew/bin/sketchybar"
+
 return M
 

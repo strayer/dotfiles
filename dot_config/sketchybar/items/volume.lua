@@ -39,7 +39,7 @@ local function handle_volume_change(env)
   end
 
   -- Set icon and label with appropriate padding
-  local config = colors.get_item_colors()
+  local config = colors.get_item_colors({ accent = "volume" })
 
   if bar_label == "" then
     -- No label - extra icon padding
@@ -72,7 +72,7 @@ end
 -- Subscribe to events
 volume:subscribe("volume_change", handle_volume_change)
 volume:subscribe("theme_colors_updated", function()
-  volume:set(colors.get_item_colors())
+  volume:set(colors.get_item_colors({ accent = "volume" }))
 end)
 
 -- No initial update needed - volume_change events will trigger updates

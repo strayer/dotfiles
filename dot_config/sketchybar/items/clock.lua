@@ -17,7 +17,7 @@ local clock = sbar.add("item", "right.clock", {
 -- Update clock display
 local function update_clock()
   local date, time = utils.format_time()
-  local item_colors = colors.get_item_colors()
+  local item_colors = colors.get_item_colors({ accent = "clock" })
   -- Preserve the time string content
   item_colors.label.string = date .. " " .. time
   clock:set(item_colors)

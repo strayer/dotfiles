@@ -71,7 +71,7 @@ local function process_package_results(results)
   end
 
   -- Get colors based on state and set properties
-  local config = colors.get_item_colors({ state = state })
+  local config = colors.get_item_colors({ state = state, accent = "updates" })
   config.icon = { string = icons.system.package_updates }
   config.label = { string = label_text }
   package_updates:set(config)
@@ -102,7 +102,7 @@ end
 
 -- Handle theme changes
 local function handle_theme_change()
-  package_updates:set(colors.get_item_colors())
+  package_updates:set(colors.get_item_colors({ accent = "updates" }))
 end
 
 -- Subscribe to events

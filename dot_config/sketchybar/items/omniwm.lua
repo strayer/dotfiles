@@ -205,7 +205,7 @@ local function rebuild_bracket(state, theme, ws_focused, visible)
   end
   sbar.add("bracket", state.bracket, state.member_list, {
     background = {
-      color = ws_focused and theme.highlighted_item_background or theme.item_background,
+      color = ws_focused and theme.focused_workspace_background or theme.item_background,
       corner_radius = 12,
       height = 24,
     },
@@ -229,7 +229,7 @@ local function update_bracket_in_place(state, theme, ws_focused, visible)
   end
   sbar.set(state.bracket, {
     background = {
-      color = ws_focused and theme.highlighted_item_background or theme.item_background,
+      color = ws_focused and theme.focused_workspace_background or theme.item_background,
     },
   })
 end
@@ -256,17 +256,26 @@ local function update_workspace_items(state, ws, theme)
     drawing = true,
     icon = {
       string = label,
-      color = ws_focused and theme.highlighted_item_primary or theme.item_primary,
+      color = ws_focused and theme.focused_workspace_primary or theme.item_muted,
     },
   })
 
   for i, desc in ipairs(descriptors) do
     ensure_icon(state, i)
+    -- Inside the focused (mauve) chip everything uses the chip's foreground color,
+    -- with unfocused windows dimmed via alpha so they stay readable on the accent.
+    local icon_color
+    if ws_focused then
+      icon_color = desc.focused and theme.focused_workspace_primary
+        or colors.with_alpha(theme.focused_workspace_primary, 0.6)
+    else
+      icon_color = theme.item_muted
+    end
     sbar.set(state.icon_names[i], {
       drawing = true,
       icon = {
         string = desc.glyph,
-        color = desc.focused and theme.highlighted_item_primary or theme.item_primary,
+        color = icon_color,
       },
     })
   end

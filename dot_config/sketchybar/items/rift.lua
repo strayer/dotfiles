@@ -30,6 +30,32 @@ local display_map = {}
 ---@type table<number, number>
 local space_to_display = {}
 
+-- Canonical workspace order (rift config order), from the global workspace
+-- query: name -> 1-based rank. The per-space queries return per-display
+-- indexes that drift (and can fully invert), so they are unusable for both
+-- ordering and `workspace switch` ids.
+---@type table<string, number>
+local canonical_rank = {}
+
+--- Fetch the global workspace list to (re)build the canonical rank map
+---@param callback function|nil Optional callback to run after the map is built
+local function refresh_canonical_order(callback)
+  sbar.exec(RIFT_CLI .. " query workspaces", function(workspaces)
+    if workspaces and type(workspaces) == "table" then
+      local ranks = {}
+      for i, workspace in ipairs(workspaces) do
+        if workspace.name then
+          ranks[workspace.name] = i
+        end
+      end
+      canonical_rank = ranks
+    end
+    if callback then
+      callback()
+    end
+  end)
+end
+
 -- Forward declarations
 local update_all_workspaces
 local update_display
@@ -122,7 +148,11 @@ local function create_workspace_item(workspace_name, workspace_index, display)
   })
 
   workspace_item:subscribe("mouse.clicked", function(_)
-    sbar.exec(RIFT_CLI .. " execute workspace switch " .. tostring(workspace_index))
+    -- workspace switch takes the canonical 0-based index; the per-space index
+    -- captured at creation drifts, so resolve from the canonical map when known
+    local rank = canonical_rank[workspace_name]
+    local switch_index = rank and (rank - 1) or workspace_index
+    sbar.exec(RIFT_CLI .. " execute workspace switch " .. tostring(switch_index))
   end)
 
   workspace_items[key] = { item_name = item_name, index = workspace_index, display = display }
@@ -181,6 +211,45 @@ local function process_workspace_data(workspaces_data, display)
   return focused_workspace_name, windows_by_workspace, focused_layout_mode
 end
 
+--- Pin workspace items into index order after each display's layout item.
+--- Creation is async (multiple update cycles can interleave on reload), so item
+--- order in the bar is not deterministic; one chained move command fixes it.
+--- Covers all displays because items_created_this_cycle is a shared flag and
+--- display cycles interleave.
+local function enforce_workspace_order()
+  local moves = {}
+
+  for display, anchor in pairs(layout_items) do
+    local ordered = {}
+    for key, workspace_data in pairs(workspace_items) do
+      if workspace_data.display == display then
+        local workspace_name = key:match("^(.+):")
+        table.insert(ordered, {
+          item_name = workspace_data.item_name,
+          -- Fall back behind all ranked workspaces for names missing from the
+          -- canonical map (e.g. before the first global query returns)
+          rank = canonical_rank[workspace_name] or (1000 + (workspace_data.index or 0)),
+        })
+      end
+    end
+    table.sort(ordered, function(a, b)
+      return a.rank < b.rank
+    end)
+
+    -- Same pattern as dock_badges: every move targets the anchor itself, and
+    -- each one lands directly after it, pushing the previous moves outward.
+    -- Iterating in reverse index order therefore yields ascending order
+    -- left-to-right.
+    for i = #ordered, 1, -1 do
+      table.insert(moves, "--move " .. ordered[i].item_name .. " after " .. anchor)
+    end
+  end
+
+  if #moves > 0 then
+    sbar.exec(settings.sketchybar_bin .. " " .. table.concat(moves, " "))
+  end
+end
+
 ---@param focused_workspace_name string|nil The currently focused workspace name
 ---@param windows_by_workspace table<string, {icons: string[]}> Windows grouped by workspace with app icons
 ---@param focused_layout_mode string|nil The layout mode for the focused workspace
@@ -192,6 +261,10 @@ local function update_workspace_styling(focused_workspace_name, windows_by_works
     local brackets = require("items.brackets")
     brackets.refresh_left_bracket()
   end
+
+  -- Always enforce ordering: creation cycles interleave across displays, so a
+  -- display can end up misordered on a cycle that created nothing itself.
+  enforce_workspace_order()
 
   local theme_colors = colors.get_colors()
 
@@ -224,19 +297,19 @@ local function update_workspace_styling(focused_workspace_name, windows_by_works
           }
 
           if is_focused then
-            -- Focused workspace gets highlighted background
+            -- Focused workspace gets an inverted accent chip (mauve bg, crust text)
             item_config.background = {
-              color = theme_colors.highlighted_item_background,
+              color = theme_colors.focused_workspace_background,
               corner_radius = 16,
               height = 24,
             }
-            item_config.icon.color = theme_colors.highlighted_item_primary
-            item_config.label.color = theme_colors.highlighted_item_primary
+            item_config.icon.color = theme_colors.focused_workspace_primary
+            item_config.label.color = theme_colors.focused_workspace_primary
           else
-            -- Unfocused workspaces with windows are transparent
+            -- Unfocused workspaces with windows are transparent and muted
             item_config.background = { color = theme_colors.item_background }
-            item_config.icon.color = theme_colors.item_primary
-            item_config.label.color = theme_colors.item_primary
+            item_config.icon.color = theme_colors.item_muted
+            item_config.label.color = theme_colors.item_muted
           end
 
           sbar.set(workspace_data.item_name, item_config)
@@ -251,7 +324,7 @@ local function update_workspace_styling(focused_workspace_name, windows_by_works
     local layout_config = {
       display = display,
       icon = {
-        color = theme_colors.item_primary,
+        color = theme_colors.accents.layout,
       },
       label = {
         string = focused_layout_mode or "",
@@ -369,13 +442,16 @@ event_handler:subscribe({ "rift_workspace_change", "rift_windows_change" }, func
   end
 end)
 
--- Full refresh for system events
+-- Full refresh for system events (re-fetch canonical order first: a rift
+-- restart with a changed config is exactly when these events fire)
 event_handler:subscribe({
   "rift_refresh",
   "system_woke",
   "forced",
   "theme_colors_updated",
-}, update_all_workspaces)
+}, function()
+  refresh_canonical_order(update_all_workspaces)
+end)
 
 -- Rebuild display map on display changes
 event_handler:subscribe("display_change", function()
@@ -383,5 +459,7 @@ event_handler:subscribe("display_change", function()
   build_display_map(update_all_workspaces)
 end)
 
--- Build display map first, then do initial update
-build_display_map(update_all_workspaces)
+-- Build canonical order and display map first, then do initial update
+refresh_canonical_order(function()
+  build_display_map(update_all_workspaces)
+end)

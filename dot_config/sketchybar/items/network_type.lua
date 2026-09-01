@@ -36,7 +36,7 @@ local function update_network_type(env)
     state = "critical"
   end
 
-  local config = colors.get_item_colors({ state = state })
+  local config = colors.get_item_colors({ state = state, accent = "network_type" })
   config.icon.string = network_icons[net_type] or network_icons.disconnected
 
   -- Show SSID as label when on wifi or hotspot
@@ -52,7 +52,7 @@ end
 
 -- Update colors on theme change
 local function update_theme()
-  local config = colors.get_item_colors()
+  local config = colors.get_item_colors({ accent = "network_type" })
   network_type:set(config)
 end
 
