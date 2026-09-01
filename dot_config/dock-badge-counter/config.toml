@@ -1,0 +1,10 @@
+# dock-badge-counter watch configuration — consumed by the `dock-badge-counter` brew service.
+# Feeds the SketchyBar `right.dock_badges` item (~/.config/sketchybar/items/dock_badges.lua).
+
+interval = 1.0
+
+# Re-send the full state once a minute so a reloaded SketchyBar picks it up again.
+heartbeat = 60
+
+on_change = 'sketchybar --trigger dock_badges BADGES="$DOCK_BADGES"'
+command_timeout = 30

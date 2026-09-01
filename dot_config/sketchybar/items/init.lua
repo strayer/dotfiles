@@ -21,6 +21,7 @@ require("items.battery")
 require("items.package_updates")
 require("items.network_type")
 require("items.network")
+require("items.dock_badges")
 
 -- Work-specific items (loaded conditionally)
 if settings.is_work_machine then
