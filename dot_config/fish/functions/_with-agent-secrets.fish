@@ -18,14 +18,9 @@ function _with-agent-secrets --no-scope-shadowing --description "Export coding-a
     #
     # We use --no-scope-shadowing so `set -fx` lands in the caller's function
     # scope. That gives us two properties at once: external commands started
-    # from the caller (claude, codex, nono, ...) inherit the keys via exported
+    # from the caller (claude, codex, ...) inherit the keys via exported
     # env, AND the keys are released as soon as the caller's function returns.
     # They never leak into the user's interactive shell.
-    #
-    # Sandboxed callers (see sb.fish) additionally hand each key to nono with
-    #   --env-credential-map env://FIRECRAWL_API_KEY FIRECRAWL_API_KEY
-    # so the key is injected into the sandboxed child explicitly, even if a
-    # profile later starts filtering environment variables.
 
     command -q dot-secret; or return 0
 

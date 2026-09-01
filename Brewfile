@@ -10,7 +10,6 @@ is_home = (hostname == "yobuko")                                   # personal (a
 
 # AI
 brew "agent-browser"
-brew "nono"
 brew "llm"
 brew "opencode"
 cask "claude-code@latest"  # cask has linux binaries (x86_64 + arm64)
