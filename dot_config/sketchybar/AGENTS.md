@@ -4,6 +4,10 @@ This document provides guidance for AI coding agents (Claude Code, Gemini CLI, C
 
 ## Quick Reference
 
+- **Quirks (read first)**: `QUIRKS.md` — non-obvious engine behaviors (basic-regex
+  brackets, silent `sbar.exec` PATH failures, bracket/item padding asymmetry,
+  ordering semantics). Consult it BEFORE touching brackets, layout, item
+  ordering, or anything shelling out via `sbar.exec`.
 - **Documentation**: [SketchyBar DeepWiki](https://deepwiki.com/FelixKratz/SketchyBar), [SbarLua DeepWiki](https://deepwiki.com/FelixKratz/SbarLua)
 - **Cheatsheets**: `CHEATSHEET_SketchyBar.md`, `CHEATSHEET_SBarLua.md`
 - **Configuration Language**: Lua (SbarLua)
