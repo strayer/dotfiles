@@ -1,12 +1,21 @@
--- items/chevron.lua - Left side decorator
+-- items/chevron.lua - Left side decorator (single-item island)
 
 local icons = require("lib.icons")
 local colors = require("lib.colors")
 local settings = require("lib.settings")
+local brackets = require("items.brackets")
 
 -- Add chevron decorator to left side
 local chevron = sbar.add("item", "left.chevron", {
   position = "left",
+  -- Single-item island: unlike brackets, the pill (item background) excludes
+  -- item paddings, so the gap-side padding would stack onto the island gap.
+  -- Keep only the screen-edge side.
+  padding_left = 5,
+  padding_right = 0,
+  -- wider inner paddings keep the content off this island's rounded ends
+  icon = { padding_left = 12 },
+  label = { padding_right = 12 },
 })
 
 if settings.is_work_machine then
@@ -31,18 +40,16 @@ if settings.is_work_machine then
     local current_theme_name = colors.get_current_theme()
     local palette_name = (current_theme_name == "light") and "latte" or "mocha"
     local theme_palette = colors.get_palette(palette_name)
-    local theme_colors = colors.get_colors()
 
     -- Determine the color for the label's foreground
     local label_color = theme_palette[random_entry.color_name]
-    local background_color = theme_colors.item_background
 
-    -- Update the chevron item
+    -- Update the chevron item (its own island)
     chevron:set({
       icon = {
         string = icons.system.chevron,
         color = label_color,
-        y_offset = -1,
+        y_offset = 0, -- default +1 lift minus 1 for this tall glyph
         font = {
           size = 16,
         },
@@ -52,10 +59,7 @@ if settings.is_work_machine then
         color = label_color,
         drawing = true,
       },
-      background = {
-        color = background_color,
-        drawing = true,
-      },
+      background = brackets.island_background(),
     })
   end
 
@@ -92,7 +96,7 @@ else
     icon = {
       string = icons.system.chevron,
       color = label_color,
-      y_offset = -1,
+      y_offset = 0, -- default +1 lift minus 1 for this tall glyph
       font = {
         size = 16,
       },
@@ -102,10 +106,7 @@ else
       color = label_color,
       drawing = true,
     },
-    background = {
-      color = theme_colors.item_background,
-      drawing = true,
-    },
+    background = brackets.island_background(),
   })
 
   -- Subscribe to theme updates to maintain color consistency
@@ -116,7 +117,7 @@ else
     chevron:set({
       icon = { color = updated_label_color },
       label = { color = updated_label_color },
-      background = { color = updated_theme_colors.item_background },
+      background = brackets.island_background(),
     })
   end)
 end

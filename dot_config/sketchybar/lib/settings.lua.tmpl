@@ -19,16 +19,19 @@ M.paddings = {
   label_right = 7,
 }
 
--- Bar and pill layout (two-pill design)
--- These values are interdependent:
--- - bar_height + bar_y_offset = 38 (aligns with notch bottom)
--- - pill_height = bar_height - 4 (2px spacing top/bottom)
+-- Bar and island layout (clustered-island design)
+-- bar_height 38 aligns with the notch bottom. A bar y_offset would misalign
+-- text and bracket backgrounds vertically (the offset is applied to item
+-- content but not to bracket backdrops), so the former 35+3 offset split is
+-- folded into the height instead - same bottom edge, symmetric centering.
 M.layout = {
-  bar_height = 35,         -- Total bar height
-  bar_y_offset = 3,        -- Top offset (compensates for implicit OS margin)
-  bar_padding_h = 5,       -- Horizontal padding (left/right spacing from screen edges)
-  pill_height = 31,        -- Pill bracket height
-  pill_inner_padding = 4,  -- Padding inside pills (spacing from pill edge to first item)
+  bar_height = 38,   -- Total bar height (notch-aligned)
+  bar_y_offset = 0,  -- Keep 0: see note above
+  bar_padding_h = 0, -- No extra edge padding: the outermost items' own 5pt
+  -- item padding provides the screen-edge margin, matching rift's 5pt gaps
+  pill_height = 31,  -- Island pill height
+  island_gap = 5,    -- Visible spacing between islands (matches the 5pt
+  -- screen-edge and rift window margins)
 }
 
 -- Update frequencies (in seconds)

@@ -6,7 +6,7 @@ local settings = require("lib.settings")
 -- Add system theme change event
 sbar.add("event", "theme_change", "AppleInterfaceThemeChangedNotification")
 
--- Configure the bar appearance (transparent for two-pill layout)
+-- Configure the bar appearance (transparent strip; islands paint themselves)
 sbar.bar({
   position = "top",
   height = settings.layout.bar_height,

@@ -27,9 +27,11 @@ run_on_start = [
 mode = "traditional"
 
 [settings.layout.gaps.outer]
-# Top gap accounts for SketchyBar (38px bar + 5px gap = 43px)
+# Top gap accounts for SketchyBar: the bar strip is 38px tall, and its island
+# pills (31px, centered) leave 3.5px inside the strip below them - matching
+# the 3.5px between display edge and pill tops, so no extra gap on top.
 # On built-in display with notch, this creates extra space but avoids overlap
-top = 43.0
+top = 38.0
 left = 5.0
 bottom = 5.0
 right = 5.0

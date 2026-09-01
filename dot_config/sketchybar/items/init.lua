@@ -1,32 +1,36 @@
 -- items/init.lua - Item loader for all bar components
+--
+-- Creation order defines bar order. Right-positioned items stack leftward
+-- (first created = rightmost), so the right side builds outside-in:
+-- clock, then badges, then the system cluster. Gap spacers separate islands.
 
 local settings = require("lib.settings")
+local gaps = require("items.padding")
 
--- Padding items (load first to appear at edges)
-require("items.padding")
-
--- Left side items
+-- Left side: chevron island | workspace island
 require("items.chevron")
-if settings.window_manager == "omniwm" then
-  require("items.omniwm")
-elseif settings.window_manager == "rift" then
-  require("items.rift")
-end
+gaps.add("left.gap.chevron_ws", "left")
+require("items.rift")
 require("items.system_theme")
 
--- Right side items
+-- Right side: badge island | system island | clock island
+-- (badges leftmost: when they disappear, no double gap can open up between
+-- the remaining islands)
 require("items.clock")
+gaps.add("right.gap.clock_system", "right")
 require("items.volume")
 require("items.battery")
 require("items.package_updates")
 require("items.network_type")
 require("items.network")
-require("items.dock_badges")
 
 -- Work-specific items (loaded conditionally)
 if settings.is_work_machine then
   require("items.mealplan")
 end
 
--- Brackets (load last to capture all items matching patterns)
-require("items.brackets")
+gaps.add("right.gap.system_badges", "right")
+require("items.dock_badges")
+
+-- Islands (init last so the static system island finds its members)
+require("items.brackets").init()

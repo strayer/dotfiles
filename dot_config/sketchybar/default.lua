@@ -17,6 +17,9 @@ sbar.default({
     color = colors.get_colors().item_primary,
     padding_left = settings.paddings.icon_left,
     padding_right = settings.paddings.icon_right,
+    -- PragmataPro renders ~1pt below the geometric center (measured on
+    -- screen); texts using the app-icons font pin y_offset back to 0
+    y_offset = 1,
   },
   label = {
     font = {
@@ -27,6 +30,7 @@ sbar.default({
     color = colors.get_colors().item_primary,
     padding_left = settings.paddings.label_left,
     padding_right = settings.paddings.label_right,
+    y_offset = 1,
   },
   background = {
     color = colors.get_colors().item_background,

@@ -11,7 +11,8 @@ local brackets = require("items.brackets")
 
 sbar.add("event", "dock_badges")
 
--- Hidden anchor: receives the event and pins where the per-app items go (next to the ping item).
+-- Hidden anchor: receives the event and pins where the per-app items go (between the
+-- clock and system islands).
 local anchor = sbar.add("item", "right.dock_badges", {
   position = "right",
   drawing = false,
@@ -20,35 +21,54 @@ local anchor = sbar.add("item", "right.dock_badges", {
 
 local items = {} -- app name -> { name = item name, item = handle }
 
+-- Attention tiers, coloring icon and count: important = warm accent (people
+-- are waiting on you), normal = blue, unimportant = regular text color.
+-- Only the extremes are listed - unlisted apps default to normal. No muting
+-- anywhere: a muted tone stands out against the rest of the bar.
+local APP_TIERS = {
+  ["Microsoft Teams"] = "important",
+  ["Signal"] = "important",
+  ["Thunderbird"] = "unimportant",
+  ["Thunderbird Beta"] = "unimportant",
+  ["Microsoft Outlook"] = "unimportant",
+}
+local TIER_RANK = { important = 1, normal = 2, unimportant = 3 }
+
+local function tier_of(app)
+  return APP_TIERS[app] or "normal"
+end
+
 local function item_name(app)
   return "right.dock_badges." .. app:gsub("[^%w]", "_")
 end
 
-local function styled(app, badge)
+local function styled(app, badge, is_first, is_last)
   local theme_colors = colors.get_colors()
   local config = colors.get_item_colors()
-  -- Red-tinted inner chip, mirroring the workspace chips exactly (same box:
-  -- height 24 / radius 16, same 14pt Bold text next to 16pt app glyphs, same
-  -- inner gap - just app-glyph-then-count instead of number-then-glyphs).
-  -- Neutral app icon, count in full red: attention without the alarm of a
-  -- solid critical-red chip. Badges without a count ("•") show icon-only.
+  -- Chipless: 16pt app glyph + bold count, icon and count colored by tier.
+  -- Badges without a count ("•") show icon-only.
+  local tier_color = theme_colors.badge_tiers[tier_of(app)] or theme_colors.item_primary
   local is_dot = not badge:match("%w")
+  -- Tight paddings between badges (the default item paddings read huge here),
+  -- but the island's outermost badges get extra outside padding so the ends
+  -- match the other islands' ~12pt corner insets
+  config.padding_left = 2
+  config.padding_right = 2
   config.icon.string = icons.get_app_icon(app)
   config.icon.font = { family = settings.font.app_icons, style = "Regular", size = 16.0 }
-  config.icon.color = theme_colors.item_primary
-  config.icon.padding_left = 8
-  config.icon.padding_right = is_dot and 8 or 2
+  -- app-icons font is optically centered; don't apply the PragmataPro lift
+  config.icon.y_offset = 0
+  config.icon.padding_left = is_first and 10 or 6
+  local trailing = is_last and 10 or 6
+  config.icon.padding_right = is_dot and trailing or 2
   config.label.string = badge
   config.label.drawing = not is_dot
-  config.label.color = theme_colors.badge_primary
+  config.label.color = tier_color
   config.label.font = { family = settings.font.numbers, style = "Bold", size = 14.0 }
-  config.label.padding_left = 4
-  config.label.padding_right = 8
-  config.background = {
-    color = theme_colors.badge_background,
-    corner_radius = 16,
-    height = 24,
-  }
+  config.label.padding_left = 3
+  config.label.padding_right = trailing
+  config.icon.color = tier_color
+  config.background = { drawing = false }
   return config
 end
 
@@ -67,30 +87,40 @@ local function apply(badges)
   for app in pairs(badges) do
     table.insert(apps, app)
   end
-  table.sort(apps)
+  -- Important tiers first (leftmost in the island), alphabetical within a tier
+  table.sort(apps, function(a, b)
+    local rank_a, rank_b = TIER_RANK[tier_of(a)], TIER_RANK[tier_of(b)]
+    if rank_a ~= rank_b then
+      return rank_a < rank_b
+    end
+    return a < b
+  end)
 
-  for _, app in ipairs(apps) do
+  for i, app in ipairs(apps) do
+    local is_first, is_last = i == 1, i == #apps
     local entry = items[app]
     if entry then
-      entry.item:set(styled(app, badges[app]))
+      entry.item:set(styled(app, badges[app], is_first, is_last))
     else
       local name = item_name(app)
       local item = sbar.add("item", name, { position = "right" })
-      item:set(styled(app, badges[app]))
+      item:set(styled(app, badges[app], is_first, is_last))
       items[app] = { name = name, item = item }
       membership_changed = true
     end
   end
 
-  -- The pill bracket resolves its /right\..*/ members only when created; rebuild it so new
-  -- items get the background (and removed ones drop out).
+  -- The island bracket resolves its member regex only when created; rebuild it
+  -- so new items get the background (and it disappears entirely with the last
+  -- badge). The neighboring gap spacer goes with it.
   if membership_changed then
-    brackets.refresh_right_bracket()
+    brackets.refresh_badge_island(#apps > 0)
+    sbar.set("right.gap.system_badges", { drawing = #apps > 0 })
   end
 
   -- Pin the order in one call (separate async moves would race). Each move puts the item
-  -- directly left of the anchor, pushing the previous ones further left, so iterating
-  -- alphabetically yields A…Z left→right ending next to the ping item.
+  -- directly left of the anchor, pushing the previous ones further left, so iterating in
+  -- sorted order yields tier-then-alphabetical left→right ending next to the anchor.
   if #apps > 0 then
     local moves = {}
     for _, app in ipairs(apps) do
@@ -107,6 +137,10 @@ anchor:subscribe("dock_badges", function(env)
   if type(badges) == "string" then
     local ok, decoded = pcall(require("cjson").decode, badges)
     badges = ok and decoded or {}
+  end
+  -- A scalar/array payload would make apply() throw (and poison last_badges)
+  if type(badges) ~= "table" then
+    badges = {}
   end
   last_badges = badges
   apply(badges)

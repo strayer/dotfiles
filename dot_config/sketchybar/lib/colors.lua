@@ -164,10 +164,12 @@ function M.update_theme_colors()
       highlighted_item_primary = catppuccin_latte.blue,
       pill_background = M.with_alpha(catppuccin_latte.mantle, 0.88),
       pill_border = M.with_alpha(catppuccin_latte.surface1, 0.7),
-      focused_workspace_background = catppuccin_latte.mauve,
-      focused_workspace_primary = catppuccin_latte.base,
-      badge_background = M.with_alpha(catppuccin_latte.red, 0.15),
-      badge_primary = catppuccin_latte.red,
+      workspace_focused = catppuccin_latte.mauve,
+      badge_tiers = {
+        important = catppuccin_latte.peach,
+        normal = catppuccin_latte.blue,
+        -- unimportant intentionally absent: falls back to item_primary
+      },
       accents = {
         chevron = catppuccin_latte.mauve,
         layout = catppuccin_latte.teal,
@@ -193,10 +195,12 @@ function M.update_theme_colors()
       highlighted_item_primary = catppuccin_mocha.text,
       pill_background = M.with_alpha(catppuccin_mocha.mantle, 0.88),
       pill_border = M.with_alpha(catppuccin_mocha.surface1, 0.6),
-      focused_workspace_background = catppuccin_mocha.mauve,
-      focused_workspace_primary = catppuccin_mocha.crust,
-      badge_background = M.with_alpha(catppuccin_mocha.red, 0.22),
-      badge_primary = catppuccin_mocha.red,
+      workspace_focused = catppuccin_mocha.mauve,
+      badge_tiers = {
+        important = catppuccin_mocha.peach,
+        normal = catppuccin_mocha.blue,
+        -- unimportant intentionally absent: falls back to item_primary
+      },
       accents = {
         chevron = catppuccin_mocha.mauve,
         layout = catppuccin_mocha.teal,

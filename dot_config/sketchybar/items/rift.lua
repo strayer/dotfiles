@@ -114,10 +114,7 @@ local function ensure_layout_item(display)
     label = {
       padding_right = 8,
     },
-    background = {
-      corner_radius = 16,
-      height = 24,
-    },
+    background = { drawing = false },
   })
 
   layout_items[display] = item_name
@@ -126,25 +123,32 @@ end
 
 local function create_workspace_item(workspace_name, workspace_index, display)
   local key = get_workspace_key(workspace_name, display)
-  local item_name = "left.space." .. workspace_name .. "." .. tostring(display)
+  -- Sanitize the name for the item id: it ends up in bracket regexes and in
+  -- batched shell --move commands, where spaces/metacharacters would break
+  local item_name = "left.space." .. workspace_name:gsub("[^%w]", "_") .. "." .. tostring(display)
 
   local workspace_item = sbar.add("item", item_name, {
     position = "left",
     display = display,
+    -- Most spacing lives in the ITEM paddings (9+4 inner per side keeps the
+    -- old 26pt inter-workspace rhythm): the item background (the focus
+    -- underline) spans the content incl. the 4pt text paddings, so it
+    -- extends slightly past the glyphs but still clears the rounded ends
+    padding_left = 9,
+    padding_right = 9,
     icon = {
       string = workspace_name,
-      padding_left = 8,
+      padding_left = 4,
       padding_right = 2,
     },
     label = {
       font = { family = settings.font.app_icons, style = "Regular", size = 16.0 },
       drawing = true,
-      padding_right = 8,
+      padding_right = 4,
+      -- app-icons font is optically centered; don't apply the PragmataPro lift
+      y_offset = 0,
     },
-    background = {
-      corner_radius = 16,
-      height = 24,
-    },
+    background = { drawing = false },
   })
 
   workspace_item:subscribe("mouse.clicked", function(_)
@@ -216,7 +220,25 @@ end
 --- order in the bar is not deterministic; one chained move command fixes it.
 --- Covers all displays because items_created_this_cycle is a shared flag and
 --- display cycles interleave.
+local rank_fetch_in_flight = false
+
 local function enforce_workspace_order()
+  -- The startup fetch can race rift; without ranks the sort would fall back
+  -- to the drifting per-space index. Retry, and apply the ordering as soon
+  -- as the ranks land (there may be no further rift event to trigger it).
+  if next(canonical_rank) == nil then
+    if not rank_fetch_in_flight then
+      rank_fetch_in_flight = true
+      refresh_canonical_order(function()
+        rank_fetch_in_flight = false
+        if next(canonical_rank) ~= nil then
+          enforce_workspace_order()
+        end
+      end)
+    end
+    return
+  end
+
   local moves = {}
 
   for display, anchor in pairs(layout_items) do
@@ -255,11 +277,15 @@ end
 ---@param focused_layout_mode string|nil The layout mode for the focused workspace
 ---@param display number SketchyBar display number
 local function update_workspace_styling(focused_workspace_name, windows_by_workspace, focused_layout_mode, display)
-  -- Refresh brackets if new items were created this cycle
+  -- Refresh the workspace island if new items were created this cycle.
+  -- Skip while no workspace items exist yet: the island's /left\.space\..*/
+  -- pattern would match nothing, which fails the whole bracket add.
   if items_created_this_cycle then
     items_created_this_cycle = false
-    local brackets = require("items.brackets")
-    brackets.refresh_left_bracket()
+    if next(workspace_items) then
+      local brackets = require("items.brackets")
+      brackets.refresh_workspace_island()
+    end
   end
 
   -- Always enforce ordering: creation cycles interleave across displays, so a
@@ -287,29 +313,35 @@ local function update_workspace_styling(focused_workspace_name, windows_by_works
             drawing = true,
             display = display,
             icon = {
-              padding_left = 8,
+              padding_left = 4,
               padding_right = 2,
             },
             label = {
               string = app_icons_str,
-              padding_right = 8,
+              padding_right = 4,
             },
           }
 
           if is_focused then
-            -- Focused workspace gets an inverted accent chip (mauve bg, crust text)
+            -- Focused: mauve name + app icons, underlined by the item's own
+            -- background shrunk to a thin bar at the bottom of the island
+            item_config.icon.color = theme_colors.workspace_focused
+            item_config.label.color = theme_colors.workspace_focused
             item_config.background = {
-              color = theme_colors.focused_workspace_background,
-              corner_radius = 16,
-              height = 24,
+              drawing = true,
+              color = theme_colors.workspace_focused,
+              height = 3,
+              corner_radius = 2,
+              -- sits just inside the island's bottom border, so it reads as
+              -- the border lighting up under the active workspace
+              y_offset = -12,
             }
-            item_config.icon.color = theme_colors.focused_workspace_primary
-            item_config.label.color = theme_colors.focused_workspace_primary
           else
-            -- Unfocused workspaces with windows are transparent and muted
-            item_config.background = { color = theme_colors.item_background }
-            item_config.icon.color = theme_colors.item_muted
-            item_config.label.color = theme_colors.item_muted
+            -- Unfocused: regular item color, no underline (a muted tone stood
+            -- out too much against the rest of the bar)
+            item_config.icon.color = theme_colors.item_primary
+            item_config.label.color = theme_colors.item_primary
+            item_config.background = { drawing = false }
           end
 
           sbar.set(workspace_data.item_name, item_config)
@@ -321,17 +353,19 @@ local function update_workspace_styling(focused_workspace_name, windows_by_works
   -- Update layout mode item for this display
   local layout_item_name = layout_items[display]
   if layout_item_name then
+    -- The default layout mode needs no announcement - only show the label
+    -- when something non-standard (e.g. scrolling) is active
+    local mode = focused_layout_mode or ""
+    local show_label = mode ~= "" and mode ~= "traditional"
     local layout_config = {
       display = display,
       icon = {
         color = theme_colors.accents.layout,
       },
       label = {
-        string = focused_layout_mode or "",
+        string = mode,
+        drawing = show_label,
         color = theme_colors.item_primary,
-      },
-      background = {
-        color = theme_colors.item_background,
       },
     }
     sbar.set(layout_item_name, layout_config)
