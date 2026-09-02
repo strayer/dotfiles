@@ -68,6 +68,25 @@ and `~/dev-explore/SbarLua`.
 - **Rule:** Keep `y_offset = 0` and fold any offset into `bar_height`
   (38+0, not 35+3 — same bottom edge, symmetric centering).
 
+### Notch display: reserved strip + `notch_display_height`
+
+- **Symptom:** Spacing tuned on external displays comes out asymmetric on the
+  built-in display (windows too far below the pills, or glued to the notch).
+- **Cause:** Two per-display differences stack. (1) macOS reserves the
+  menu-bar/notch strip on the built-in display, so rift's usable frame
+  already starts below it (`rift-cli query displays` → `frame.origin.y`,
+  38pt at "More Space" scaling) — rift's per-display `outer.top` is measured
+  from *that* origin, while external displays' frames start at the true
+  screen top. (2) The strip height depends on the display's scaling mode, so
+  any coincidence with the bar height is fragile.
+- **Rule:** Use the bar's `notch_display_height` (applies to the built-in
+  display only; items and pills re-center per display automatically) to give
+  the notch display its own strip height, and tune the rift per-display
+  `outer.top` relative to the *frame origin*, not the screen top. Current
+  numbers: `notch_display_height = 43` + internal `outer.top = 5` → pills at
+  6..37 with 6pt above/below; externals keep `bar_height = 38` + global
+  `top = 38`. Re-check after changing the internal display's scaling.
+
 ### Right-position items stack leftward; batched moves anchor-push
 
 - **Symptom:** "Why is the item I created first at the far right?" /
