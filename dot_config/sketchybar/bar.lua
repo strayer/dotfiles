@@ -10,6 +10,7 @@ sbar.add("event", "theme_change", "AppleInterfaceThemeChangedNotification")
 sbar.bar({
   position = "top",
   height = settings.layout.bar_height,
+  notch_display_height = settings.layout.notch_bar_height,
   margin = 0,
   y_offset = settings.layout.bar_y_offset,
   corner_radius = 0,

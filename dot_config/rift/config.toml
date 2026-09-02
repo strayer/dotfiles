@@ -40,8 +40,12 @@ right = 5.0
 horizontal = 7.0
 vertical = 7.0
 
-# Per-display gaps: Built-in display with notch needs smaller top gap since SketchyBar
-# sits in the notch area. External displays need full 43px top gap for SketchyBar.
+# Per-display gaps: on the built-in (notch) display, macOS reserves the
+# menu-bar strip, so rift's usable frame already starts below it (y=38 at
+# "More Space" scaling). SketchyBar uses notch_display_height=43 there, so
+# the pills sit at y 6..37; windows at frame origin + 5 = 43 gives a 6pt
+# gap below the pills, matching the 6pt above them. External displays have
+# no reserved strip, hence the global top = 38.
 [settings.layout.gaps.per_display."37D8832A-2D66-02CA-B9F7-8F30A301B230"]
 outer = { top = 5.0, left = 5.0, bottom = 5.0, right = 5.0 }
 inner = { horizontal = 7.0, vertical = 7.0 }
