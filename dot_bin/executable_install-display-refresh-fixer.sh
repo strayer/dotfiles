@@ -15,7 +15,7 @@ bundle="$HOME/.bin/display-refresh-fixer.app"
 binary="$bundle/Contents/MacOS/display-refresh-fixer"
 plist_path="$HOME/Library/LaunchAgents/$label.plist"
 display_match="${DISPLAY_MATCH:-DELL}"
-target_refresh="${TARGET_REFRESH:-143.96Hz-VRR}"
+target_refresh="${TARGET_REFRESH:-143.96Hz}"
 
 if [[ ! -x "$binary" || "$source" -nt "$binary" ]]; then
   "$HOME/.bin/compile-display-refresh-fixer"

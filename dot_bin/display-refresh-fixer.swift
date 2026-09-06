@@ -15,7 +15,7 @@ import UserNotifications
 // Our own mode switch also fires a reconfiguration callback; the "already at
 // target" check keeps that from looping.
 //
-// Usage: display-refresh-fixer [--display DELL] [--refresh 143.96Hz-VRR] [--debug]
+// Usage: display-refresh-fixer [--display DELL] [--refresh 143.96Hz] [--debug]
 // SIGUSR1 forces a check (handy for testing).
 // Background: vault note "Dell G3223Q".
 
@@ -27,7 +27,7 @@ func argValue(_ flag: String, default def: String) -> String {
   return def
 }
 let displayName = argValue("--display", default: "DELL")
-let targetRefresh = argValue("--refresh", default: "143.96Hz-VRR")
+let targetRefresh = argValue("--refresh", default: "143.96Hz")
 let debugMode = CommandLine.arguments.contains("--debug")
 
 func log(_ msg: String) {
