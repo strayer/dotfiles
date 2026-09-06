@@ -33,7 +33,7 @@ tm <session>                         # tmux session manager (attach or create)
 toggle-theme.sh [theme]              # System-wide theme switching with automation
 install-dark-mode-notify.sh          # Setup automated theme switching via LaunchAgent
 install-sbarlua.sh                   # Install SbarLua for SketchyBar configuration
-install-display-refresh-fixer.sh     # Build + install LaunchAgent keeping the Dell G3223Q on 144 Hz (needs BetterDisplay)
+install-display-refresh-fixer.sh     # Build + install LaunchAgent keeping the Dell G3223Q on 144 Hz VRR (needs BetterDisplay)
 compile-display-refresh-fixer        # Build ~/.bin/display-refresh-fixer.app from display-refresh-fixer.swift
 secretive-ssh-keygen [args]          # SSH key generation using Secretive app
 restart-gpg-agent.fish               # GPG agent management for multi-user conflicts
@@ -182,7 +182,7 @@ launchctl load ~/Library/LaunchAgents/com.user.darkmode.plist
 install-display-refresh-fixer.sh    # Install earth.gru.display-refresh-fixer (compiles the Swift daemon first; macOS only)
 ```
 
-The display-refresh-fixer re-applies BetterDisplay's "unexposed" 3008x1692 HiDPI @ 144 Hz mode on the Dell G3223Q after display reconfiguration or wake, because macOS 15.1+ never persists that mode. Target display/mode are plist arguments (`--display`, `--refresh`); log at `~/Library/Logs/display-refresh-fixer.log`; `kill -USR1 <pid>` forces a check. Re-run the install script after editing the `.swift` source. The compiled `.app` bundle is a build artifact and not managed by chezmoi.
+The display-refresh-fixer re-applies BetterDisplay's "unexposed" 3008x1692 HiDPI @ 144 Hz VRR mode on the Dell G3223Q after display reconfiguration or wake, because macOS 15.1+ never persists that mode. Target display/mode are plist arguments (`--display`, `--refresh`); log at `~/Library/Logs/display-refresh-fixer.log`; `kill -USR1 <pid>` forces a check. Re-run the install script after editing the `.swift` source. The compiled `.app` bundle is a build artifact and not managed by chezmoi.
 
 ### Development Workflows
 
