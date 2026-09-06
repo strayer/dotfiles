@@ -1,0 +1,47 @@
+#!/bin/bash
+# Builds ~/.bin/display-refresh-fixer.app from display-refresh-fixer.swift.
+# An .app bundle is required for native notifications (UserNotifications needs a bundle id).
+# After editing the source: run this, then
+#   launchctl kickstart -k gui/$(id -u)/earth.gru.display-refresh-fixer
+set -euo pipefail
+
+if ! command -v swiftc &>/dev/null; then
+  echo "Error: swiftc not found. Install Xcode or Command Line Tools." >&2
+  exit 1
+fi
+
+SOURCE="$HOME/.bin/display-refresh-fixer.swift"
+BUNDLE="$HOME/.bin/display-refresh-fixer.app"
+BINARY="$BUNDLE/Contents/MacOS/display-refresh-fixer"
+
+mkdir -p "$BUNDLE/Contents/MacOS"
+
+cat > "$BUNDLE/Contents/Info.plist" <<'PLISTEOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>earth.gru.display-refresh-fixer</string>
+    <key>CFBundleName</key>
+    <string>Display Fixer</string>
+    <key>CFBundleDisplayName</key>
+    <string>Display Fixer</string>
+    <key>CFBundleExecutable</key>
+    <string>display-refresh-fixer</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSUIElement</key>
+    <true/>
+</dict>
+</plist>
+PLISTEOF
+
+echo "Compiling display-refresh-fixer..."
+swiftc -O -framework AppKit -framework UserNotifications "$SOURCE" -o "$BINARY"
+codesign --force --sign - "$BUNDLE"
+echo "Compiled $BUNDLE"
