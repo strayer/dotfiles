@@ -156,6 +156,10 @@ if status --is-interactive
     abbr --add --global tf terraform
   end
 
+  if type -q claude
+    abbr --add --global clauderc 'env -u DISABLE_TELEMETRY -u DO_NOT_TRACK claude --remote-control'
+  end
+
   if type -q zoxide
     zoxide init fish | source
   end
