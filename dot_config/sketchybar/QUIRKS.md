@@ -68,24 +68,35 @@ and `~/dev-explore/SbarLua`.
 - **Rule:** Keep `y_offset = 0` and fold any offset into `bar_height`
   (38+0, not 35+3 — same bottom edge, symmetric centering).
 
-### Notch display: reserved strip + `notch_display_height`
+### Notch display: reserved strip, scaling modes & `notch_display_height`
 
-- **Symptom:** Spacing tuned on external displays comes out asymmetric on the
-  built-in display (windows too far below the pills, or glued to the notch).
-- **Cause:** Two per-display differences stack. (1) macOS reserves the
+- **Symptom:** Spacing tuned on external displays comes out asymmetric on
+  the built-in display — windows too far below the pills, glued to them, or
+  pills glued to the display edge. Recurs whenever the internal display's
+  scaling mode changes.
+- **Cause:** Three per-display differences stack. (1) macOS reserves the
   menu-bar/notch strip on the built-in display, so rift's usable frame
-  already starts below it (`rift-cli query displays` → `frame.origin.y`,
-  38pt at "More Space" scaling) — rift's per-display `outer.top` is measured
-  from *that* origin, while external displays' frames start at the true
-  screen top. (2) The strip height depends on the display's scaling mode, so
-  any coincidence with the bar height is fragile.
-- **Rule:** Use the bar's `notch_display_height` (applies to the built-in
-  display only; items and pills re-center per display automatically) to give
-  the notch display its own strip height, and tune the rift per-display
-  `outer.top` relative to the *frame origin*, not the screen top. Current
-  numbers: `notch_display_height = 43` + internal `outer.top = 5` → pills at
-  6..37 with 6pt above/below; externals keep `bar_height = 38` + global
-  `top = 38`. Re-check after changing the internal display's scaling.
+  starts below it (`rift-cli query displays` → `frame.origin.y`) and rift's
+  per-display `outer.top` is measured from *that* origin, while external
+  frames start at the true screen top. (2) The strip's POINT height depends
+  on the scaling mode (38 at "More Space" in laptop mode, 32 at default
+  scaling when docked as secondary — same physical notch), so static point
+  values go stale on every mode switch. (3) SketchyBar item heights and
+  fonts are global across displays; only the bar strip height is
+  per-display (`notch_display_height`, built-in only; items re-center per
+  display automatically).
+- **Rule / current design:** pills should center **between the display edge
+  and the window tops**, not within the notch strip. `bar.lua` syncs
+  `notch_display_height = frame.origin.y + notch_window_gap` at load and on
+  `display_change`/`system_woke`, so the notch bar strip always ends exactly
+  where windows begin and centering comes out symmetric at every scaling
+  mode. `settings.layout.notch_window_gap` MUST equal the built-in display's
+  per-display `outer.top` in rift's config (both 5). As a safety net, the
+  pill height clamps to the smallest strip present minus
+  `pill_strip_margin` (a change re-triggers `theme_colors_updated`, which
+  restyles everything, including the underline offset derived from the
+  current pill height). Externals keep `bar_height = 38` + global
+  `top = 38`. When notch spacing looks off, check `frame.origin.y` FIRST.
 
 ### Right-position items stack leftward; batched moves anchor-push
 

@@ -20,7 +20,8 @@ function M.island_background()
     color = theme_colors.pill_background,
     border_color = theme_colors.pill_border,
     border_width = 1,
-    height = settings.layout.pill_height,
+    -- runtime value: bar.lua adapts it to the smallest bar strip present
+    height = settings.layout.current_pill_height,
     corner_radius = 9999,
   }
 end

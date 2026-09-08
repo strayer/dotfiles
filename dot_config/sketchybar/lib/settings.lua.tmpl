@@ -26,12 +26,19 @@ M.paddings = {
 -- folded into the height instead - same bottom edge, symmetric centering.
 M.layout = {
   bar_height = 38,   -- Total bar height (notch-aligned)
-  notch_bar_height = 43, -- Taller strip on the built-in (notch) display: pills
-  -- center per display, giving 6pt above/below with rift's 5pt window gap
+  notch_bar_height = 38, -- FALLBACK strip height for the built-in (notch)
+  -- display; bar.lua syncs it to the actual reserved-strip height at runtime
+  -- so the bar physically matches the notch across scaling modes
   bar_y_offset = 0,  -- Keep 0: see note above
   bar_padding_h = 0, -- No extra edge padding: the outermost items' own 5pt
   -- item padding provides the screen-edge margin, matching rift's 5pt gaps
-  pill_height = 31,  -- Island pill height
+  pill_height = 31,  -- Maximum island pill height (used when it fits)
+  pill_strip_margin = 5, -- Minimum room between pill and strip edge (per side
+  -- total; pills shrink to strip - this when the notch strip is small)
+  notch_window_gap = 5, -- Gap between the reserved notch strip and the first
+  -- window on the built-in display. MUST match the per-display outer.top for
+  -- the built-in display in rift's config: the bar strip extends down to the
+  -- window tops so pills center between display edge and windows.
   island_gap = 5,    -- Visible spacing between islands (matches the 5pt
   -- screen-edge and rift window margins)
 }
@@ -44,6 +51,12 @@ M.update_freq = {
   mealplan = 120,
   package_updates = 3600, -- Hourly updates
 }
+
+-- Runtime layout state: the current pill height, adapted by bar.lua to the
+-- smallest bar strip present (the notch strip shrinks at default scaling
+-- when the internal display is a secondary monitor). Items read this instead
+-- of layout.pill_height.
+M.layout.current_pill_height = M.layout.pill_height
 
 -- System detection
 M.hostname = "{{ .chezmoi.hostname }}"

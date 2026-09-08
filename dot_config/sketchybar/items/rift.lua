@@ -333,8 +333,9 @@ local function update_workspace_styling(focused_workspace_name, windows_by_works
               height = 3,
               corner_radius = 2,
               -- sits just inside the island's bottom border, so it reads as
-              -- the border lighting up under the active workspace
-              y_offset = -12,
+              -- the border lighting up under the active workspace; derived
+              -- from the (runtime-adaptive) pill height: -12 at 31pt pills
+              y_offset = -(math.floor(settings.layout.current_pill_height / 2) - 3),
             }
           else
             -- Unfocused: regular item color, no underline (a muted tone stood
