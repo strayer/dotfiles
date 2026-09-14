@@ -11,9 +11,19 @@
 # Reloading kills and restarts rift, which resets window state, so it's never done
 # automatically; the user runs it manually when convenient.
 #
+# Never run this with sudo: LaunchAgents live in the per-user gui/<uid> domain.
+# As root, `id -u` is 0 and launchctl targets gui/0, which does not exist
+# ("Bootstrap failed: 125: Domain does not support specified action").
+#
 # Subcommands: install | uninstall | rotate (default) | reload
 
 set -euo pipefail
+
+if [[ "$(id -u)" -eq 0 || -n "${SUDO_USER:-}" ]]; then
+  echo "error: do not run $(basename "$0") as root/with sudo." >&2
+  echo "       LaunchAgents are managed in your own gui/<uid> domain; rerun without sudo." >&2
+  exit 1
+fi
 
 RIFT_PLIST="$HOME/Library/LaunchAgents/git.acsandmann.rift.plist"
 ROTATE_LABEL="com.grunewaldt.rift-log-rotate"
@@ -33,6 +43,19 @@ LOG_ERR="/tmp/rift_${USER_NAME}.err.log"
 
 notify() {
   osascript -e "display notification \"$2\" with title \"$1\"" >/dev/null 2>&1 || true
+}
+
+# bootout is mostly synchronous on modern macOS, but a bootstrap issued too
+# early fails with "5: Input/output error" / "37: Operation already in
+# progress". Poll until the service target is gone (max ~3s).
+bootout_and_wait() {
+  local target="$1"
+  launchctl bootout "$target" 2>/dev/null || true
+  local i=0
+  while launchctl print "$target" >/dev/null 2>&1 && ((i < 30)); do
+    sleep 0.1
+    i=$((i + 1))
+  done
 }
 
 write_rotate_plist() {
@@ -73,7 +96,7 @@ cmd_install() {
   fi
   mkdir -p "$STATE_DIR"
   write_rotate_plist
-  launchctl bootout "gui/$(id -u)/${ROTATE_LABEL}" || true
+  bootout_and_wait "gui/$(id -u)/${ROTATE_LABEL}"
   launchctl bootstrap "gui/$(id -u)" "$ROTATE_PLIST"
   echo "installed ${ROTATE_LABEL} (every ${ROTATE_INTERVAL}s)"
   "$ROTATE_SCRIPT" rotate
@@ -95,15 +118,11 @@ cmd_reload() {
     echo "error: $RIFT_PLIST not found — is rift's service installed?" >&2
     exit 1
   fi
-  launchctl bootout "$target" 2>/dev/null || true
-  # bootout is mostly synchronous on modern macOS but be defensive.
-  local i=0
-  while launchctl print "$target" >/dev/null 2>&1 && ((i < 30)); do
-    sleep 0.1
-    i=$((i + 1))
-  done
+  bootout_and_wait "$target"
   launchctl bootstrap "gui/${uid}" "$RIFT_PLIST"
-  echo "reloaded rift (bootout + bootstrap)"
+  local effective
+  effective=$(launchctl print "$target" 2>/dev/null | awk '/RUST_LOG =>/{print $3; exit}')
+  echo "reloaded rift (bootout + bootstrap), effective RUST_LOG=${effective:-unset}"
 }
 
 # 0 = already debug, 1 = patched, 2 = plist absent or RUST_LOG key missing
