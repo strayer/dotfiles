@@ -17,3 +17,8 @@ Library/Preferences/pnpm/config.yaml
 .config/ssh-agent-multiplexer
 .config/fish/functions/step.fish
 {{- end }}
+
+{{ if not (hasKey .obsidian.vaults .chezmoi.hostname) -}}
+{{/* /vault skill only where .chezmoidata/obsidian.yaml knows the vault path */ -}}
+.agents/skills/vault
+{{- end }}

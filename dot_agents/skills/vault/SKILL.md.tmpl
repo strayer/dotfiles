@@ -1,0 +1,40 @@
+{{- $vault := joinPath .chezmoi.homeDir (get .obsidian.vaults .chezmoi.hostname) -}}
+---
+name: vault
+description: Capture results of the current session in the user's Obsidian vault, either as a new draft note or as a dated log entry appended to an existing note. Triggers on phrases like "write this to the vault", "put it in Obsidian", "keep this as a note", "add a log entry", "add this to the project note", "I want to remember this" (and their German equivalents). Not for editing arbitrary vault notes and not for creating tasks.
+argument-hint: "[note <topic> | log <note name>] [optional: what to capture]"
+---
+
+Writes into the Obsidian vault at `{{ $vault }}` from any Claude Code session. The skill only knows the mechanics. Every vault-specific rule (folder names, draft location, note format, language, what is off-limits) lives in the vault's own `AGENTS.md`, which you must read first.
+
+<setup>
+1. Check that `{{ $vault }}/AGENTS.md` exists. If it does not: stop and tell the user that the vault path for this host must be set in `.chezmoidata/obsidian.yaml` of the dotfiles. Do not guess another path.
+2. Read `{{ $vault }}/AGENTS.md` completely. It is the single source of truth for the vault. Look for the section that describes writing from outside sessions; it names the drafts folder and the conventions for both modes below. If that section is missing, stop and tell the user.
+3. Determine the mode from `$ARGUMENTS`: starts with `note` → new draft, starts with `log` → log entry. No argument or unclear: ask briefly whether this should be a new draft or an entry to an existing note, and what exactly to capture. Ask nothing else.
+</setup>
+
+<mode_note>
+- The target is **always** the drafts folder named in the vault's AGENTS.md. Nowhere else, even if the topic obviously belongs to another folder. Filing is the user's job.
+- The text after `note` is a topic hint, not a literal filename. Derive a short title from it; drop or replace characters that are invalid in filenames (`/`, `\`, `:`, `*`, `?`, `"`, `<`, `>`, `|`, `#`). The heading may keep them. If a note with that title already exists in the drafts folder, append a dated section instead of overwriting.
+- If a half-sentence follows the topic, that is the focus of the note.
+- Content: what was found out or decided in the session and why. Mark the user's statements as theirs and your own conclusions as conclusions. No session transcript, no tool output.
+- Format, language, header line and everything else follow the vault's AGENTS.md. Do not add anything it does not ask for.
+- Where the header line asks for the working directory, use the directory the user launched Claude Code in. If you run as a subagent, use the one your caller gave you, never your own.
+- Wiki-links only to notes that exist. Check first with `fd -i -e md '<name>' '{{ $vault }}'` (without `fd`: `find '{{ $vault }}' -iname '*<name>*.md'`). Otherwise plain text.
+- No confirmation before writing: the drafts folder is the quarantine. Report the path afterwards.
+</mode_note>
+
+<mode_log>
+- Find the target note: `fd -i -e md '<name>' '{{ $vault }}' --exclude '.*'`, then drop hits in the folders the vault's AGENTS.md declares off-limits for log entries. Exactly one hit → use it. Several → list them and ask. None → ask whether it should become a draft in the drafts folder instead. **Never** create a new note outside the drafts folder.
+- Do not load the whole note into context. Read only the headings (`rg -n '^#' <file>` or `grep -n '^#'`) and the tail (`tail -n 80`) to learn heading level, date format, ordering and language of the existing entries, and follow them. The vault's AGENTS.md says which ordering is common.
+- Draft the entry in the same form as the existing ones, in the language the note is written in. Keep it short: what changed or was learned, why, what is open.
+- **Show the finished entry and wait for an explicit ok.** Nothing is written without it.
+- After the ok: insert only the entry. Do not rewrite, reorder, or touch other sections, and do not add frontmatter. Report the path afterwards.
+</mode_log>
+
+<never>
+- Move, rename or delete notes. If the user explicitly asks for deletion, use `trash`, never `rm`.
+- Write into any folder the vault's AGENTS.md declares off-limits, or into dot-folders.
+- Promote a note out of the drafts folder, even when asked in passing during another task.
+- Infer conventions from existing notes. What AGENTS.md does not prescribe stays plain.
+</never>

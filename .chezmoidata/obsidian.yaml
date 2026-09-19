@@ -1,0 +1,11 @@
+# Obsidian vault location per host, relative to the home directory (data
+# files are not templates, so templates join this with .chezmoi.homeDir).
+# Consumed by dot_agents/skills/vault/SKILL.md.tmpl (the /vault skill) and by
+# .chezmoiignore, which skips that skill on hosts not listed here.
+# Macs run the Obsidian app, headless boxes obsidian-headless (mise config).
+# The vault's own rules live in <vault>/AGENTS.md, not in the dotfiles.
+obsidian:
+  vaults:
+    runabout: Documents/Default
+    yobuko: Documents/Default
+    CO-MBP-KC9KQV64V3: Documents/wag-notes
