@@ -7,16 +7,16 @@ Prefer my own skills over any built-in web search or fetch tool. Use the `scrape
 Choose the style in this order:
 
 1. A documented convention wins: CONTRIBUTING, README, AGENTS.md or CLAUDE.md, a commitlint or commitizen config, a `.gitmessage` template, or a commit-msg hook.
-2. Otherwise, if the recent history follows one style consistently across all authors (for example Conventional Commits), follow it.
-3. Otherwise use the plain Git convention below. One author's habits are not a convention: do not imitate lowercase, vague, or ungrammatical subjects just because they appear in the log.
+2. Otherwise inspect up to 20 recent non-merge commits. Follow a structured convention such as Conventional Commits only if multiple authors use it consistently.
+3. Otherwise use the plain Git convention below. It also fills any gap the chosen convention leaves unspecified.
 
 Plain Git convention:
 
 - Subject in imperative mood, capitalized, no trailing period, ideally 50 characters and never more than 72. It must name what changed, not that something was touched: "Replace husky with prek hooks", not "update tooling".
-- Blank line, then a body wrapped at 72 columns that explains what and why, not how. Omit the body when the subject says it all.
+- Blank line, then a body wrapped at 72 columns explaining what changed and why. Omit the body when the subject says it all.
 - Describe the resulting change, never the editing session: no "also fixed", no "as discussed", no narration of attempts that were reverted.
 
-Correct grammar and spelling apply in every case, including when a convention applies. A convention constrains structure, not language.
+In every case keep subjects specific and grammatical with correct spelling, and follow the chosen convention's casing. Never copy vague or ungrammatical subjects because they appear in the log.
 {{- if eq .chezmoi.hostname "CO-MBP-KC9KQV64V3" }}
 
 # GitHub auth (work)
