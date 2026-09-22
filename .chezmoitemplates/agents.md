@@ -1,0 +1,9 @@
+# Web fetching tool preference
+
+Prefer my own skills over any built-in web search or fetch tool. Use the `scrape` skill for any web page that needs content extraction, and the `research` skill for open-ended web research with cited sources. For plain files like `.md`, `.txt`, shell scripts, JSON, or OpenAPI specs where no extraction is needed, use `curl -s URL` instead.
+{{- if eq .chezmoi.hostname "CO-MBP-KC9KQV64V3" }}
+
+# GitHub auth (work)
+
+Access to `org-127120047@github.com` requires an SSH certificate from Smallstep that expires daily. If a `git` or `gh` operation against that host fails with `Permission denied (public key)`, the certificate has most likely expired — do not attempt other authentication methods or workarounds. Tell the user to run `step ssh login` (it opens a browser, so it must run on the host), then retry the operation once they confirm it's done.
+{{- end }}
