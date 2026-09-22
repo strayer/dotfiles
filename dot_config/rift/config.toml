@@ -21,6 +21,10 @@ default_disable = false
 run_on_start = [
   "rift-cli subscribe cli --event workspace_changed --command sh --args -c --args 'sketchybar --trigger rift_workspace_change RIFT_SPACE_ID=\"$RIFT_SPACE_ID\" RIFT_DISPLAY_UUID=\"$RIFT_DISPLAY_UUID\" RIFT_WORKSPACE_NAME=\"$RIFT_WORKSPACE_NAME\"'",
   "rift-cli subscribe cli --event windows_changed --command sh --args -c --args 'sketchybar --trigger rift_windows_change RIFT_SPACE_ID=\"$RIFT_SPACE_ID\" RIFT_DISPLAY_UUID=\"$RIFT_DISPLAY_UUID\" RIFT_WORKSPACE_NAME=\"$RIFT_WORKSPACE_NAME\"'",
+  # Teams call auto-PiP: mirror a call window via rift-pip while its workspace is
+  # hidden, close the PiP when it is visible again or the call ends (~/.bin/rift-pip-auto)
+  "rift-cli subscribe cli --event workspace_changed --command sh --args -c --args '\"$HOME/.bin/rift-pip-auto\"'",
+  "rift-cli subscribe cli --event windows_changed --command sh --args -c --args '\"$HOME/.bin/rift-pip-auto\"'",
 ]
 
 [settings.layout]
@@ -186,3 +190,7 @@ app_rules = [
 
 # Scrolling: re-center the focused column
 "Alt + Ctrl + C" = "center_selection"
+
+# Picture-in-picture: close the PiP that is showing, else mirror the focused window
+# into a floating PiP via rift-pip. Teams calls get a PiP automatically, see run_on_start.
+"Alt + Ctrl + P" = { exec = ["sh", "-c", "\"$HOME/.bin/rift-pip-auto\" toggle"] }

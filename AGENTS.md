@@ -33,6 +33,8 @@ tm <session>                         # tmux session manager (attach or create)
 toggle-theme.sh [theme]              # System-wide theme switching with automation
 install-dark-mode-notify.sh          # Setup automated theme switching via LaunchAgent
 install-sbarlua.sh                   # Install SbarLua for SketchyBar configuration
+install-rift-pip.sh                  # Build + install rift-pip (~/.cargo/bin) with the local --window patch from ~/.bin/src/
+rift-pip-auto [toggle]               # Rift event hook: auto-PiP for hidden Teams calls; `toggle` mirrors the focused window (Alt+Ctrl+P)
 install-display-refresh-fixer.sh     # Build + install LaunchAgent keeping the Dell G3223Q on 144 Hz (needs BetterDisplay)
 compile-display-refresh-fixer        # Build ~/.bin/display-refresh-fixer.app from display-refresh-fixer.swift
 secretive-ssh-keygen [args]          # SSH key generation using Secretive app
@@ -105,6 +107,7 @@ Sophisticated automated theme switching with cross-application coordination:
 
 - **SketchyBar**: Complete SbarLua configuration with modular architecture (`init.lua`, `bar.lua`, `default.lua`, items/\*). Includes window manager integration (Rift), custom items (battery, network, clock, volume, meal planning), and theme coordination. Coding agents can use the deepwiki mcp to retrieve information about [SketchyBar](https://deepwiki.com/FelixKratz/SketchyBar) and [SbarLua](https://deepwiki.com/FelixKratz/SbarLua).
 - **Window Manager**: Rift - BSP tiling window manager with Mach IPC. Configuration in `dot_config/rift/config.toml`. Uses CLI subscriptions to trigger SketchyBar updates on workspace/window changes.
+- **Teams call PiP**: `rift-pip-auto` runs on Rift's `workspace_changed`/`windows_changed` CLI subscriptions. It finds a Microsoft Teams call window (any Teams window whose title is not a main-window section like `Chat | …`) and mirrors it with [rift-pip](https://github.com/acsandmann/rift-pip) while its workspace is hidden; the PiP closes when the workspace is active again or the call ends. rift-pip is built by `install-rift-pip.sh` with a local patch (`dot_bin/private_src/rift-pip-window-option.patch`) adding `--window <id>`, since upstream only mirrors the focused window. State and log live in `~/.cache/rift-pip/`. Needs Screen Recording permission for the launching app (rift).
 - **Package management**: Comprehensive Brewfile (260+ work packages, 290+ home packages) with custom taps, MAS automation, and environment-specific tool sets
 - **Karabiner**: Custom keyboard modifications in `private_karabiner/`
 - **LaunchAgent automation**: Automated theme switching and system integration services

@@ -1,0 +1,234 @@
+#!/bin/dash
+# rift-pip-auto — keep a Microsoft Teams call visible while its workspace is hidden.
+#
+# Rift runs this on every workspace_changed / windows_changed event (CLI
+# subscriptions registered in ~/.config/rift/config.toml, run_on_start). It looks
+# for a Teams *call* window across all workspaces and:
+#   - starts `rift-pip --window <id>` when the call is parked on an inactive
+#     workspace (the PiP floats above every workspace),
+#   - stops the PiP again when the call's workspace becomes active or the call
+#     window disappears,
+#   - leaves a PiP alone that the user closed via its red button (until the call
+#     is visible again, which resets the state).
+#
+# Usage:
+#   rift-pip-auto          # event handler (idempotent, safe to run any time)
+#   rift-pip-auto toggle   # hotkey: close the PiP that is showing, else mirror the focused window
+#
+# Uses dash: it runs on every WM event, so shell startup overhead matters.
+# Tunables via environment (set in the rift config exec if you like):
+#   RIFT_PIP          path to the rift-pip binary (default ~/.cargo/bin/rift-pip)
+#   RIFT_PIP_CORNER   --bottom_right (default) | --bottom_left | --top_left | --top_right
+#   RIFT_CLI          path to rift-cli (default ~/.bin/rift-cli)
+set -eu
+
+RIFT_CLI="${RIFT_CLI:-$HOME/.bin/rift-cli}"
+RIFT_PIP="${RIFT_PIP:-$HOME/.cargo/bin/rift-pip}"
+CORNER="${RIFT_PIP_CORNER:---bottom_right}"
+STATE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/rift-pip"
+AUTO_PIDFILE="$STATE_DIR/auto.pid"     # "<pid> <window_server_id>"
+MANUAL_PIDFILE="$STATE_DIR/manual.pid" # "<pid>"
+LOG="$STATE_DIR/rift-pip.log"
+LOCK="$STATE_DIR/lock.d"
+LOCK_STALE_SECS=5 # a lock without a pid file older than this is a dead holder's
+LOCK_WAIT_MAX=80  # tenths of a second to wait for the lock before giving up
+RERUN_FLAG="$STATE_DIR/rerun" # a waiter that gave up asks the holder to re-evaluate
+
+TEAMS_BUNDLE="com.microsoft.teams2"
+# Teams main-window sections and pop-outs, titled "<section> | ... | Microsoft Teams".
+# Anything else from Teams ("<meeting subject> | Microsoft Teams") counts as a call.
+# Extend this list if a non-call Teams window ever gets mirrored.
+NOT_CALL='^(Activity|Aktivität|Chat|Teams|Calendar|Kalender|Calls|Anrufe|Files|Dateien|Apps|OneDrive|Copilot|Planner|Viva Engage|Microsoft Teams)( \||$)'
+
+mkdir -p "$STATE_DIR"
+[ -x "$RIFT_PIP" ] || RIFT_PIP=$(command -v rift-pip) || {
+  echo "$(date '+%F %T') rift-pip not installed; run install-rift-pip.sh" >>"$LOG"
+  exit 1
+}
+
+log() { echo "$(date '+%F %T') $*" >>"$LOG"; }
+
+# True when $1 is a live rift-pip process (guards against pid reuse).
+pip_alive() {
+  [ -n "${1:-}" ] && kill -0 "$1" 2>/dev/null &&
+    case "$(ps -o comm= -p "$1" 2>/dev/null)" in *rift-pip*) return 0 ;; esac
+  return 1
+}
+
+launch() { # launch <pidfile> <args...>
+  pidfile=$1
+  shift
+  # Detach fully: Rift waits for the exec'd command's stdio to close.
+  "$RIFT_PIP" "$@" </dev/null >>"$LOG" 2>&1 &
+  echo "$! ${2:-}" >"$pidfile"
+  log "started rift-pip $* (pid $!)"
+}
+
+stop() { # stop <pidfile>
+  if [ -f "$1" ]; then
+    read -r pid _ <"$1" || pid=""
+    if pip_alive "$pid"; then
+      kill "$pid" 2>/dev/null && log "stopped rift-pip (pid $pid)"
+    fi
+    rm -f "$1"
+  fi
+}
+
+# --- lock -------------------------------------------------------------------
+# Serialises handlers: workspace_changed and windows_changed often fire back to
+# back, and Rift runs each on its own thread. mkdir is the atomic acquire; the
+# holder's pid inside lets others detect a dead holder.
+
+lock_is_stale() {
+  holder=$(cat "$LOCK/pid" 2>/dev/null || true)
+  if [ -n "$holder" ]; then
+    if kill -0 "$holder" 2>/dev/null; then return 1; else return 0; fi
+  fi
+  # No pid yet: the holder is either between mkdir and writing it, or died there.
+  dir_older_than "$LOCK" "$LOCK_STALE_SECS"
+}
+
+dir_older_than() { # dir_older_than <dir> <seconds>
+  now=$(date +%s)
+  mtime=$(stat -f %m "$1" 2>/dev/null || echo "$now")
+  [ $((now - mtime)) -ge "$2" ]
+}
+
+# Remove a stale lock. Serialised through a second mkdir and re-checked while
+# holding it, so two contenders that both saw the same dead lock cannot end up
+# with one of them removing a lock the other has just freshly acquired.
+reclaim_stale_lock() {
+  if ! mkdir "$LOCK.reclaim" 2>/dev/null; then
+    # Another reclaimer is at it; it holds this for milliseconds unless it died.
+    dir_older_than "$LOCK.reclaim" "$LOCK_STALE_SECS" && rmdir "$LOCK.reclaim" 2>/dev/null
+    return 1
+  fi
+  if lock_is_stale; then
+    rm -rf "$LOCK"
+  fi
+  rmdir "$LOCK.reclaim" 2>/dev/null
+}
+
+unlock() { [ "$(cat "$LOCK/pid" 2>/dev/null)" = "$$" ] && rm -rf "$LOCK"; }
+
+lock() {
+  waited=0
+  until mkdir "$LOCK" 2>/dev/null; do
+    if [ "$waited" -ge "$LOCK_WAIT_MAX" ]; then
+      # Give up, but have the holder re-evaluate once it is done: it may have
+      # queried Rift before the event that spawned us happened.
+      : >"$RERUN_FLAG"
+      exit 0
+    fi
+    if lock_is_stale; then
+      reclaim_stale_lock && continue
+    fi
+    sleep 0.1
+    waited=$((waited + 1))
+  done
+  echo $$ >"$LOCK/pid"
+  # Signal traps must terminate: dash would otherwise resume the handler after
+  # running the trap, i.e. keep going without the lock.
+  trap unlock EXIT
+  trap 'exit 143' TERM
+  trap 'exit 130' INT
+}
+
+# --- modes ------------------------------------------------------------------
+
+toggle() {
+  lock
+  # A running automatic PiP is "the PiP" too: close it and leave auto.pid in
+  # place, which marks it dismissed until the call has been visible again.
+  if [ -f "$AUTO_PIDFILE" ]; then
+    read -r pid _ <"$AUTO_PIDFILE" || pid=""
+    if pip_alive "$pid"; then
+      kill "$pid" 2>/dev/null && log "stopped auto rift-pip (pid $pid) via toggle"
+      return
+    fi
+  fi
+  if [ -f "$MANUAL_PIDFILE" ]; then
+    read -r pid _ <"$MANUAL_PIDFILE" || pid=""
+    if pip_alive "$pid"; then
+      stop "$MANUAL_PIDFILE"
+      return
+    fi
+    rm -f "$MANUAL_PIDFILE"
+  fi
+  launch "$MANUAL_PIDFILE" "$CORNER"
+}
+
+# Prints "<window_server_id> <true|false>" for the Teams call window to track,
+# the boolean being whether its workspace is active. Hidden calls win over
+# visible ones (a misclassified main window must not mask a real hidden call),
+# and the call given in $1 (the one currently mirrored) wins among equals.
+# Returns non-zero if any Rift query failed; prints nothing if there is no call.
+find_call() {
+  displays=$("$RIFT_CLI" query displays) || return 1
+  spaces=$(printf '%s' "$displays" | jq -r '.[].space // empty') || return 1
+  json=""
+  for space in $spaces; do
+    workspaces=$("$RIFT_CLI" query workspaces --space-id "$space") || return 1
+    json="$json$workspaces"
+  done
+  printf '%s' "$json" | jq -rs --arg bundle "$TEAMS_BUNDLE" --arg not_call "$NOT_CALL" --arg current "${1:-}" '
+    [ .[][] | .is_active as $active | .windows[]
+      | select(.bundle_id == $bundle
+               and .window_server_id != null
+               and .title != ""
+               and (.title | test($not_call) | not))
+      | { wsid: .window_server_id, active: $active } ]
+    | sort_by(.active, (.wsid | tostring) != $current)
+    | first // empty | "\(.wsid) \(.active)"'
+}
+
+auto() {
+  lock
+  n=0
+  while :; do
+    rm -f "$RERUN_FLAG"
+    auto_once
+    # A waiter that timed out may have carried a newer event: look again.
+    [ -e "$RERUN_FLAG" ] && [ "$n" -lt 3 ] || break
+    n=$((n + 1))
+  done
+}
+
+auto_once() {
+  recorded_wsid=""
+  if [ -f "$AUTO_PIDFILE" ]; then
+    read -r _ recorded_wsid <"$AUTO_PIDFILE" || true
+  fi
+
+  # A failed query says nothing about the call; keep the current state.
+  call=$(find_call "$recorded_wsid") || {
+    log "rift query failed; leaving PiP state unchanged"
+    return
+  }
+  wanted_wsid=${call%% *}
+  visible=${call#* }
+
+  # No call, or the call is on the active workspace: nothing to mirror.
+  if [ -z "$call" ] || [ "$visible" = "true" ]; then
+    stop "$AUTO_PIDFILE"
+    return
+  fi
+
+  if [ "$recorded_wsid" = "$wanted_wsid" ]; then
+    # Already mirroring this call, or the user closed that PiP (or it failed;
+    # see the log): don't relaunch until the call has been visible again.
+    return
+  fi
+
+  stop "$AUTO_PIDFILE"
+  launch "$AUTO_PIDFILE" --window "$wanted_wsid" "$CORNER"
+}
+
+case "${1:-}" in
+  "") auto ;;
+  toggle) toggle ;;
+  *)
+    echo "usage: rift-pip-auto [toggle]" >&2
+    exit 2
+    ;;
+esac
