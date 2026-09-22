@@ -214,6 +214,7 @@ Usage: `mcp__deepwiki__ask_question` with `repoName` set to the GitHub repo (e.g
   - `mise`: Runtime version management
   - `git`, `gitconfig`: Git configuration
   - `claude`: Claude Code settings
+  - `agents`: Shared agent instructions and skills (`.chezmoitemplates/agents.md`, `dot_agents/`)
   - `karabiner`: Keyboard customization
   - `terminal`: Cross-terminal features
   - `atuin`: Command history settings
