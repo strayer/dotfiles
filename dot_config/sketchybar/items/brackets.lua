@@ -77,6 +77,7 @@ function M.init()
     "right.package_updates",
     "right.network_type",
     "right.network",
+    "right.steam_frame",
   }
   if settings.is_work_machine then
     table.insert(system_members, "right.mealplan")

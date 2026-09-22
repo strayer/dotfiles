@@ -156,6 +156,7 @@ function M.update_theme_colors()
     theme_colors = {
       warning = catppuccin_latte.peach,
       critical = catppuccin_latte.red,
+      success = catppuccin_latte.green,
       bar_background = M.with_alpha(0x000000, 0.3),
       item_background = M.transparent,
       highlighted_item_background = M.with_alpha(catppuccin_latte.surface0, 0.8),
@@ -180,6 +181,7 @@ function M.update_theme_colors()
         volume = catppuccin_latte.mauve,
         clock = catppuccin_latte.lavender,
         mealplan = catppuccin_latte.pink,
+        steam_frame = catppuccin_latte.blue,
       },
     }
   else
@@ -187,6 +189,7 @@ function M.update_theme_colors()
     theme_colors = {
       warning = catppuccin_mocha.peach,
       critical = catppuccin_mocha.red,
+      success = catppuccin_mocha.green,
       bar_background = M.transparent,
       item_background = M.transparent,
       highlighted_item_background = M.with_alpha(catppuccin_mocha.surface0, 0.7),
@@ -211,6 +214,7 @@ function M.update_theme_colors()
         volume = catppuccin_mocha.mauve,
         clock = catppuccin_mocha.lavender,
         mealplan = catppuccin_mocha.pink,
+        steam_frame = catppuccin_mocha.blue,
       },
     }
   end
@@ -246,7 +250,7 @@ end
 
 -- Helper function to get standard item color configuration
 -- options.accent: name of an accent slot (see theme_colors.accents) - colors the icon only
--- options.state: "critical" | "warning" | "highlighted" - overrides accent
+-- options.state: "critical" | "warning" | "success" | "highlighted" - overrides accent
 function M.get_item_colors(options)
   local current_theme_colors = M.get_colors()
   local config = {
@@ -267,6 +271,9 @@ function M.get_item_colors(options)
     elseif options.state == "warning" then
       config.icon.color = current_theme_colors.warning
       config.label.color = current_theme_colors.warning
+    elseif options.state == "success" then
+      config.icon.color = current_theme_colors.success
+      config.label.color = current_theme_colors.success
     elseif options.state == "highlighted" then
       config.icon.color = current_theme_colors.highlighted_item_primary
       config.label.color = current_theme_colors.highlighted_item_primary

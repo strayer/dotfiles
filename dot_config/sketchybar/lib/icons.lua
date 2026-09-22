@@ -46,6 +46,11 @@ M.system = {
     disconnected = "󰖪",
   },
   package_updates = "󰏔",
+  steam_frame = {
+    headset = "\u{F0894}", -- nf-md-virtual_reality
+    step_done = "\u{F05E0}", -- nf-md-check_circle
+    step_todo = "\u{F0766}", -- nf-md-circle_outline
+  },
   warning = "󰀪",
   error = "󰅖",
 }

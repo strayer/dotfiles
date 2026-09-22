@@ -1,0 +1,252 @@
+-- items/steam_frame.lua - Steam Frame order shipping status
+--
+-- Polls a small status endpoint that serves a sanitized
+-- view of Valve's four-step shipping progress (no order, account or tracking
+-- identifiers). The icon color encodes the state, the label shows the step
+-- count (or the carrier once shipped), and the hover popup lists the steps
+-- with the time the monitor first saw each one complete.
+--
+-- States:
+--   progress  accent color, "n/4"       order moving through Valve's steps
+--   shipped   success color, carrier    all four steps complete
+--   stale     warning color             monitor logged out / failing / errored
+--   offline   muted, last known label   endpoint unreachable or no data yet
+
+local colors = require("lib.colors")
+local icons = require("lib.icons")
+local settings = require("lib.settings")
+
+local CONFIG = {
+  status_url = "{{ (secret | fromYaml).steam_frame_status_url }}",
+  request_timeout = 10, -- HTTP request timeout in seconds
+  stale_fail_threshold = 3, -- consecutive monitor failures before "stale"
+}
+
+local steam_frame = sbar.add("item", "right.steam_frame", {
+  position = "right",
+  icon = {
+    string = icons.system.steam_frame.headset,
+  },
+  label = {
+    padding_left = 4,
+  },
+  update_freq = settings.update_freq.steam_frame,
+  popup = {
+    align = "center",
+    background = {
+      color = colors.with_alpha(0x000000, 0.3),
+      corner_radius = 9,
+      border_width = 0,
+    },
+    blur_radius = 30,
+    y_offset = 2,
+  },
+})
+
+-- Module state
+local M = {
+  status = nil, -- last successfully fetched status payload
+  offline = true, -- last fetch failed (status, if any, is stale)
+  popup_items = {},
+}
+
+-- Fetch the sanitized status; callback(status) or callback(nil, reason)
+local function fetch_status(callback)
+  local cmd = string.format(
+    "/usr/bin/curl -s --max-time %d -H %q %q",
+    CONFIG.request_timeout,
+    "User-Agent: SketchyBar-SteamFrame/1.0",
+    CONFIG.status_url
+  )
+
+  sbar.exec(cmd, function(result, exit_code)
+    if exit_code ~= 0 then
+      callback(nil, "curl failed with exit code " .. exit_code)
+      return
+    end
+    if type(result) ~= "table" then
+      callback(nil, "non-JSON response")
+      return
+    end
+    if result.error then
+      -- 404 "no status received yet" from the endpoint, or similar
+      callback(nil, tostring(result.error))
+      return
+    end
+    if type(result.order) ~= "table" then
+      -- e.g. a generic 404 page from the host
+      callback(nil, "unexpected payload")
+      return
+    end
+    callback(result)
+  end)
+end
+
+-- "progress" | "shipped" | "stale"
+local function classify(status)
+  local fails = tonumber(status.fails) or 0
+  if status.logged_out or status.has_error or fails >= CONFIG.stale_fail_threshold then
+    return "stale"
+  end
+  if status.order.shipped then
+    return "shipped"
+  end
+  return "progress"
+end
+
+-- "2026-09-23T08:03:10" -> "23.09. 08:03"
+local function format_timestamp(iso)
+  if type(iso) ~= "string" then
+    return nil
+  end
+  local month, day, hour, minute = iso:match("^%d%d%d%d%-(%d%d)%-(%d%d)T(%d%d):(%d%d)")
+  if not month then
+    return iso
+  end
+  return day .. "." .. month .. ". " .. hour .. ":" .. minute
+end
+
+-- Step labels as Steam shows them, shortened for the popup
+local function short_step_name(name)
+  return (tostring(name or "?"):gsub(":.*$", ""))
+end
+
+local function clear_popup_items()
+  for _, item in ipairs(M.popup_items) do
+    sbar.remove(item.name)
+  end
+  M.popup_items = {}
+end
+
+local function add_popup_item(name, icon_string, icon_color, label_string, label_color)
+  local popup_item = sbar.add("item", name, {
+    position = "popup." .. steam_frame.name,
+    icon = {
+      string = icon_string,
+      color = icon_color,
+      padding_left = 8,
+      padding_right = 4,
+      drawing = icon_string ~= nil,
+    },
+    label = {
+      string = label_string,
+      color = label_color,
+      padding_right = 8,
+    },
+    background = {
+      color = colors.with_alpha(0x000000, 0.0),
+      drawing = true,
+    },
+    padding_left = 4,
+    padding_right = 4,
+  })
+  table.insert(M.popup_items, popup_item)
+end
+
+local function rebuild_popup(status, state)
+  local theme_colors = colors.get_colors()
+  clear_popup_items()
+
+  for i, step in ipairs(status.order.steps or {}) do
+    local done = step.complete == true
+    local text = short_step_name(step.name)
+    local seen = done and format_timestamp(step.completed_at) or nil
+    if seen then
+      text = text .. "  " .. seen
+    end
+    add_popup_item(
+      "steam_frame_step." .. i,
+      done and icons.system.steam_frame.step_done or icons.system.steam_frame.step_todo,
+      done and theme_colors.success or theme_colors.item_muted,
+      text,
+      done and theme_colors.item_primary or theme_colors.item_muted
+    )
+  end
+
+  local footer = "checked " .. (format_timestamp(status.at) or "?")
+  local footer_color = theme_colors.item_muted
+  if state == "stale" then
+    footer = "monitor needs attention · " .. footer
+    footer_color = theme_colors.warning
+  elseif M.offline then
+    footer = "endpoint unreachable · " .. footer
+    footer_color = theme_colors.warning
+  end
+  add_popup_item("steam_frame_footer", nil, nil, footer, footer_color)
+end
+
+-- Render M.status / M.offline into the bar item
+local function refresh_display()
+  local theme_colors = colors.get_colors()
+  local status = M.status
+
+  if not status then
+    -- Nothing fetched yet (or ever): muted headset, no label
+    clear_popup_items()
+    steam_frame:set({
+      icon = { string = icons.system.steam_frame.headset, color = theme_colors.item_muted },
+      label = { drawing = false },
+      background = { color = theme_colors.item_background },
+      popup = { drawing = false },
+    })
+    return
+  end
+
+  local state = classify(status)
+  local order = status.order
+  local label_text = tostring(order.steps_done or "?") .. "/" .. tostring(order.steps_total or 4)
+  if state == "shipped" then
+    label_text = order.carrier or "shipped"
+  end
+
+  local config
+  if M.offline then
+    config = colors.get_item_colors()
+    config.icon.color = theme_colors.item_muted
+    config.label.color = theme_colors.item_muted
+  elseif state == "stale" then
+    config = colors.get_item_colors({ state = "warning" })
+  elseif state == "shipped" then
+    config = colors.get_item_colors({ state = "success" })
+  else
+    config = colors.get_item_colors({ accent = "steam_frame" })
+  end
+  config.icon.string = icons.system.steam_frame.headset
+  config.label.string = label_text
+  config.label.drawing = true
+  steam_frame:set(config)
+
+  rebuild_popup(status, state)
+end
+
+local function update_steam_frame()
+  fetch_status(function(status, _)
+    if status then
+      M.status = status
+      M.offline = false
+    else
+      M.offline = true
+    end
+    refresh_display()
+  end)
+end
+
+-- Hover popup
+steam_frame:subscribe({ "mouse.entered", "mouse.exited", "mouse.exited.global" }, function(env)
+  if env.SENDER == "mouse.entered" and M.status then
+    steam_frame:set({ popup = { drawing = true } })
+  else
+    steam_frame:set({ popup = { drawing = false } })
+  end
+end)
+
+-- Periodic and system events
+steam_frame:subscribe("routine", update_steam_frame)
+steam_frame:subscribe("system_woke", update_steam_frame)
+steam_frame:subscribe("forced", update_steam_frame)
+steam_frame:subscribe("theme_colors_updated", refresh_display)
+
+-- Initial update
+update_steam_frame()
+
+-- vim: ft=lua
