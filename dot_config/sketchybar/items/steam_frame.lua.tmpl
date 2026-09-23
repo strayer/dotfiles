@@ -6,8 +6,13 @@
 -- count (or the carrier once shipped), and the hover popup lists the steps
 -- with the time the monitor first saw each one complete.
 --
+-- The endpoint also carries community-tracked EU shipping stats for the
+-- current day (eu_today). While the order is in progress the bar label
+-- appends today's EU shipment count ("n/4 · EU 7"); the popup lists the
+-- full breakdown below the steps. Stats older than eu_max_age are ignored.
+--
 -- States:
---   progress  accent color, "n/4"       order moving through Valve's steps
+--   progress  accent color, "n/4 · EU n"  order moving through Valve's steps
 --   shipped   success color, carrier    all four steps complete
 --   stale     warning color             monitor logged out / failing / errored
 --   offline   muted, last known label   endpoint unreachable or no data yet
@@ -20,6 +25,7 @@ local CONFIG = {
   status_url = "{{ (secret | fromYaml).steam_frame_status_url }}",
   request_timeout = 10, -- HTTP request timeout in seconds
   stale_fail_threshold = 3, -- consecutive monitor failures before "stale"
+  eu_max_age = 24 * 60 * 60, -- ignore community stats older than this (seconds)
 }
 
 local steam_frame = sbar.add("item", "right.steam_frame", {
@@ -40,6 +46,7 @@ local steam_frame = sbar.add("item", "right.steam_frame", {
     },
     blur_radius = 30,
     y_offset = 2,
+    height = 26, -- row height; unset it falls back to the bar height (38) and rows look double-spaced
   },
 })
 
@@ -106,6 +113,72 @@ local function format_timestamp(iso)
   return day .. "." .. month .. ". " .. hour .. ":" .. minute
 end
 
+-- Parse an ISO-8601 timestamp into an epoch. Naive timestamps are taken as
+-- local time (the order block); a trailing "Z" or "+HH:MM" offset is honoured
+-- (the eu_today block is UTC).
+local function parse_iso(iso)
+  if type(iso) ~= "string" then
+    return nil
+  end
+  local y, mo, d, h, mi, sec, rest = iso:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d):?(%d?%d?)(.*)$")
+  if not y then
+    return nil
+  end
+  local t = os.time({
+    year = tonumber(y),
+    month = tonumber(mo),
+    day = tonumber(d),
+    hour = tonumber(h),
+    min = tonumber(mi),
+    sec = tonumber(sec) or 0,
+  })
+  if not t then
+    return nil
+  end
+  rest = rest:gsub("^%.%d+", "") -- drop fractional seconds
+  local offset
+  if rest == "Z" then
+    offset = 0
+  else
+    local sign, oh, om = rest:match("^([%+%-])(%d%d):?(%d%d)$")
+    if not sign then
+      return t -- naive: already local
+    end
+    offset = (tonumber(oh) * 3600 + tonumber(om) * 60) * (sign == "-" and -1 or 1)
+  end
+  -- os.time() read the fields as local time; shift by the local UTC offset
+  -- (isdst copied from the local calendar so mktime does not add an hour)
+  local utc_fields = os.date("!*t", t)
+  utc_fields.isdst = os.date("*t", t).isdst
+  local local_offset = t - os.time(utc_fields)
+  return t + local_offset - offset
+end
+
+local function format_epoch(epoch)
+  return os.date("%d.%m. %H:%M", epoch)
+end
+
+-- Community EU shipping stats for today: returns (stats, as_of_epoch), or
+-- nil when the block is missing, unparsable or older than eu_max_age.
+local function eu_today(status)
+  local eu = status.eu_today
+  if type(eu) ~= "table" then
+    return nil
+  end
+  local as_of = parse_iso(eu.as_of)
+  if not as_of or os.time() - as_of > CONFIG.eu_max_age then
+    return nil
+  end
+  return eu, as_of
+end
+
+local function num(value)
+  if value == nil then
+    return "?"
+  end
+  return tostring(value)
+end
+
 -- Step labels as Steam shows them, shortened for the popup
 local function short_step_name(name)
   return (tostring(name or "?"):gsub(":.*$", ""))
@@ -163,7 +236,29 @@ local function rebuild_popup(status, state)
     )
   end
 
+  local eu, eu_as_of = eu_today(status)
+  if eu then
+    add_popup_item("steam_frame_eu.header", nil, nil, "── EU today ──", theme_colors.item_primary)
+    local rows = {
+      string.format(
+        "shipped %s (%s× 1TB) · delivered %s",
+        num(eu.eu_shipped),
+        num(eu.eu_shipped_1tb),
+        num(eu.eu_delivered)
+      ),
+      string.format("DE shipped %s · delivered %s", num(eu.de_shipped), num(eu.de_delivered)),
+      string.format("DE 1TB shipped %s %%", num(eu.de_1tb_shipped_pct)),
+      string.format("total %s shipped · %s delivered", num(eu.eu_shipped_total), num(eu.eu_delivered_total)),
+    }
+    for i, row in ipairs(rows) do
+      add_popup_item("steam_frame_eu." .. i, nil, nil, row, theme_colors.item_primary)
+    end
+  end
+
   local footer = "checked " .. (format_timestamp(status.at) or "?")
+  if eu_as_of then
+    footer = footer .. " · EU " .. format_epoch(eu_as_of)
+  end
   local footer_color = theme_colors.item_muted
   if state == "stale" then
     footer = "monitor needs attention · " .. footer
@@ -197,6 +292,11 @@ local function refresh_display()
   local label_text = tostring(order.steps_done or "?") .. "/" .. tostring(order.steps_total or 4)
   if state == "shipped" then
     label_text = order.carrier or "shipped"
+  else
+    local eu = eu_today(status)
+    if eu and eu.eu_shipped ~= nil then
+      label_text = label_text .. " · EU " .. num(eu.eu_shipped)
+    end
   end
 
   local config
