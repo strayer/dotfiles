@@ -39,10 +39,13 @@ local steam_frame = sbar.add("item", "right.steam_frame", {
   update_freq = settings.update_freq.steam_frame,
   popup = {
     align = "center",
+    -- same surface as the bar pills so text stays readable in both themes;
+    -- colors are re-applied in refresh_display on theme_colors_updated
     background = {
-      color = colors.with_alpha(0x000000, 0.3),
+      color = colors.get_colors().pill_background,
+      border_color = colors.get_colors().pill_border,
+      border_width = 1,
       corner_radius = 9,
-      border_width = 0,
     },
     blur_radius = 30,
     y_offset = 2,
@@ -274,6 +277,15 @@ end
 local function refresh_display()
   local theme_colors = colors.get_colors()
   local status = M.status
+
+  steam_frame:set({
+    popup = {
+      background = {
+        color = theme_colors.pill_background,
+        border_color = theme_colors.pill_border,
+      },
+    },
+  })
 
   if not status then
     -- Nothing fetched yet (or ever): muted headset, no label
