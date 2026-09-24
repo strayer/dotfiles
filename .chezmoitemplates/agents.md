@@ -7,7 +7,7 @@ Prefer my own skills over any built-in web search or fetch tool. Use the `scrape
 Choose the style in this order:
 
 1. A documented convention wins: CONTRIBUTING, README, AGENTS.md or CLAUDE.md, a commitlint or commitizen config, a `.gitmessage` template, or a commit-msg hook.
-2. Otherwise inspect up to 20 recent non-merge commits. Follow a structured convention such as Conventional Commits only if multiple authors use it consistently.
+2. Otherwise inspect up to 20 recent non-merge commits on the default branch, plus any commits already on the branch you are adding to. If the branch already has commits, match their style. Otherwise use a structured convention such as Conventional Commits if a clear majority of the 20 use it, counting bot commits; treat a few plain outliers as noise, not as a mixed convention.
 3. Otherwise use the plain Git convention below. It also fills any gap the chosen convention leaves unspecified.
 
 Plain Git convention:
