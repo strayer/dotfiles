@@ -352,6 +352,9 @@ steam_frame:subscribe({ "mouse.entered", "mouse.exited", "mouse.exited.global" }
   end
 end)
 
+-- Click forces a refresh
+steam_frame:subscribe("mouse.clicked", update_steam_frame)
+
 -- Periodic and system events
 steam_frame:subscribe("routine", update_steam_frame)
 steam_frame:subscribe("system_woke", update_steam_frame)
