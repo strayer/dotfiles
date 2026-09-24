@@ -34,13 +34,17 @@ local mealplan = sbar.add("item", "right.mealplan", {
   update_freq = 60,
   popup = {
     align = "center",
+    -- same surface as the bar pills so text stays readable in both themes;
+    -- colors are re-applied in apply_popup_theme on theme_change
     background = {
-      color = colors.with_alpha(0x000000, 0.3),
+      color = colors.get_colors().pill_background,
+      border_color = colors.get_colors().pill_border,
+      border_width = 1,
       corner_radius = 9,
-      border_width = 0,
     },
     blur_radius = 30,
     y_offset = 2,
+    height = 26, -- row height; unset it falls back to the bar height and rows look double-spaced
   },
 })
 
@@ -313,8 +317,22 @@ local function show_error_state()
   })
 end
 
+-- Re-apply the theme's pill surface to the popup
+local function apply_popup_theme()
+  local theme_colors = colors.get_colors()
+  mealplan:set({
+    popup = {
+      background = {
+        color = theme_colors.pill_background,
+        border_color = theme_colors.pill_border,
+      },
+    },
+  })
+end
+
 -- Display current state
 local function refresh_display()
+  apply_popup_theme()
   if M.meals then
     update_display(M.meals)
   else
@@ -385,6 +403,7 @@ mealplan:subscribe("system_woke", update_mealplan)
 mealplan:subscribe("forced", update_mealplan)
 mealplan:subscribe("theme_change", function()
   -- Refresh display with new theme colors using current data
+  apply_popup_theme()
   if M.meals then
     update_display(M.meals)
   else
