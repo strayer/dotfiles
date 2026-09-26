@@ -1,2 +1,3 @@
 .config/nono
 .config/fish/functions/sb.fish
+.config/hash-salt

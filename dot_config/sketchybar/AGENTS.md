@@ -274,6 +274,7 @@ This configuration registers custom events:
 | `theme_colors_updated`       | Internal event after colors refresh   |
 | `rift_workspace_change`      | Rift workspace switched (PoC)         |
 | `rift_refresh`               | Rift needs full refresh (PoC)         |
+| `network_info_change`        | Network watcher daemon: `NETWORK_TYPE`, `NETWORK_SSID`, `NETWORK_SSID_HASH` (HMAC-SHA256, salted, matched against `lib/known_networks.lua`) |
 
 ### Environment Detection
 

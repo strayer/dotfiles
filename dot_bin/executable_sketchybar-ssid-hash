@@ -1,0 +1,134 @@
+#!/bin/bash
+#
+# Print salted hashes of WiFi SSIDs for dot_config/sketchybar/lib/known_networks.lua.
+# The SketchyBar network item hides the SSID of known networks, which are stored
+# only as hashes so the names never end up in the (public) dotfiles repo.
+# Hash contract (matches sketchybar-network-watcher.swift): lowercase hex
+# HMAC-SHA256 with the salt from ~/.config/dotfiles/hash-salt as key (leading
+# and trailing whitespace trimmed) over the SSID's UTF-8 bytes, without a trailing newline.
+# The salt file is rendered by chezmoi from the `hash_salt` secret; changing
+# the salt invalidates every stored hash.
+#
+# Environment:
+#   SKETCHYBAR_HASH_SALT_FILE  Override the salt file path (for testing)
+#
+
+set -euo pipefail
+
+WATCHER="$HOME/.bin/sketchybar-network-watcher.app/Contents/MacOS/sketchybar-network-watcher"
+INTERFACE="en0"
+SALT_FILE="${SKETCHYBAR_HASH_SALT_FILE:-$HOME/.config/dotfiles/hash-salt}"
+SALT=""
+
+usage() {
+  cat <<USAGE
+Usage: $(basename "$0") <SSID> [SSID...]   Print the hash of each SSID (one per line)
+       $(basename "$0") --current          Show type, hash and SSID of the current network
+       $(basename "$0") --preferred        List hash and SSID of all preferred networks on $INTERFACE
+       $(basename "$0") -h | --help        Show this help
+
+Hashes are HMAC-SHA256 keyed with the salt in $SALT_FILE.
+Set SKETCHYBAR_HASH_SALT_FILE to use a different salt file (for testing).
+USAGE
+}
+
+load_salt() {
+  if [ -r "$SALT_FILE" ]; then
+    SALT=$(<"$SALT_FILE")
+    # Trim leading and trailing whitespace/newlines; mirrors the Swift watcher's
+    # trimmingCharacters(in: .whitespacesAndNewlines) so both hash identically
+    SALT=${SALT#"${SALT%%[![:space:]]*}"}
+    SALT=${SALT%"${SALT##*[![:space:]]}"}
+  fi
+  if [ -z "$SALT" ]; then
+    echo "Error: $SALT_FILE missing or empty: run chezmoi apply" >&2
+    exit 1
+  fi
+}
+
+reminder() {
+  echo
+  echo "Add hashes to ~/.config/sketchybar/lib/known_networks.lua (chezmoi source: dot_config/sketchybar/lib/known_networks.lua). Never commit the names."
+}
+
+hash_ssid() {
+  printf '%s' "$1" | openssl dgst -sha256 -hmac "$SALT" | awk '{print $NF}'
+}
+
+show_current() {
+  if [ ! -x "$WATCHER" ]; then
+    echo "Error: watcher binary not found at $WATCHER (run compile-network-watcher)" >&2
+    exit 1
+  fi
+
+  local line type rest ssid watcher_hash hash
+  line=$("$WATCHER" --once)
+  # Split manually: `read` with IFS=$'\t' would collapse an empty SSID field
+  type=${line%%$'\t'*}
+  rest=${line#*$'\t'}
+  ssid=${rest%$'\t'*}
+  watcher_hash=${rest##*$'\t'}
+
+  if [ -z "$ssid" ]; then
+    printf '%-12s (no SSID)\n' "$type"
+    if [ "$type" != "ethernet" ] && [ "$type" != "disconnected" ]; then
+      echo "SSID is empty: Location Services permission for sketchybar-network-watcher is probably missing." >&2
+    fi
+  else
+    # Print the helper's own hash (the one to paste into known_networks.lua)
+    # and cross-check it against the watcher's
+    hash=$(hash_ssid "$ssid")
+    printf '%-12s %s  %s\n' "$type" "$hash" "$ssid"
+    if [ -z "$watcher_hash" ]; then
+      echo "Warning: watcher returned no hash (it found no salt file) - run chezmoi apply" >&2
+    elif [ "$watcher_hash" != "$hash" ]; then
+      echo "Warning: watcher hash differs from helper hash (stale watcher binary or different salt file?) - run compile-network-watcher" >&2
+    fi
+  fi
+  reminder
+}
+
+show_preferred() {
+  local output line ssid count=0
+  output=$(networksetup -listpreferredwirelessnetworks "$INTERFACE")
+  while IFS= read -r line; do
+    case "$line" in
+      $'\t'*) ;;
+      *) continue ;; # header "Preferred networks on en0:" or error text
+    esac
+    ssid=${line#$'\t'}
+    [ -n "$ssid" ] || continue
+    printf '%s  %s\n' "$(hash_ssid "$ssid")" "$ssid"
+    count=$((count + 1))
+  done <<<"$output"
+
+  if [ "$count" -eq 0 ]; then
+    echo "No preferred networks found on $INTERFACE" >&2
+  fi
+  reminder
+}
+
+if [ $# -eq 0 ]; then
+  usage >&2
+  exit 1
+fi
+
+case "$1" in
+  -h | --help)
+    usage
+    ;;
+  --current)
+    load_salt
+    show_current
+    ;;
+  --preferred)
+    load_salt
+    show_preferred
+    ;;
+  *)
+    load_salt
+    for ssid in "$@"; do
+      hash_ssid "$ssid"
+    done
+    ;;
+esac

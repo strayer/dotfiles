@@ -37,6 +37,8 @@ install-rift-pip.sh                  # Build + install rift-pip (~/.cargo/bin) w
 rift-pip-auto [toggle]               # Rift event hook: auto-PiP for hidden Teams calls; `toggle` mirrors the focused window (Alt+Ctrl+P)
 install-display-refresh-fixer.sh     # Build + install LaunchAgent keeping the Dell G3223Q on 144 Hz (needs BetterDisplay)
 compile-display-refresh-fixer        # Build ~/.bin/display-refresh-fixer.app from display-refresh-fixer.swift
+compile-network-watcher              # Build ~/.bin/sketchybar-network-watcher.app from sketchybar-network-watcher.swift
+sketchybar-ssid-hash [SSID|--current|--preferred]  # Print salted SSID hashes (HMAC-SHA256) for sketchybar/lib/known_networks.lua
 secretive-ssh-keygen [args]          # SSH key generation using Secretive app
 restart-gpg-agent.fish               # GPG agent management for multi-user conflicts
 ```
@@ -108,6 +110,7 @@ Sophisticated automated theme switching with cross-application coordination:
 - **SketchyBar**: Complete SbarLua configuration with modular architecture (`init.lua`, `bar.lua`, `default.lua`, items/\*). Includes window manager integration (Rift), custom items (battery, network, clock, volume, meal planning), and theme coordination. Coding agents can use the deepwiki mcp to retrieve information about [SketchyBar](https://deepwiki.com/FelixKratz/SketchyBar) and [SbarLua](https://deepwiki.com/FelixKratz/SbarLua).
 - **Window Manager**: Rift - BSP tiling window manager with Mach IPC. Configuration in `dot_config/rift/config.toml`. Uses CLI subscriptions to trigger SketchyBar updates on workspace/window changes.
 - **Teams call PiP**: `rift-pip-auto` runs on Rift's `workspace_changed`/`windows_changed` CLI subscriptions. It finds a Microsoft Teams call window (any Teams window whose title is not a main-window section like `Chat | …`) and mirrors it with [rift-pip](https://github.com/acsandmann/rift-pip) while its workspace is hidden; the PiP closes when the workspace is active again or the call ends. rift-pip is built by `install-rift-pip.sh` with a local patch (`dot_bin/private_src/rift-pip-window-option.patch`) adding `--window <id>`, since upstream only mirrors the focused window. State and log live in `~/.cache/rift-pip/`. Needs Screen Recording permission for the launching app (rift).
+- **Network type item**: `dot_bin/sketchybar-network-watcher.swift` (built into an `.app` by `compile-network-watcher`; needs Location Services permission to read the SSID on macOS Sequoia+) triggers the SketchyBar `network_info_change` event with `NETWORK_TYPE`, `NETWORK_SSID` and `NETWORK_SSID_HASH`. The SketchyBar item only shows the SSID when it is neither one of the device's default networks nor one of the device's known hotspots, both listed per hostname by HMAC-SHA256 hash (keyed by the `hash_salt` secret rendered to `~/.config/dotfiles/hash-salt`) in `dot_config/sketchybar/lib/known_networks.lua` so network names never enter the repo. Generate hashes with `sketchybar-ssid-hash`.
 - **Package management**: Comprehensive Brewfile (260+ work packages, 290+ home packages) with custom taps, MAS automation, and environment-specific tool sets
 - **Karabiner**: Custom keyboard modifications in `private_karabiner/`
 - **LaunchAgent automation**: Automated theme switching and system integration services
@@ -161,6 +164,7 @@ Uses `mas` command for App Store applications with specific app IDs, also enviro
 - **SSH**: Separate configurations for different services with Secretive app integration (home machine)
 - **Authentication**: SSH agent socket management for tmux/screen sessions
 - **Private files**: Use `private_` prefix for sensitive configurations (Karabiner, SSH keys)
+- **Hash salt**: The generic `hash_salt` secret (64 hex chars) is rendered to `~/.config/dotfiles/hash-salt` (0600) via `dot_config/dotfiles/private_hash-salt.tmpl`. Use it as HMAC-SHA256 key whenever the public repo should store only hashes of private strings (e.g. SSIDs in `known_networks.lua`). Rotating it invalidates all stored hashes.
 
 ## Working with Templates
 
