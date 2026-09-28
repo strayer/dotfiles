@@ -6,5 +6,5 @@ gui:
   shortTimeFormat: "15:04:05"
 git:
   parseEmoji: true
-  pagers:
-    - pager: delta --dark --paging=never
+  diffRenderers:
+    - command: delta --dark --paging=never
