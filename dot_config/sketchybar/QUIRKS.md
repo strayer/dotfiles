@@ -87,16 +87,23 @@ and `~/dev-explore/SbarLua`.
   display automatically).
 - **Rule / current design:** pills should center **between the display edge
   and the window tops**, not within the notch strip. `bar.lua` syncs
-  `notch_display_height = frame.origin.y + notch_window_gap` at load and on
-  `display_change`/`system_woke`, so the notch bar strip always ends exactly
-  where windows begin and centering comes out symmetric at every scaling
-  mode. `settings.layout.notch_window_gap` MUST equal the built-in display's
+  `notch_display_height = reserved_strip + notch_window_gap` at load and on
+  `display_change`/`system_woke`, where `reserved_strip` is rift's usable
+  frame origin minus the display's full-bounds origin from
+  `sketchybar --query displays` (matched by UUID). Both are global
+  coordinates: the raw rift origin equals the strip only while the built-in
+  display is primary at (0, 0); arranged below an external it is that
+  display's height + strip (e.g. 1724), which once pushed the bar strip to
+  ~1729 pt and the pills off the notch entirely. So the notch bar strip
+  always ends exactly where windows begin and centering comes out symmetric
+  at every scaling mode and display arrangement. `settings.layout.notch_window_gap` MUST equal the built-in display's
   per-display `outer.top` in rift's config (both 5). As a safety net, the
   pill height clamps to the smallest strip present minus
   `pill_strip_margin` (a change re-triggers `theme_colors_updated`, which
   restyles everything, including the underline offset derived from the
   current pill height). Externals keep `bar_height = 38` + global
-  `top = 38`. When notch spacing looks off, check `frame.origin.y` FIRST.
+  `top = 38`. When notch spacing looks off, compare rift's `frame.origin.y`
+  with SketchyBar's display `frame.y` FIRST.
 
 ### Right-position items stack leftward; batched moves anchor-push
 
