@@ -161,7 +161,9 @@ function M.update_theme_colors()
       item_background = M.transparent,
       highlighted_item_background = M.with_alpha(catppuccin_latte.surface0, 0.8),
       item_primary = catppuccin_latte.text,
-      item_muted = catppuccin_latte.overlay0,
+      -- subtext0, not overlay0: on the mantle pill surface overlay0 drops to
+      -- ~2.2:1 contrast and secondary popup rows become unreadable
+      item_muted = catppuccin_latte.subtext0,
       highlighted_item_primary = catppuccin_latte.blue,
       pill_background = M.with_alpha(catppuccin_latte.mantle, 0.88),
       pill_border = M.with_alpha(catppuccin_latte.surface1, 0.7),

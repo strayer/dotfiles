@@ -1,31 +1,51 @@
--- items/steam_frame.lua - Steam Frame order shipping status
+-- items/steam_frame.lua - Steam Frame parcel tracking (GLS)
 --
--- Polls a small status endpoint that serves a sanitized
--- view of Valve's four-step shipping progress (no order, account or tracking
--- identifiers). The icon color encodes the state, the label shows the step
--- count (or the carrier once shipped), and the hover popup lists the steps
--- with the time the monitor first saw each one complete.
+-- Polls a small status endpoint that serves a sanitized view of the Steam
+-- Frame order: Valve's four order steps plus, once shipped, the GLS parcel
+-- data (no order, account or tracking identifiers). The bar shows the lead
+-- parcel's five-stage progress as dots, the current stage with the country of
+-- the last scan and the delivery window; the icon follows the parcel stage and
+-- the color encodes the state. The hover
+-- popup lists every parcel (stage, ETA, latest events), the Steam order steps
+-- with the time the monitor first saw each one complete, and a footer with
+-- the monitor's check times.
 --
--- The endpoint also carries community-tracked EU shipping stats for the
--- current day (eu_today). While the order is in progress the bar label
--- appends today's EU shipment count ("n/4 · EU 7"); the popup lists the
--- full breakdown below the steps. Stats older than eu_max_age are ignored.
+-- Lead parcel: the first parcel (payload order: Frame, then Ergo Kit) that is
+-- not delivered yet; the label is prefixed with the parcel's short name once
+-- the first parcel is delivered.
 --
--- States:
---   progress  accent color, "n/4 · EU n"  order moving through Valve's steps
---   shipped   success color, carrier    all four steps complete
---   stale     warning color             monitor logged out / failing / errored
---   offline   muted, last known label   endpoint unreachable or no data yet
+-- Bar states:
+--   moving      accent icon,   "●●○○○ in transit NL · Wed 09:45"
+--   delivery    highlighted,   "●●●●○ out for delivery DE · today 09:45"
+--   delivered   success,       "●●●●● delivered"    every parcel delivered
+--   stale       warning color                       GLS feed failing or old
+--   offline     muted, last known label             endpoint unreachable
+--   no parcels  headset, carrier name               shipped, no GLS data yet
+--
+-- Once every parcel has been delivered for `hide_after_delivered`, the item
+-- hides itself.
+--
+-- Testing other states: curl accepts file:// URLs, so point status_url of the
+-- deployed file at an edited copy of the live payload and reload the bar.
 
 local colors = require("lib.colors")
+local gls_lib = require("lib.gls")
 local icons = require("lib.icons")
 local settings = require("lib.settings")
 
 local CONFIG = {
   status_url = "{{ (secret | fromYaml).steam_frame_status_url }}",
   request_timeout = 10, -- HTTP request timeout in seconds
-  stale_fail_threshold = 3, -- consecutive monitor failures before "stale"
-  eu_max_age = 24 * 60 * 60, -- ignore community stats older than this (seconds)
+  gls_max_age = 15 * 60, -- GLS tick older than this (seconds) counts as stale
+  popup_events = 2, -- newest tracking events shown per parcel
+  event_text_max = 64, -- characters before an event text is truncated
+  eta_raw_max = 16, -- characters of an unparsable delivery window in the bar
+  hide_after_delivered = 24 * 60 * 60, -- hide the item this long after the last delivery
+}
+
+-- Short parcel names for the bar label prefix
+local PARCEL_SHORT = {
+  ["Ergo Kit"] = "Kit",
 }
 
 local steam_frame = sbar.add("item", "right.steam_frame", {
@@ -37,6 +57,7 @@ local steam_frame = sbar.add("item", "right.steam_frame", {
     padding_left = 4,
   },
   update_freq = settings.update_freq.steam_frame,
+  updates = true, -- keep polling while hidden after delivery
   popup = {
     align = "center",
     -- same surface as the bar pills so text stays readable in both themes;
@@ -92,99 +113,93 @@ local function fetch_status(callback)
   end)
 end
 
--- "progress" | "shipped" | "stale"
-local function classify(status)
-  local fails = tonumber(status.fails) or 0
-  if status.logged_out or status.has_error or fails >= CONFIG.stale_fail_threshold then
-    return "stale"
+-- Parcel list of the payload, or nil when no GLS data has been received
+local function parcels_of(status)
+  local gls = status.gls
+  if type(gls) ~= "table" or type(gls.parcels) ~= "table" or #gls.parcels == 0 then
+    return nil
   end
-  if status.order.shipped then
-    return "shipped"
-  end
-  return "progress"
+  return gls.parcels
 end
 
--- "2026-09-23T08:03:10" -> "23.09. 08:03"
-local function format_timestamp(iso)
-  if type(iso) ~= "string" then
-    return nil
+-- Icon glyph for a parcel's stage
+local function stage_icon(parcel)
+  local status = parcel.status
+  if status == "DELIVERED" then
+    return icons.system.steam_frame.parcel_check
+  elseif status == "INDELIVERY" then
+    return icons.system.steam_frame.truck_delivery
+  elseif status == "INTRANSIT" or status == "INWAREHOUSE" then
+    return icons.system.steam_frame.truck
   end
-  local month, day, hour, minute = iso:match("^%d%d%d%d%-(%d%d)%-(%d%d)T(%d%d):(%d%d)")
-  if not month then
-    return iso
-  end
-  return day .. "." .. month .. ". " .. hour .. ":" .. minute
+  return icons.system.steam_frame.parcel
 end
 
--- Parse an ISO-8601 timestamp into an epoch. Naive timestamps are taken as
--- local time (the order block); a trailing "Z" or "+HH:MM" offset is honoured
--- (the eu_today block is UTC).
-local function parse_iso(iso)
-  if type(iso) ~= "string" then
+-- Country code of the parcel's newest tracking event, or nil
+local function last_country(parcel)
+  local event = type(parcel.events) == "table" and parcel.events[1] or nil
+  if type(event) ~= "table" or type(event.country) ~= "string" or event.country == "" then
     return nil
   end
-  local y, mo, d, h, mi, sec, rest = iso:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d):?(%d?%d?)(.*)$")
-  if not y then
-    return nil
+  return event.country
+end
+
+-- "●●○○○ in transit NL · Wed 09:45" for the lead parcel: stage dots, current
+-- stage with the country of the last scan, then the delivery window start.
+-- Prefixed with the parcel's short name once a later parcel leads.
+local function bar_label(lead, lead_index)
+  local stage = gls_lib.status_short(lead.status)
+  local country = last_country(lead)
+  if country and lead.status ~= "DELIVERED" then
+    stage = stage .. " " .. country
   end
-  local t = os.time({
-    year = tonumber(y),
-    month = tonumber(mo),
-    day = tonumber(d),
-    hour = tonumber(h),
-    min = tonumber(mi),
-    sec = tonumber(sec) or 0,
-  })
-  if not t then
-    return nil
-  end
-  rest = rest:gsub("^%.%d+", "") -- drop fractional seconds
-  local offset
-  if rest == "Z" then
-    offset = 0
-  else
-    local sign, oh, om = rest:match("^([%+%-])(%d%d):?(%d%d)$")
-    if not sign then
-      return t -- naive: already local
+
+  local eta_text
+  if lead.status ~= "DELIVERED" then
+    local eta = gls_lib.parse_expected_delivery(lead.expected_delivery)
+    if eta then
+      eta_text = gls_lib.relative_day(eta.epoch_day) .. " " .. eta.from
+    elseif type(lead.expected_delivery) == "string" and lead.expected_delivery ~= "" then
+      eta_text = gls_lib.truncate(lead.expected_delivery, CONFIG.eta_raw_max)
     end
-    offset = (tonumber(oh) * 3600 + tonumber(om) * 60) * (sign == "-" and -1 or 1)
   end
-  -- os.time() read the fields as local time; shift by the local UTC offset
-  -- (isdst copied from the local calendar so mktime does not add an hour)
-  local utc_fields = os.date("!*t", t)
-  utc_fields.isdst = os.date("*t", t).isdst
-  local local_offset = t - os.time(utc_fields)
-  return t + local_offset - offset
+
+  local label = gls_lib.stage_dots(lead) .. " " .. stage
+  if eta_text then
+    label = label .. " · " .. eta_text
+  end
+  if lead_index > 1 and lead.status ~= "DELIVERED" then
+    local name = tostring(lead.label or "")
+    label = (PARCEL_SHORT[name] or name) .. " " .. label
+  end
+  return label
 end
 
-local function format_epoch(epoch)
-  return os.date("%d.%m. %H:%M", epoch)
-end
-
--- Community EU shipping stats for today: returns (stats, as_of_epoch), or
--- nil when the block is missing, unparsable or older than eu_max_age.
-local function eu_today(status)
-  local eu = status.eu_today
-  if type(eu) ~= "table" then
-    return nil
+-- Epoch of the newest tracking event across all parcels, or nil
+local function newest_event_epoch(parcels)
+  local newest
+  for _, parcel in ipairs(parcels) do
+    local epoch = gls_lib.latest_event_epoch(parcel)
+    if epoch and (not newest or epoch > newest) then
+      newest = epoch
+    end
   end
-  local as_of = parse_iso(eu.as_of)
-  if not as_of or os.time() - as_of > CONFIG.eu_max_age then
-    return nil
-  end
-  return eu, as_of
-end
-
-local function num(value)
-  if value == nil then
-    return "?"
-  end
-  return tostring(value)
+  return newest
 end
 
 -- Step labels as Steam shows them, shortened for the popup
 local function short_step_name(name)
   return (tostring(name or "?"):gsub(":.*$", ""))
+end
+
+-- "2026-09-28" + "14:17:04" -> "28.09. 14:17"
+local function format_event_time(event)
+  local month, day = tostring(event.date or ""):match("^%d%d%d%d%-(%d%d)%-(%d%d)")
+  local hour, minute = tostring(event.time or ""):match("^(%d%d):(%d%d)")
+  if not month or not hour then
+    return nil
+  end
+  return day .. "." .. month .. ". " .. hour .. ":" .. minute
 end
 
 local function clear_popup_items()
@@ -194,7 +209,9 @@ local function clear_popup_items()
   M.popup_items = {}
 end
 
-local function add_popup_item(name, icon_string, icon_color, label_string, label_color)
+-- opts.indent: extra left padding for rows nested under a parcel header
+local function add_popup_item(name, icon_string, icon_color, label_string, label_color, opts)
+  opts = opts or {}
   local popup_item = sbar.add("item", name, {
     position = "popup." .. steam_frame.name,
     icon = {
@@ -207,6 +224,7 @@ local function add_popup_item(name, icon_string, icon_color, label_string, label
     label = {
       string = label_string,
       color = label_color,
+      padding_left = opts.indent or 4,
       padding_right = 8,
     },
     background = {
@@ -219,14 +237,88 @@ local function add_popup_item(name, icon_string, icon_color, label_string, label
   table.insert(M.popup_items, popup_item)
 end
 
-local function rebuild_popup(status, state)
+local function add_parcel_rows(parcel, index, theme_colors)
+  local prefix = "steam_frame_parcel." .. index
+  local delivered = parcel.status == "DELIVERED"
+  local indent = 28
+
+  local header = tostring(parcel.label or "parcel") .. " · " .. gls_lib.status_short(parcel.status)
+  if type(parcel.weight) == "string" and parcel.weight ~= "" then
+    header = header .. " · " .. parcel.weight
+  end
+  if parcel.has_live_tracking then
+    header = header .. " · live"
+  end
+  add_popup_item(
+    prefix .. ".header",
+    stage_icon(parcel),
+    delivered and theme_colors.success or theme_colors.accents.steam_frame,
+    header,
+    theme_colors.item_primary
+  )
+
+  if not delivered then
+    local eta = gls_lib.parse_expected_delivery(parcel.expected_delivery)
+    local text, color
+    if eta then
+      text = string.format(
+        "ETA %s %s %s – %s",
+        gls_lib.relative_day(eta.epoch_day),
+        os.date("%d.%m.", eta.epoch_day),
+        eta.from,
+        eta.to
+      )
+      color = theme_colors.item_primary
+    elseif type(parcel.expected_delivery) == "string" and parcel.expected_delivery ~= "" then
+      text = "ETA " .. parcel.expected_delivery
+      color = theme_colors.item_primary
+    else
+      text = "no ETA yet"
+      color = theme_colors.item_muted
+    end
+    add_popup_item(prefix .. ".eta", nil, nil, text, color, { indent = indent })
+  end
+
+  local events = type(parcel.events) == "table" and parcel.events or {}
+  for n = 1, math.min(#events, CONFIG.popup_events) do
+    local event = events[n]
+    if type(event) == "table" then
+      local parts = {}
+      local when = format_event_time(event)
+      if when then
+        table.insert(parts, when)
+      end
+      if type(event.country) == "string" and event.country ~= "" then
+        table.insert(parts, event.country)
+      end
+      table.insert(parts, gls_lib.truncate(event.text or "", CONFIG.event_text_max))
+      add_popup_item(prefix .. ".event." .. n, nil, nil, table.concat(parts, "  "), theme_colors.item_muted, {
+        indent = indent,
+      })
+    end
+  end
+end
+
+local function rebuild_popup(status, health)
   local theme_colors = colors.get_colors()
   clear_popup_items()
 
+  local parcels = parcels_of(status)
+  if parcels then
+    for i, parcel in ipairs(parcels) do
+      if type(parcel) == "table" then
+        add_parcel_rows(parcel, i, theme_colors)
+      end
+    end
+  else
+    add_popup_item("steam_frame_parcel.none", nil, nil, "no parcel data yet", theme_colors.item_muted)
+  end
+
+  add_popup_item("steam_frame_order.header", nil, nil, "── Steam order ──", theme_colors.item_primary)
   for i, step in ipairs(status.order.steps or {}) do
     local done = step.complete == true
     local text = short_step_name(step.name)
-    local seen = done and format_timestamp(step.completed_at) or nil
+    local seen = done and gls_lib.format_timestamp(step.completed_at) or nil
     if seen then
       text = text .. "  " .. seen
     end
@@ -239,35 +331,19 @@ local function rebuild_popup(status, state)
     )
   end
 
-  local eu, eu_as_of = eu_today(status)
-  if eu then
-    add_popup_item("steam_frame_eu.header", nil, nil, "── EU today ──", theme_colors.item_primary)
-    local rows = {
-      string.format(
-        "shipped %s (%s× 1TB) · delivered %s",
-        num(eu.eu_shipped),
-        num(eu.eu_shipped_1tb),
-        num(eu.eu_delivered)
-      ),
-      string.format("DE shipped %s · delivered %s", num(eu.de_shipped), num(eu.de_delivered)),
-      string.format("DE 1TB shipped %s %%", num(eu.de_1tb_shipped_pct)),
-      string.format("total %s shipped · %s delivered", num(eu.eu_shipped_total), num(eu.eu_delivered_total)),
-    }
-    for i, row in ipairs(rows) do
-      add_popup_item("steam_frame_eu." .. i, nil, nil, row, theme_colors.item_primary)
-    end
-  end
-
-  local footer = "checked " .. (format_timestamp(status.at) or "?")
-  if eu_as_of then
-    footer = footer .. " · EU " .. format_epoch(eu_as_of)
+  local footer = "Steam " .. (gls_lib.format_timestamp(status.at) or "?")
+  if type(status.gls) == "table" then
+    footer = "GLS " .. (gls_lib.format_timestamp(status.gls.at) or "?") .. " · " .. footer
   end
   local footer_color = theme_colors.item_muted
-  if state == "stale" then
-    footer = "monitor needs attention · " .. footer
-    footer_color = theme_colors.warning
-  elseif M.offline then
+  if M.offline then
     footer = "endpoint unreachable · " .. footer
+    footer_color = theme_colors.warning
+  elseif health == "error" then
+    footer = "GLS error · " .. footer
+    footer_color = theme_colors.warning
+  elseif health == "stale" then
+    footer = "GLS stale · " .. footer
     footer_color = theme_colors.warning
   end
   add_popup_item("steam_frame_footer", nil, nil, footer, footer_color)
@@ -291,6 +367,7 @@ local function refresh_display()
     -- Nothing fetched yet (or ever): muted headset, no label
     clear_popup_items()
     steam_frame:set({
+      drawing = true,
       icon = { string = icons.system.steam_frame.headset, color = theme_colors.item_muted },
       label = { drawing = false },
       background = { color = theme_colors.item_background },
@@ -299,36 +376,51 @@ local function refresh_display()
     return
   end
 
-  local state = classify(status)
-  local order = status.order
-  local label_text = tostring(order.steps_done or "?") .. "/" .. tostring(order.steps_total or 4)
-  if state == "shipped" then
-    label_text = order.carrier or "shipped"
+  local parcels = parcels_of(status)
+  local health = parcels and gls_lib.health(status.gls, CONFIG.gls_max_age) or "ok"
+  local lead, lead_index = gls_lib.lead_parcel(parcels)
+  local delivered = parcels and gls_lib.all_delivered(parcels) or false
+
+  local config, icon_string, label_text
+  if not lead then
+    icon_string = icons.system.steam_frame.headset
+    label_text = status.order.carrier or "shipped"
+    config = colors.get_item_colors({ accent = "steam_frame" })
   else
-    local eu = eu_today(status)
-    if eu and eu.eu_shipped ~= nil then
-      label_text = label_text .. " · EU " .. num(eu.eu_shipped)
+    icon_string = stage_icon(lead)
+    label_text = bar_label(lead, lead_index)
+    if health ~= "ok" then
+      config = colors.get_item_colors({ state = "warning" })
+    elseif delivered then
+      config = colors.get_item_colors({ state = "success" })
+    elseif lead.status == "INDELIVERY" then
+      config = colors.get_item_colors({ state = "highlighted" })
+    else
+      config = colors.get_item_colors({ accent = "steam_frame" })
     end
   end
-
-  local config
   if M.offline then
     config = colors.get_item_colors()
     config.icon.color = theme_colors.item_muted
     config.label.color = theme_colors.item_muted
-  elseif state == "stale" then
-    config = colors.get_item_colors({ state = "warning" })
-  elseif state == "shipped" then
-    config = colors.get_item_colors({ state = "success" })
-  else
-    config = colors.get_item_colors({ accent = "steam_frame" })
   end
-  config.icon.string = icons.system.steam_frame.headset
+
+  -- Hide the item once every parcel has been delivered for a while
+  local drawing = true
+  if delivered then
+    local last = newest_event_epoch(parcels)
+    if last and os.time() - last > CONFIG.hide_after_delivered then
+      drawing = false
+    end
+  end
+
+  config.drawing = drawing
+  config.icon.string = icon_string
   config.label.string = label_text
   config.label.drawing = true
   steam_frame:set(config)
 
-  rebuild_popup(status, state)
+  rebuild_popup(status, health)
 end
 
 local function update_steam_frame()
