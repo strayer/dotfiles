@@ -46,17 +46,6 @@ M.system = {
     disconnected = "󰖪",
   },
   package_updates = "󰏔",
-  steam_frame = {
-    headset = "\u{F0894}", -- nf-md-virtual_reality
-    step_done = "\u{F05E0}", -- nf-md-check_circle
-    step_todo = "\u{F0766}", -- nf-md-circle_outline
-    -- GLS parcel stages. TODO: replace the headset placeholders with the
-    -- Nerd Font glyphs named in the comments.
-    parcel = "\u{F0894}", -- PLACEHOLDER: nf-md-package_variant_closed
-    truck = "\u{F0894}", -- PLACEHOLDER: nf-md-truck_fast
-    truck_delivery = "\u{F0894}", -- PLACEHOLDER: nf-md-truck_delivery
-    parcel_check = "\u{F0894}", -- PLACEHOLDER: nf-md-package_variant_closed_check
-  },
   warning = "󰀪",
   error = "󰅖",
 }

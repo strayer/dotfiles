@@ -1,3 +1,5 @@
 .config/nono
 .config/fish/functions/sb.fish
 .config/hash-salt
+.config/sketchybar/items/steam_frame.lua
+.config/sketchybar/lib/gls.lua
