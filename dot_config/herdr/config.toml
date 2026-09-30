@@ -1,0 +1,13 @@
+onboarding = false
+
+[ui]
+status_indicators = "symbols"
+# Mobile single-column layout kicks in at or below this width (default 64).
+# The phone terminal is 69 columns wide; leave a little headroom.
+mobile_width_threshold = 72
+
+[ui.toast]
+delivery = "off"
+
+[ui.sound]
+enabled = false
