@@ -24,6 +24,7 @@ local M = {}
 M.default_wifi = {
   yobuko = {
     "9b0fd5cbfa38daa747330547ba5779f456cd617ca12b341043deb02f602432d2",
+    "81cd88f35d8e9190a812abc9fac7ab352876bb3db757acd1aeb68f95e75c02d9",
   },
   ["CO-MBP-KC9KQV64V3"] = {
     "81cd88f35d8e9190a812abc9fac7ab352876bb3db757acd1aeb68f95e75c02d9",
