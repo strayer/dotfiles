@@ -22,6 +22,7 @@ require("items.volume")
 require("items.battery")
 require("items.package_updates")
 require("items.network_type")
+require("items.tailscale") -- no-op without Tailscale
 require("items.network")
 
 -- Work-specific items (loaded conditionally)

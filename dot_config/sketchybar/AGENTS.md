@@ -276,6 +276,7 @@ This configuration registers custom events:
 | `rift_refresh`               | Rift needs full refresh (PoC)         |
 | `network_info_change`        | Network watcher daemon: `NETWORK_TYPE`, `NETWORK_SSID`, `NETWORK_SSID_HASH` (HMAC-SHA256, salted, matched against `lib/known_networks.lua`), `NETWORK_SIGNAL` (WiFi signal level 0-4, empty unless wifi) |
 | `network_details_change`     | Network watcher daemon, only while the network popup is open (detail mode via `SIGUSR1`/`SIGUSR2`): link, IP and VPN details, see the header of `sketchybar-network-watcher.swift` |
+| `tailscale_change`           | `earth.gru.sketchybar-tailscale-watch` LaunchAgent: Tailscale state/prefs/netmap/health changed (no payload; the item reads `tailscale status --json`) |
 
 ### Environment Detection
 

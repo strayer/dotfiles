@@ -78,6 +78,9 @@ function M.init()
     "right.network_type",
     "right.network",
   }
+  if require("items.tailscale").enabled then
+    table.insert(system_members, "right.tailscale")
+  end
   if settings.is_work_machine then
     table.insert(system_members, "right.mealplan")
   end

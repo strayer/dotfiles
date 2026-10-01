@@ -1,0 +1,21 @@
+#!/bin/sh
+# sketchybar-tailscale-watch <tailscale-cli>
+#
+# Streams Tailscale's IPN bus (`tailscale debug watch-ipn`) and triggers the
+# SketchyBar `tailscale_change` event whenever the backend state, prefs
+# (on/off, exit node), netmap or health change. The bus also sends engine
+# statistics every second; jq drops those, so SketchyBar only hears about
+# real changes and then reads `tailscale status --json` itself.
+#
+# Runs as the LaunchAgent earth.gru.sketchybar-tailscale-watch (installed by
+# install-sketchybar-tailscale-watch.sh, only on machines with Tailscale).
+# When Tailscale is not running the stream ends: the script triggers once (so
+# the item can show it) and exits; launchd restarts it after ThrottleInterval.
+
+TAILSCALE=${1:?usage: sketchybar-tailscale-watch <tailscale-cli>}
+
+"$TAILSCALE" debug watch-ipn --initial --peer-changes=false --peer-patches=false 2>/dev/null |
+  jq --unbuffered -c 'select(.State != null or .Prefs != null or .NetMap != null or .Health != null) | 1' 2>/dev/null |
+  while read -r _; do sketchybar --trigger tailscale_change; done
+
+sketchybar --trigger tailscale_change

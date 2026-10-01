@@ -47,6 +47,11 @@ M.system = {
     -- WiFi signal levels 0-4 (NETWORK_SIGNAL)
     wifi_signal = { "󰤯", "󰤟", "󰤢", "󰤥", "󰤨" },
   },
+  tailscale = {
+    connected = "󱗼", -- nf-md-dots_grid (Tailscale logo)
+    disconnected = "󱗽", -- nf-md-dots_square
+    exit_node = "󱌑", -- nf-md-earth_arrow_right
+  },
   package_updates = "󰏔",
   warning = "󰀪",
   error = "󰅖",
