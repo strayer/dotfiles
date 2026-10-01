@@ -44,6 +44,8 @@ M.system = {
     wifi = "󰖩",
     hotspot = "󱄙",
     disconnected = "󰖪",
+    -- WiFi signal levels 0-4 (NETWORK_SIGNAL)
+    wifi_signal = { "󰤯", "󰤟", "󰤢", "󰤥", "󰤨" },
   },
   package_updates = "󰏔",
   warning = "󰀪",

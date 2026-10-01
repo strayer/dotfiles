@@ -11,6 +11,8 @@
 -- lib/known_networks.lua, so no plain SSIDs live in the repo.
 -- Ethernet and disconnected never show a label; an empty SSID (no Location
 -- permission) shows no label either.
+--
+-- On wifi the icon shows the signal level (NETWORK_SIGNAL, 0-4) as bars.
 
 local icons = require("lib.icons")
 local colors = require("lib.colors")
@@ -43,6 +45,7 @@ sbar.exec("sh -c 'pkill -x sketchybar-network-watcher; " .. watcher_bin .. " &'"
 local last_net_type = "disconnected"
 local last_ssid = ""
 local last_hash = ""
+local last_signal = nil
 
 -- Whether the SSID label should be shown for the given network state
 local function should_show_label(net_type, ssid, hash)
@@ -66,7 +69,8 @@ local function render()
   end
 
   local config = colors.get_item_colors({ state = state, accent = "network_type" })
-  config.icon.string = network_icons[last_net_type] or network_icons.disconnected
+  local signal_icon = last_net_type == "wifi" and last_signal and network_icons.wifi_signal[last_signal + 1]
+  config.icon.string = signal_icon or network_icons[last_net_type] or network_icons.disconnected
 
   if should_show_label(last_net_type, last_ssid, last_hash) then
     config.label.drawing = true
@@ -83,6 +87,7 @@ local function update_network_type(env)
   last_net_type = env.NETWORK_TYPE or "disconnected"
   last_ssid = env.NETWORK_SSID or ""
   last_hash = env.NETWORK_SSID_HASH or ""
+  last_signal = tonumber(env.NETWORK_SIGNAL or "")
   render()
 end
 

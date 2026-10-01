@@ -5,6 +5,11 @@
 //   NETWORK_SSID_HASH  lowercase hex HMAC-SHA256 of the SSID's UTF-8 bytes, keyed
 //                      with the salt (empty if no SSID or no salt); equals
 //                      `printf '%s' "$SSID" | openssl dgst -sha256 -hmac "$SALT" | awk '{print $NF}'`
+//   NETWORK_SIGNAL     WiFi signal level 0-4 from the RSSI (empty unless type is wifi)
+//
+// Besides SCDynamicStore changes, CoreWLAN link quality events re-trigger the
+// event, but only when the signal level changes (with hysteresis), since the
+// RSSI itself changes every few seconds.
 //
 // Salt: read once at startup from ~/.config/dotfiles/hash-salt (deployed by chezmoi from
 // an encrypted secret), UTF-8, leading/trailing whitespace+newlines trimmed. If the file
@@ -132,8 +137,31 @@ func detectNetwork(store: SCDynamicStore) -> (type: String, ssid: String) {
   return ("ethernet", ssid)
 }
 
+// MARK: - Signal Quality
+
+/// RSSI lower bounds (dBm) of signal levels 1...4; anything weaker is level 0.
+let signalThresholds = [-80, -72, -65, -55]
+/// dB the RSSI must move past a threshold before the level changes, so a
+/// signal hovering around a threshold does not flicker between two levels.
+let signalHysteresis = 3
+
+/// Map an RSSI to a signal level 0-4, sticking to the previous level until
+/// the RSSI clears the neighbouring threshold by the hysteresis margin.
+func signalLevel(rssi: Int, previous: Int?) -> Int {
+  guard let previous else { return signalThresholds.filter { rssi >= $0 }.count }
+  return signalThresholds.enumerated().filter { index, threshold in
+    rssi >= (index < previous ? threshold - signalHysteresis : threshold + signalHysteresis)
+  }.count
+}
+
+/// Current RSSI of the WiFi interface, or nil when it is not associated.
+func currentRSSI() -> Int? {
+  guard let rssi = CWWiFiClient.shared().interface()?.rssiValue(), rssi != 0 else { return nil }
+  return rssi
+}
+
 /// Trigger sketchybar custom event with network info as env vars.
-func triggerSketchybar(type: String, ssid: String, hash: String) {
+func triggerSketchybar(type: String, ssid: String, hash: String, signal: Int?) {
   let process = Process()
   process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
   process.arguments = [
@@ -141,6 +169,7 @@ func triggerSketchybar(type: String, ssid: String, hash: String) {
     "NETWORK_TYPE=\(type)",
     "NETWORK_SSID=\(ssid)",
     "NETWORK_SSID_HASH=\(hash)",
+    "NETWORK_SIGNAL=\(signal.map(String.init) ?? "")",
   ]
   process.standardOutput = FileHandle.nullDevice
   process.standardError = FileHandle.nullDevice
@@ -212,20 +241,58 @@ var context = SCDynamicStoreContext(
 var debounceTimer: DispatchSourceTimer?
 let debounceQueue = DispatchQueue(label: "network-watcher.debounce")
 
+// Last sent network state; only accessed on debounceQueue
+var lastType = "disconnected"
+var lastSSID = ""
+var lastHash = ""
+var lastSignal: Int?
+
+func triggerLastState() {
+  triggerSketchybar(type: lastType, ssid: lastSSID, hash: lastHash, signal: lastSignal)
+}
+
+/// Detect the network and send it to sketchybar. Must run on debounceQueue.
+func detectAndTrigger(store: SCDynamicStore) {
+  (lastType, lastSSID) = detectNetwork(store: store)
+  lastHash = ssidHash(lastSSID)
+  if lastType == "wifi", let rssi = currentRSSI() {
+    lastSignal = signalLevel(rssi: rssi, previous: lastSignal)
+    debug("RSSI: \(rssi) dBm, signal level \(lastSignal!)")
+  } else {
+    lastSignal = nil
+  }
+  debug("Result: type=\(lastType), ssid=\(lastSSID)")
+  debug("SSID hash: \(lastHash)")
+  triggerLastState()
+}
+
 func scheduleDetection(store: SCDynamicStore) {
   debounceQueue.async {
     debounceTimer?.cancel()
     let timer = DispatchSource.makeTimerSource(queue: debounceQueue)
     timer.schedule(deadline: .now() + 1.0)
     timer.setEventHandler {
-      let (networkType, ssid) = detectNetwork(store: store)
-      let hash = ssidHash(ssid)
-      debug("Result: type=\(networkType), ssid=\(ssid)")
-      debug("SSID hash: \(hash)")
-      triggerSketchybar(type: networkType, ssid: ssid, hash: hash)
+      detectAndTrigger(store: store)
     }
     timer.resume()
     debounceTimer = timer
+  }
+}
+
+/// Receives CoreWLAN link quality events (every few seconds while associated)
+/// and re-triggers sketchybar only when the signal level changes.
+class LinkQualityDelegate: NSObject, CWEventDelegate {
+  func linkQualityDidChangeForWiFiInterface(
+    withName interfaceName: String, rssi: Int, transmitRate: Double
+  ) {
+    debounceQueue.async {
+      guard lastType == "wifi", rssi != 0 else { return }
+      let level = signalLevel(rssi: rssi, previous: lastSignal)
+      guard level != lastSignal else { return }
+      debug("RSSI: \(rssi) dBm, signal level \(lastSignal.map(String.init) ?? "-") -> \(level)")
+      lastSignal = level
+      triggerLastState()
+    }
   }
 }
 
@@ -302,6 +369,15 @@ guard let runLoopSource = SCDynamicStoreCreateRunLoopSource(nil, store, 0) else 
 
 CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .defaultMode)
 
+// Watch WiFi signal strength; CWWiFiClient holds its delegate weakly
+let linkQualityDelegate = LinkQualityDelegate()
+CWWiFiClient.shared().delegate = linkQualityDelegate
+do {
+  try CWWiFiClient.shared().startMonitoringEvent(with: .linkQualityDidChange)
+} catch {
+  fputs("Failed to monitor WiFi link quality: \(error)\n", stderr)
+}
+
 // Handle SIGTERM for clean exit
 signal(SIGTERM) { _ in
   exit(0)
@@ -313,11 +389,9 @@ signal(SIGINT) { _ in
 // Initial detection and trigger
 debug("WiFi interface: \(wifiInterface)")
 debug("Location auth: \(locationManager.authorizationStatus.rawValue)")
-let (initialType, initialSSID) = detectNetwork(store: store)
-let initialHash = ssidHash(initialSSID)
-debug("Initial result: type=\(initialType), ssid=\(initialSSID)")
-debug("SSID hash: \(initialHash)")
-triggerSketchybar(type: initialType, ssid: initialSSID, hash: initialHash)
+debounceQueue.sync {
+  detectAndTrigger(store: store)
+}
 
 // Re-send the state once more after 2 s. network_type.lua starts this daemon
 // from inside SbarLua's config transaction, and SbarLua buffers item creation
