@@ -26,8 +26,6 @@ make install
 echo "SbarLua installed successfully!"
 
 echo "Installing Lua modules with Luarocks..."
-luarocks install http
 luarocks install lua-cjson
 luarocks install lua-simdjson
-luarocks install luaposix
 echo "Lua modules installed successfully!"
