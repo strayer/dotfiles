@@ -16,7 +16,6 @@
 
 local icons = require("lib.icons")
 local colors = require("lib.colors")
-local cjson = require("cjson")
 
 local M = { enabled = false }
 
@@ -42,6 +41,10 @@ if not cli then
   return M
 end
 M.enabled = true
+
+-- Required after the CLI check so a missing rock cannot break the bar on
+-- machines without Tailscale
+local cjson = require("cjson")
 
 local POPUP_REFRESH_SECONDS = 5
 -- Health messages that are always present on unstable builds and say nothing
