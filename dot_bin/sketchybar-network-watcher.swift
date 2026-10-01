@@ -11,6 +11,23 @@
 // event, but only when the signal level changes (with hysteresis), since the
 // RSSI itself changes every few seconds.
 //
+// Detail mode (for the SketchyBar popup): SIGUSR1 enables it, SIGUSR2 disables
+// it; it also expires on its own after detailModeTimeout. While enabled, the
+// daemon additionally triggers `network_details_change` right away, on every
+// network change and on every link quality event, with:
+//   NETWORK_TYPE, NETWORK_SSID, NETWORK_SIGNAL   as above
+//   NETWORK_INTERFACE  physical interface (en0, en7, ...)
+//   NETWORK_IP         IPv4 address of the physical interface
+//   NETWORK_ROUTER     IPv4 router of the physical interface
+//   NETWORK_VPN        comma-separated names of connected VPN services
+//   and, on wifi/hotspot only (empty otherwise):
+//   NETWORK_RSSI, NETWORK_NOISE  dBm
+//   NETWORK_TX_RATE    Mbit/s
+//   NETWORK_CHANNEL    e.g. "36 · 5 GHz · 80 MHz"
+//   NETWORK_PHY        e.g. "Wi-Fi 6 (802.11ax)"
+//   NETWORK_SECURITY   e.g. "WPA3 Personal"
+// Outside detail mode none of this is gathered or sent.
+//
 // Salt: read once at startup from ~/.config/dotfiles/hash-salt (deployed by chezmoi from
 // an encrypted secret), UTF-8, leading/trailing whitespace+newlines trimmed. If the file
 // is missing or empty, a warning is printed to stderr and every hash is empty.
@@ -92,27 +109,33 @@ func resolvePhysicalInterface(store: SCDynamicStore) -> String? {
   return nil
 }
 
-/// Detect current network type and SSID from SCDynamicStore state.
-func detectNetwork(store: SCDynamicStore) -> (type: String, ssid: String) {
-  // 1. Read primary interface
+/// The primary interface, or the physical interface underneath it when the
+/// primary is a tunnel. nil when there is no (physical) connection.
+func primaryPhysicalInterface(store: SCDynamicStore) -> String? {
   guard
     let globalDict = SCDynamicStoreCopyValue(store, "State:/Network/Global/IPv4" as CFString)
       as? [String: Any],
-    var primaryInterface = globalDict["PrimaryInterface"] as? String
+    let primaryInterface = globalDict["PrimaryInterface"] as? String
   else {
-    return ("disconnected", "")
+    return nil
   }
 
   debug("Primary interface: \(primaryInterface)")
 
-  if isVirtualInterface(primaryInterface) {
-    if let physical = resolvePhysicalInterface(store: store) {
-      debug("Primary is a tunnel; underlying physical interface: \(physical)")
-      primaryInterface = physical
-    } else {
-      debug("Primary is a tunnel; no underlying physical interface found")
-      return ("disconnected", "")
-    }
+  guard isVirtualInterface(primaryInterface) else { return primaryInterface }
+  if let physical = resolvePhysicalInterface(store: store) {
+    debug("Primary is a tunnel; underlying physical interface: \(physical)")
+    return physical
+  }
+  debug("Primary is a tunnel; no underlying physical interface found")
+  return nil
+}
+
+/// Detect current network type and SSID from SCDynamicStore state.
+func detectNetwork(store: SCDynamicStore) -> (type: String, ssid: String) {
+  // 1. Read primary interface
+  guard let primaryInterface = primaryPhysicalInterface(store: store) else {
+    return ("disconnected", "")
   }
 
   // 2. Read AirPort state for hotspot detection and SSID fallback
@@ -160,17 +183,133 @@ func currentRSSI() -> Int? {
   return rssi
 }
 
-/// Trigger sketchybar custom event with network info as env vars.
-func triggerSketchybar(type: String, ssid: String, hash: String, signal: Int?) {
+// MARK: - Details
+
+/// IPv4 state of the first service in the user's service order that is bound
+/// to the given interface (holds Addresses and Router).
+func serviceIPv4(store: SCDynamicStore, interface: String) -> [String: Any]? {
+  guard
+    let setupDict = SCDynamicStoreCopyValue(store, "Setup:/Network/Global/IPv4" as CFString)
+      as? [String: Any],
+    let serviceOrder = setupDict["ServiceOrder"] as? [String]
+  else {
+    return nil
+  }
+  for serviceID in serviceOrder {
+    if let serviceDict = SCDynamicStoreCopyValue(
+      store, "State:/Network/Service/\(serviceID)/IPv4" as CFString) as? [String: Any],
+      serviceDict["InterfaceName"] as? String == interface
+    {
+      return serviceDict
+    }
+  }
+  return nil
+}
+
+/// Names of all services with active IPv4 state on a tunnel interface.
+func connectedVPNNames(store: SCDynamicStore) -> [String] {
+  guard
+    let keys = SCDynamicStoreCopyKeyList(store, "State:/Network/Service/[^/]+/IPv4" as CFString)
+      as? [String]
+  else {
+    return []
+  }
+  return keys.compactMap { key -> String? in
+    guard
+      let dict = SCDynamicStoreCopyValue(store, key as CFString) as? [String: Any],
+      let iface = dict["InterfaceName"] as? String,
+      isVirtualInterface(iface)
+    else { return nil }
+    let serviceID = key.split(separator: "/")[3]
+    let setup = SCDynamicStoreCopyValue(store, "Setup:/Network/Service/\(serviceID)" as CFString)
+      as? [String: Any]
+    return setup?["UserDefinedName"] as? String ?? iface
+  }.sorted()
+}
+
+func bandName(_ band: CWChannelBand) -> String {
+  switch band {
+  case .band2GHz: return "2.4 GHz"
+  case .band5GHz: return "5 GHz"
+  case .band6GHz: return "6 GHz"
+  default: return ""
+  }
+}
+
+func widthName(_ width: CWChannelWidth) -> String {
+  switch width {
+  case .width20MHz: return "20 MHz"
+  case .width40MHz: return "40 MHz"
+  case .width80MHz: return "80 MHz"
+  case .width160MHz: return "160 MHz"
+  default: return ""
+  }
+}
+
+func phyName(_ mode: CWPHYMode, band: CWChannelBand?) -> String {
+  switch mode {
+  case .mode11be: return "Wi-Fi 7 (802.11be)"
+  case .mode11ax: return band == .band6GHz ? "Wi-Fi 6E (802.11ax)" : "Wi-Fi 6 (802.11ax)"
+  case .mode11ac: return "Wi-Fi 5 (802.11ac)"
+  case .mode11n: return "Wi-Fi 4 (802.11n)"
+  case .mode11a: return "802.11a"
+  case .mode11b: return "802.11b"
+  case .mode11g: return "802.11g"
+  default: return ""
+  }
+}
+
+func securityName(_ security: CWSecurity) -> String {
+  switch security {
+  case .none: return "Open"
+  case .WEP, .dynamicWEP: return "WEP"
+  case .wpaPersonal, .wpaPersonalMixed: return "WPA Personal"
+  case .wpa2Personal, .personal: return "WPA2 Personal"
+  case .wpa3Personal: return "WPA3 Personal"
+  case .wpa3Transition: return "WPA2/WPA3 Personal"
+  case .wpaEnterprise, .wpaEnterpriseMixed: return "WPA Enterprise"
+  case .wpa2Enterprise, .enterprise: return "WPA2 Enterprise"
+  case .wpa3Enterprise: return "WPA3 Enterprise"
+  case .OWE, .oweTransition: return "Enhanced Open (OWE)"
+  default: return ""
+  }
+}
+
+/// Gather the popup details for the current network as env var assignments.
+func networkDetails(store: SCDynamicStore) -> [String] {
+  let interface = lastType == "disconnected" ? nil : primaryPhysicalInterface(store: store)
+  let ipv4 = interface.flatMap { serviceIPv4(store: store, interface: $0) }
+  var vars = [
+    "NETWORK_TYPE=\(lastType)",
+    "NETWORK_SSID=\(lastSSID)",
+    "NETWORK_SIGNAL=\(lastSignal.map(String.init) ?? "")",
+    "NETWORK_INTERFACE=\(interface ?? "")",
+    "NETWORK_IP=\((ipv4?["Addresses"] as? [String])?.first ?? "")",
+    "NETWORK_ROUTER=\(ipv4?["Router"] as? String ?? "")",
+    "NETWORK_VPN=\(connectedVPNNames(store: store).joined(separator: ", "))",
+  ]
+
+  let wifi = interface == wifiInterface ? CWWiFiClient.shared().interface() : nil
+  let channel = wifi?.wlanChannel()
+  let channelParts =
+    channel.map { [String($0.channelNumber), bandName($0.channelBand), widthName($0.channelWidth)] }
+    ?? []
+  vars += [
+    "NETWORK_RSSI=\(wifi.map { String($0.rssiValue()) } ?? "")",
+    "NETWORK_NOISE=\(wifi.map { String($0.noiseMeasurement()) } ?? "")",
+    "NETWORK_TX_RATE=\(wifi.map { String(Int($0.transmitRate().rounded())) } ?? "")",
+    "NETWORK_CHANNEL=\(channelParts.filter { !$0.isEmpty }.joined(separator: " · "))",
+    "NETWORK_PHY=\(wifi.map { phyName($0.activePHYMode(), band: channel?.channelBand) } ?? "")",
+    "NETWORK_SECURITY=\(wifi.map { securityName($0.security()) } ?? "")",
+  ]
+  return vars
+}
+
+/// Trigger a sketchybar custom event with the given env var assignments.
+func triggerSketchybar(event: String, vars: [String]) {
   let process = Process()
   process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-  process.arguments = [
-    "sketchybar", "--trigger", "network_info_change",
-    "NETWORK_TYPE=\(type)",
-    "NETWORK_SSID=\(ssid)",
-    "NETWORK_SSID_HASH=\(hash)",
-    "NETWORK_SIGNAL=\(signal.map(String.init) ?? "")",
-  ]
+  process.arguments = ["sketchybar", "--trigger", event] + vars
   process.standardOutput = FileHandle.nullDevice
   process.standardError = FileHandle.nullDevice
   do { try process.run() } catch {}
@@ -247,8 +386,26 @@ var lastSSID = ""
 var lastHash = ""
 var lastSignal: Int?
 
+// Detail mode end; only accessed on debounceQueue
+let detailModeTimeout: TimeInterval = 300
+var detailModeUntil: Date?
+var detailModeActive: Bool { detailModeUntil.map { $0 > Date() } ?? false }
+
 func triggerLastState() {
-  triggerSketchybar(type: lastType, ssid: lastSSID, hash: lastHash, signal: lastSignal)
+  triggerSketchybar(
+    event: "network_info_change",
+    vars: [
+      "NETWORK_TYPE=\(lastType)",
+      "NETWORK_SSID=\(lastSSID)",
+      "NETWORK_SSID_HASH=\(lastHash)",
+      "NETWORK_SIGNAL=\(lastSignal.map(String.init) ?? "")",
+    ])
+}
+
+/// Send the popup details if detail mode is on. Must run on debounceQueue.
+func triggerDetailsIfActive(store: SCDynamicStore) {
+  guard detailModeActive else { return }
+  triggerSketchybar(event: "network_details_change", vars: networkDetails(store: store))
 }
 
 /// Detect the network and send it to sketchybar. Must run on debounceQueue.
@@ -264,6 +421,7 @@ func detectAndTrigger(store: SCDynamicStore) {
   debug("Result: type=\(lastType), ssid=\(lastSSID)")
   debug("SSID hash: \(lastHash)")
   triggerLastState()
+  triggerDetailsIfActive(store: store)
 }
 
 func scheduleDetection(store: SCDynamicStore) {
@@ -280,18 +438,28 @@ func scheduleDetection(store: SCDynamicStore) {
 }
 
 /// Receives CoreWLAN link quality events (every few seconds while associated)
-/// and re-triggers sketchybar only when the signal level changes.
+/// and re-triggers sketchybar only when the signal level changes, plus the
+/// details on every event while detail mode is on.
 class LinkQualityDelegate: NSObject, CWEventDelegate {
+  let store: SCDynamicStore
+
+  init(store: SCDynamicStore) {
+    self.store = store
+  }
+
   func linkQualityDidChangeForWiFiInterface(
     withName interfaceName: String, rssi: Int, transmitRate: Double
   ) {
-    debounceQueue.async {
-      guard lastType == "wifi", rssi != 0 else { return }
-      let level = signalLevel(rssi: rssi, previous: lastSignal)
-      guard level != lastSignal else { return }
-      debug("RSSI: \(rssi) dBm, signal level \(lastSignal.map(String.init) ?? "-") -> \(level)")
-      lastSignal = level
-      triggerLastState()
+    debounceQueue.async { [store] in
+      if lastType == "wifi", rssi != 0 {
+        let level = signalLevel(rssi: rssi, previous: lastSignal)
+        if level != lastSignal {
+          debug("RSSI: \(rssi) dBm, signal level \(lastSignal.map(String.init) ?? "-") -> \(level)")
+          lastSignal = level
+          triggerLastState()
+        }
+      }
+      triggerDetailsIfActive(store: store)
     }
   }
 }
@@ -370,7 +538,7 @@ guard let runLoopSource = SCDynamicStoreCreateRunLoopSource(nil, store, 0) else 
 CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .defaultMode)
 
 // Watch WiFi signal strength; CWWiFiClient holds its delegate weakly
-let linkQualityDelegate = LinkQualityDelegate()
+let linkQualityDelegate = LinkQualityDelegate(store: store)
 CWWiFiClient.shared().delegate = linkQualityDelegate
 do {
   try CWWiFiClient.shared().startMonitoringEvent(with: .linkQualityDidChange)
@@ -385,6 +553,23 @@ signal(SIGTERM) { _ in
 signal(SIGINT) { _ in
   exit(0)
 }
+
+// Detail mode toggles from the SketchyBar popup (USR1 on open, USR2 on close)
+signal(SIGUSR1, SIG_IGN)
+signal(SIGUSR2, SIG_IGN)
+let detailOnSource = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: debounceQueue)
+detailOnSource.setEventHandler {
+  debug("Detail mode on")
+  detailModeUntil = Date().addingTimeInterval(detailModeTimeout)
+  triggerDetailsIfActive(store: store)
+}
+detailOnSource.resume()
+let detailOffSource = DispatchSource.makeSignalSource(signal: SIGUSR2, queue: debounceQueue)
+detailOffSource.setEventHandler {
+  debug("Detail mode off")
+  detailModeUntil = nil
+}
+detailOffSource.resume()
 
 // Initial detection and trigger
 debug("WiFi interface: \(wifiInterface)")
