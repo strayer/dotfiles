@@ -195,8 +195,9 @@ if OS.mac?
   brew "felixkratz/formulae/sketchybar", trusted: true
 
   # rift (BSP tiling window manager)
-  tap "acsandmann/tap"
-  brew "acsandmann/tap/rift", trusted: true
+  # currently disabled because usually compiled as local fork
+  # tap "acsandmann/tap"
+  # brew "acsandmann/tap/rift", trusted: true
 
   # AI
   brew "ollama"
