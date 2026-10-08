@@ -1,0 +1,360 @@
+#!/usr/bin/env python3
+"""Sync Tinycast's custom commands with a folder of Raycast script commands.
+
+Tinycast only imports Raycast scripts once (Settings -> Commands -> Import
+Raycast Scripts). This keeps the imported commands in step with the folder:
+
+- a new script becomes a command, parsed the way Tinycast's own importer
+  (RaycastScriptImport.swift) parses it
+- a changed script updates its command in place, keeping the command's id,
+  so hotkeys, aliases and an icon picked in Tinycast survive
+- a deleted script removes its command
+- commands that don't point into the folder are left alone
+
+`# @tinycast.icon <SF Symbol name>` in a script's directive block sets the
+command's icon; Raycast and Tinycast's importer both ignore the directive.
+
+Tinycast reads its command list only at launch and rewrites it on every
+change, so the list can't be edited under a running app: when something
+changed, a running Tinycast is quit, the list written, and Tinycast
+relaunched in the background. The previous list is saved to
+~/.cache/tinycast-sync/ first.
+"""
+
+import argparse
+import contextlib
+import datetime
+import fcntl
+import glob
+import json
+import os
+import plistlib
+import re
+import stat
+import subprocess
+import sys
+import time
+import uuid
+
+DEFAULTS_KEY = "customCommands"
+DOMAINS = ["com.tinycast.app", "com.tinycast.app.beta"]
+HEAD_SIZE = 8 * 1024
+COMMENT_MARKERS = ("#", "//", "--")
+# Fields the script owns; everything else on a command belongs to Tinycast.
+SCRIPT_FIELDS = (
+    "name",
+    "command",
+    "requiresConfirmation",
+    "arguments",
+    "showsOutput",
+    "workingDirectory",
+)
+COMMAND_PATTERN = re.compile(r"^(?P<interpreter>.+?) '(?P<path>(?:[^']|'\\'')*)' \"\$@\"$")
+BACKUP_DIR = os.path.expanduser("~/.cache/tinycast-sync")
+
+
+def shell_quoted(path):
+    return "'" + path.replace("'", "'\\''") + "'"
+
+
+def abbreviate_home(path):
+    home = os.path.expanduser("~")
+    if path == home:
+        return "~"
+    if path.startswith(home + "/"):
+        return "~" + path[len(home) :]
+    return path
+
+
+def read_head(path):
+    # A script that can't be read must not look deleted: that would drop its
+    # command, and the next sync would bring it back under a new id.
+    try:
+        with open(path, "rb") as handle:
+            data = handle.read(HEAD_SIZE)
+    except OSError as error:
+        raise SystemExit(f"error: cannot read {path}: {error.strerror}; nothing synced")
+    if not data:
+        return None
+    # A full read lands mid-line; cut at the last newline like Tinycast does.
+    if len(data) == HEAD_SIZE and b"\n" in data:
+        data = data[: data.rindex(b"\n")]
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+
+
+def directives(source, prefix):
+    values = {}
+    for line in source.split("\n"):
+        trimmed = line.strip()
+        if not trimmed:
+            continue
+        marker = next((m for m in COMMENT_MARKERS if trimmed.startswith(m)), None)
+        if marker is None:
+            break
+        body = trimmed[len(marker) :].strip()
+        if not body.startswith(prefix):
+            continue
+        field = body[len(prefix) :]
+        match = re.search(r"\s", field)
+        if not match:
+            continue
+        key, value = field[: match.start()], field[match.start() :].strip()
+        if key and value:
+            values[key] = value
+    return values
+
+
+def arguments(raycast):
+    result = []
+    for index in (1, 2, 3):
+        try:
+            value = json.loads(raycast.get(f"argument{index}", ""))
+        except ValueError:
+            continue
+        placeholder = value.get("placeholder") if isinstance(value, dict) else None
+        if not isinstance(placeholder, str) or not placeholder.strip():
+            continue
+        optional = value.get("optional")
+        result.append(
+            {"name": placeholder.strip(), "isOptional": optional if isinstance(optional, bool) else False}
+        )
+    return result
+
+
+def parse_script(path):
+    """The command Tinycast's importer would create, or None for a helper file."""
+    source = read_head(path)
+    if source is None:
+        return None
+    first = source.split("\n", 1)[0]
+    if not first.startswith("#!"):
+        return None
+    interpreter = first[2:].strip()
+    raycast = directives(source, "@raycast.")
+    title = raycast.get("title")
+    if not interpreter or not title:
+        return None
+    declared = raycast.get("currentDirectoryPath")
+    draft = {
+        "name": title.strip(),
+        "command": f'{interpreter} {shell_quoted(path)} "$@"',
+        "requiresConfirmation": raycast.get("needsConfirmation") == "true",
+        "arguments": arguments(raycast),
+        "showsOutput": raycast.get("mode") in ("compact", "fullOutput"),
+        "workingDirectory": abbreviate_home(declared or os.path.dirname(path)),
+    }
+    icon = directives(source, "@tinycast.").get("icon")
+    return draft, icon
+
+
+def scan(directory):
+    scripts = {}
+    for name in sorted(os.listdir(directory)):
+        if name.startswith("."):
+            continue
+        path = os.path.join(directory, name)
+        # stat follows symlinks, so a linked script counts as one. Only a
+        # dangling link is really gone; any other stat failure aborts, as in
+        # read_head, rather than drop a command that is merely unreachable.
+        try:
+            mode = os.stat(path).st_mode
+        except FileNotFoundError:
+            continue
+        except OSError as error:
+            raise SystemExit(f"error: cannot inspect {path}: {error.strerror}; nothing synced")
+        if not stat.S_ISREG(mode):
+            continue
+        parsed = parse_script(path)
+        if parsed:
+            scripts[path] = parsed
+    return scripts
+
+
+def script_path(command, directory):
+    match = COMMAND_PATTERN.match(command.get("command", ""))
+    if not match:
+        return None
+    path = match.group("path").replace("'\\''", "'")
+    return path if os.path.dirname(path) == directory else None
+
+
+def merge(current, scripts, directory):
+    pending = dict(scripts)
+    result, changes = [], []
+    for command in current:
+        path = script_path(command, directory)
+        # A second command on an already synced script was made by hand; keep it as is.
+        if path is None or (path in scripts and path not in pending):
+            result.append(command)
+            continue
+        if path not in scripts:
+            changes.append(f"remove  {command.get('name')}")
+            continue
+        draft, icon = pending.pop(path)
+        updated = {**command, **draft}
+        if icon:
+            updated["iconSymbol"] = icon
+        if updated != command:
+            changes.append(f"update  {updated['name']}")
+        result.append(updated)
+
+    names = {c.get("name", "").casefold() for c in result}
+    for path, (draft, icon) in pending.items():
+        if draft["name"].casefold() in names:
+            print(
+                f"warning: skipping {path}: a command named {draft['name']!r} already exists",
+                file=sys.stderr,
+            )
+            continue
+        names.add(draft["name"].casefold())
+        command = {
+            "id": str(uuid.uuid4()).upper(),
+            "isEnabled": True,
+            "loadsShellEnvironment": False,
+            "showsConfirmation": False,
+            **draft,
+        }
+        if icon:
+            command["iconSymbol"] = icon
+        changes.append(f"add     {draft['name']}")
+        result.append(command)
+    return result, changes
+
+
+def run(*args, check=True):
+    return subprocess.run(args, capture_output=True, check=check)
+
+
+def is_present(domain):
+    """Installed, or launched at some point; prefs can be written before a first launch."""
+    if run("defaults", "read", domain, check=False).returncode == 0:
+        return True
+    # Read bundles directly: AppleScript's `path to application id` sends the
+    # running app an Apple Event and can hang until it times out.
+    for folder in ("/Applications", os.path.expanduser("~/Applications")):
+        for info in glob.glob(os.path.join(folder, "*.app", "Contents", "Info.plist")):
+            try:
+                with open(info, "rb") as handle:
+                    if plistlib.load(handle).get("CFBundleIdentifier") == domain:
+                        return True
+            except Exception:  # another app's unreadable or malformed Info.plist
+                continue
+    return False
+
+
+@contextlib.contextmanager
+def locked():
+    """One sync at a time: two would race on quitting, writing and relaunching Tinycast."""
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    with open(os.path.join(BACKUP_DIR, "lock"), "w") as handle:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            print("waiting for another tinycast-sync-commands to finish")
+            fcntl.flock(handle, fcntl.LOCK_EX)
+        yield
+
+
+def read_commands(domain):
+    exported = run("defaults", "export", domain, "-").stdout
+    data = plistlib.loads(exported).get(DEFAULTS_KEY)
+    return json.loads(data) if data else []
+
+
+def write_commands(domain, commands):
+    data = json.dumps(commands, ensure_ascii=False, separators=(",", ":")).encode()
+    run("defaults", "write", domain, DEFAULTS_KEY, "-data", data.hex())
+
+
+def is_running(domain):
+    # Unlike AppleScript's `is running`, this also answers for an app that isn't installed.
+    return bool(run("lsappinfo", "find", f"bundleid={domain}").stdout.strip())
+
+
+def quit_app(domain):
+    result = run("osascript", "-e", f'tell application id "{domain}" to quit', check=False)
+    if result.returncode != 0:
+        raise SystemExit(
+            f"error: could not quit {domain}: {result.stderr.decode().strip()}\n"
+            "Allow your terminal to control Tinycast (System Settings -> Privacy & Security"
+            " -> Automation), or quit Tinycast yourself and run this again."
+        )
+    for _ in range(100):
+        if not is_running(domain):
+            return
+        time.sleep(0.1)
+    raise SystemExit(f"error: {domain} did not quit within 10 seconds")
+
+
+def backup(domain, commands):
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+    path = os.path.join(BACKUP_DIR, f"{domain}-{stamp}.json")
+    with open(path, "w") as handle:
+        json.dump(commands, handle, ensure_ascii=False, indent=2)
+    return path
+
+
+def sync(domain, directory, dry_run):
+    current = read_commands(domain)
+    merged, changes = merge(current, scan(directory), directory)
+    if not changes:
+        print(f"{domain}: up to date")
+        return
+    for change in changes:
+        print(f"{domain}: {change}")
+    if dry_run:
+        return
+
+    was_running = is_running(domain)
+    if was_running:
+        quit_app(domain)
+    try:
+        if was_running:
+            # Quitting can persist last-moment edits, so merge against what it left.
+            current = read_commands(domain)
+            merged, _ = merge(current, scan(directory), directory)
+        saved = backup(domain, current)
+        write_commands(domain, merged)
+        if read_commands(domain) != merged:
+            raise SystemExit(f"error: {domain}: the written list did not read back; backup at {saved}")
+    finally:
+        # A failed sync must not leave Tinycast closed.
+        if was_running:
+            run("open", "-g", "-b", domain, check=False)
+    print(f"{domain}: synced {len(changes)} change(s); previous list saved to {saved}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser.add_argument(
+        "--dir",
+        default="~/.bin/raycast-scripts",
+        help="folder of Raycast script commands (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--domain",
+        action="append",
+        help="Tinycast bundle id to sync; repeatable (default: every installed channel)",
+    )
+    parser.add_argument("-n", "--dry-run", action="store_true", help="show changes, write nothing")
+    args = parser.parse_args()
+
+    directory = os.path.abspath(os.path.expanduser(args.dir))
+    if not os.path.isdir(directory):
+        raise SystemExit(f"error: {directory} is not a folder")
+    domains = args.domain or [d for d in DOMAINS if is_present(d)]
+    if not domains:
+        print("Tinycast is not installed; nothing to sync")
+        return
+    # A dry run writes nothing, not even the lock file.
+    with contextlib.nullcontext() if args.dry_run else locked():
+        for domain in domains:
+            sync(domain, directory, args.dry_run)
+
+
+if __name__ == "__main__":
+    main()

@@ -42,6 +42,7 @@ compile-network-watcher              # Build ~/.bin/sketchybar-network-watcher.a
 sketchybar-ssid-hash [SSID|--current|--preferred]  # Print salted SSID hashes (HMAC-SHA256) for sketchybar/lib/known_networks.lua
 secretive-ssh-keygen [args]          # SSH key generation using Secretive app
 restart-gpg-agent.fish               # GPG agent management for multi-user conflicts
+tinycast-sync-commands [-n]          # Sync Tinycast custom commands with ~/.bin/raycast-scripts (macOS only)
 ```
 
 ### Raycast Scripts (in ~/.bin/raycast-scripts/)
@@ -52,6 +53,8 @@ ghostty-new-window                   # Open new Ghostty terminal window (AppleSc
 kitty-new-window                     # Open new Kitty terminal window with single-instance mode
 reload-sketchybar                    # Reload SketchyBar configuration for development
 ```
+
+Tinycast imports these scripts as custom commands. `.chezmoiscripts/run_onchange_after_20-tinycast-sync-commands.sh.tmpl` reruns `tinycast-sync-commands` whenever a script changes or Tinycast gets installed: it adds, updates (keeping each command's id, so hotkeys and aliases survive) and removes the commands that point into this folder, leaving other custom commands alone. Tinycast can't show `@raycast.icon`; an optional `# @tinycast.icon <SF Symbol>` directive sets the command's icon instead. The sync quits and relaunches a running Tinycast only when something changed (needs Automation permission for the terminal); the previous list is saved to `~/.cache/tinycast-sync/`. A failed sync fails `chezmoi apply`, so the next apply retries it. The folder is `exact_`: a script deleted from the repo is deleted from `~/.bin/raycast-scripts` too, and the sync then drops its command.
 
 ### Homebrew Package Discovery
 

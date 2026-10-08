@@ -1,0 +1,16 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/sh
+# Re-sync Tinycast's custom commands whenever ~/.bin/raycast-scripts or the
+# sync script changes, or Tinycast gets installed. Hashes, so chezmoi reruns
+# this only on a change:
+# sync {{ include "dot_bin/executable_tinycast-sync-commands" | sha256sum }}
+{{- range list "/Applications" (joinPath .chezmoi.homeDir "Applications") }}
+# installed in {{ . }}: {{ if stat (joinPath . "Tinycast.app") }}stable{{ end }} {{ if stat (joinPath . "Tinycast Beta.app") }}beta{{ end }}
+{{- end }}
+{{- range glob (joinPath .chezmoi.sourceDir "dot_bin/exact_raycast-scripts/executable_*") }}
+# {{ base . }} {{ include . | sha256sum }}
+{{- end }}
+# A failure fails the apply, so chezmoi runs this again next time instead of
+# recording a sync that never happened (e.g. Automation permission denied).
+exec "$HOME/.bin/tinycast-sync-commands"
+{{ end -}}

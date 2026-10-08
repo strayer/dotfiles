@@ -4,10 +4,17 @@ README.md
 stylua.toml
 .chezmoisecrets*
 todo
+{{/* bytecode cache inside the exact_ script folder; ignored so chezmoi leaves it be */ -}}
+.bin/raycast-scripts/__pycache__
 
 {{ if ne .chezmoi.os "darwin" -}}
 {{/* macOS-only: symlink pnpm's native config dir to the XDG location */ -}}
 Library/Preferences/pnpm/config.yaml
+{{- end }}
+
+{{ if ne .chezmoi.os "darwin" -}}
+{{/* macOS-only: keeps Tinycast's custom commands in step with ~/.bin/raycast-scripts */ -}}
+.bin/tinycast-sync-commands
 {{- end }}
 
 {{ if not (get . "headless") -}}
