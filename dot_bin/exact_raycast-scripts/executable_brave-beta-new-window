@@ -7,5 +7,6 @@
 
 # Optional parameters:
 # @raycast.icon images/brave-beta.png
+# @tinycast.icon macwindow.badge.plus
 
 open --new "/Applications/Brave Browser Beta.app"

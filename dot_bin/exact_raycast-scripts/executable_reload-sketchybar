@@ -7,5 +7,6 @@
 
 # Optional parameters:
 # @raycast.icon ♻️
+# @tinycast.icon arrow.clockwise
 
 sketchybar --reload

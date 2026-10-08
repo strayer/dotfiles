@@ -7,6 +7,7 @@
 
 # Optional parameters:
 # @raycast.icon images/kitty.png
+# @tinycast.icon apple.terminal.on.rectangle
 
 if pgrep -U "$(id -u)" -x kitty >/dev/null; then
   kitty --single-instance -d "$HOME"
