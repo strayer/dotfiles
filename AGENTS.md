@@ -14,6 +14,14 @@ This is a chezmoi dotfiles repository that manages configuration files across mu
 - `private_` prefix: Files with restricted permissions
 - `.tmpl` suffix: Template files using Go templating with chezmoi variables
 
+### Removing Deployed Files
+
+Deleting a file from the source state does **not** delete it from the home directory: chezmoi simply stops managing it and the old copy stays behind. Chezmoi has three ways to delete targets, so never claim it can't or that only `exact_` does:
+
+- `.chezmoiremove` (repo root): list of target paths relative to `~`, one per line, always rendered as a template. **This repo's default**: when removing a managed file or directory, delete it from the source state *and* add its target path here. Directories listed are removed with their contents.
+- `remove_` prefix: a source entry like `dot_bin/remove_foo` deletes `~/.bin/foo` (file or symlink; a directory only if empty).
+- `exact_` directory prefix: removes everything in the target directory that the source state doesn't list (used for `~/.bin/raycast-scripts`).
+
 ## Common Commands
 
 ### Chezmoi Management
