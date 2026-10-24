@@ -11,9 +11,5 @@ function brup
     echo "### Running brew up…"
     brew up; or return
     brew upgrade -y --greedy-latest; or return
-    if test -e $HOME/.bin/outdated-packages.sh
-        echo "Pruning outdated-packages cache"
-        $HOME/.bin/outdated-packages.sh prune
-    end
     brew cleanup
 end

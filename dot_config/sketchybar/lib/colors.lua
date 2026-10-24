@@ -175,7 +175,6 @@ function M.update_theme_colors()
       accents = {
         chevron = catppuccin_latte.mauve,
         layout = catppuccin_latte.teal,
-        updates = catppuccin_latte.peach,
         network = catppuccin_latte.sapphire,
         network_type = catppuccin_latte.sky,
         tailscale = catppuccin_latte.blue,
@@ -207,7 +206,6 @@ function M.update_theme_colors()
       accents = {
         chevron = catppuccin_mocha.mauve,
         layout = catppuccin_mocha.teal,
-        updates = catppuccin_mocha.peach,
         network = catppuccin_mocha.sapphire,
         network_type = catppuccin_mocha.sky,
         tailscale = catppuccin_mocha.blue,

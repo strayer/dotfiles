@@ -52,7 +52,6 @@ M.system = {
     disconnected = "󱗽", -- nf-md-dots_square
     exit_node = "󱌑", -- nf-md-earth_arrow_right
   },
-  package_updates = "󰏔",
   warning = "󰀪",
   error = "󰅖",
 }

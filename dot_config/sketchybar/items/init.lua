@@ -20,7 +20,6 @@ require("items.clock")
 gaps.add("right.gap.clock_system", "right")
 require("items.volume")
 require("items.battery")
-require("items.package_updates")
 require("items.network_type")
 require("items.tailscale") -- no-op without Tailscale
 require("items.network")

@@ -3,3 +3,6 @@
 .config/hash-salt
 .config/sketchybar/items/steam_frame.lua
 .config/sketchybar/lib/gls.lua
+.bin/outdated-packages.sh
+.cache/outdated-packages
+.config/sketchybar/items/package_updates.lua

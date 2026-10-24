@@ -74,7 +74,6 @@ function M.init()
   local system_members = {
     "right.volume",
     "right.battery",
-    "right.package_updates",
     "right.network_type",
     "right.network",
   }
