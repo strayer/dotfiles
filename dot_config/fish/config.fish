@@ -124,10 +124,6 @@ if status --is-interactive
     end
   end
 
-  # if type -q kitty
-  #   kitty + complete setup fish | source
-  # end
-
   if type -q docker
     abbr --add --global compose docker compose
     abbr --add --global dr docker run

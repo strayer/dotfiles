@@ -47,12 +47,11 @@ TIMEOUT = 10
 #   9:"C" 10:"M" 11:"O" 12:"P" 13:"T" 14:"W" 15:"D"
 #
 # Desired layout:
-#   1 -> Zen | 2 -> Ghostty/Kitty | M -> messengers/Outlook | D -> Discord
+#   1 -> Zen | 2 -> Ghostty | M -> messengers/Outlook | D -> Discord
 #   T -> Thunderbird/Teams | P -> Spotify | O -> Obsidian
 APP_WORKSPACE = {
     "app.zen-browser.zen": 0,  # 1: Zen
     "com.mitchellh.ghostty": 1,  # 2: Ghostty
-    "net.kovidgoyal.kitty": 1,  # 2: Kitty
     "org.whispersystems.signal-desktop": 10,  # M: Signal
     "ru.keepcoder.Telegram": 10,  # M: Telegram
     "io.element.elementx": 10,  # M: Element X
@@ -69,7 +68,7 @@ APP_WORKSPACE = {
 # Terminals are only relocated when they got dumped onto workspace 1 (index 0).
 # This preserves deliberate per-project terminal layouts on other workspaces
 # (e.g. one project per workspace 3/4/...) while still recovering from a reset.
-TERMINALS = {"com.mitchellh.ghostty", "net.kovidgoyal.kitty"}
+TERMINALS = {"com.mitchellh.ghostty"}
 
 
 def rift(*args):

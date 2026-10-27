@@ -6,3 +6,5 @@
 .bin/outdated-packages.sh
 .cache/outdated-packages
 .config/sketchybar/items/package_updates.lua
+.config/kitty
+.config/wezterm

@@ -7,7 +7,6 @@ readonly LOG_SIZE_LIMIT=1048576  # 1MB
 readonly LOG_FILE="$HOME/toggle-theme.log"
 readonly ROTATED_LOG_FILE="$LOG_FILE.1.zst"
 readonly SYSTEM_THEME_FILE="$HOME/.cache/system-theme.txt"
-readonly WEZTERM_SYSTEM_THEME_FILE="$HOME/.config/wezterm/current-system-theme.lua"
 
 # Function to perform log rotation
 if [ -f "$LOG_FILE" ]; then
@@ -87,16 +86,12 @@ fi
 
 if [ "$theme" == "dark" ]; then
   fish_theme="tokyonight_storm"
-  kitty_theme="Tokyo Night Storm"
   lsd_theme="colors-tokyonight.yaml"
-  fish -c "set -Ue AICHAT_LIGHT_THEME"
   fish -c "set -Ux BAT_THEME 'tokyonight_storm'"
   fish -c "set -Ux DELTA_FEATURES '+tokyonight-storm'"
 else
   fish_theme="Catppuccin Latte"
-  kitty_theme="Catppuccin-Latte"
   lsd_theme="colors-cattpuccin-latte.yaml"
-  fish -c "set -Ux AICHAT_LIGHT_THEME true"
   fish -c "set -Ux BAT_THEME 'Catppuccin Latte'"
   fish -c "set -Ux DELTA_FEATURES '+Catppuccin Latte'"
 fi
@@ -106,25 +101,15 @@ neovim_pids=$(pgrep -d ' ' nvim || true)
 
 log_message "Selected theme=$theme from $theme_source"
 log_message "fish_theme=$fish_theme"
-log_message "kitty_theme=$kitty_theme"
 log_message "lsd_theme=$lsd_theme"
 log_message "neovim_pids=$neovim_pids"
 
-log_message "Setting system and wezterm theme"
+log_message "Setting system theme"
 echo -n "$theme" >"$SYSTEM_THEME_FILE"
-echo "return \"$theme\"" >"$WEZTERM_SYSTEM_THEME_FILE"
 
 log_message "Setting fish theme"
 validate_theme_name "$fish_theme"
 fish -c "yes | fish_config theme save $(printf '%q' "$fish_theme")"
-
-log_message "Setting kitty theme"
-if command -v kitten &>/dev/null; then
-  validate_theme_name "$kitty_theme"
-  kitten themes --reload-in=all "$kitty_theme"
-else
-  log_message "kitty command not found, skipping theme change."
-fi
 
 log_message "Setting lsd theme"
 lsd_config_dir="$HOME/.config/lsd"
