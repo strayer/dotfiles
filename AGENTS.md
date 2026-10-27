@@ -53,12 +53,11 @@ restart-gpg-agent.fish               # GPG agent management for multi-user confl
 tinycast-sync-commands [-n]          # Sync Tinycast custom commands with ~/.bin/raycast-scripts (macOS only)
 ```
 
-### Raycast Scripts (in ~/.bin/raycast-scripts/)
+### Launcher Scripts (in ~/.bin/raycast-scripts/)
 
 ```bash
 firefox-new-window                   # Open new Firefox Developer Edition window
 ghostty-new-window                   # Open new Ghostty terminal window (AppleScript)
-kitty-new-window                     # Open new Kitty terminal window with single-instance mode
 reload-sketchybar                    # Reload SketchyBar configuration for development
 ```
 
@@ -70,15 +69,6 @@ Tinycast imports these scripts as custom commands. `.chezmoiscripts/run_onchange
 brew info <package>                  # Get detailed information about a package (description, dependencies, installation status)
 brew search <term>                   # Search for packages by name or description
 brew bundle cleanup --file Brewfile  # Show packages installed but missing from this repository's Brewfile
-```
-
-### Homebrew Automation
-
-```bash
-brew autoupdate start [interval] [options]  # Start automatic Homebrew updates via launchd
-brew autoupdate stop                         # Stop autoupdating but retain logs
-brew autoupdate status                       # Check current autoupdate status
-brew autoupdate logs                         # View autoupdate logs
 ```
 
 ## Architecture & Environment Detection
@@ -102,7 +92,7 @@ The repository prompts for sensitive configuration during initial setup:
 Sophisticated automated theme switching with cross-application coordination:
 
 - **Supported themes**: tokyonight (day/storm/night)
-- **Applications**: bat, fish, kitty, sketchybar, git-delta, aichat, neovim, wezterm
+- **Applications**: bat, fish, lsd, sketchybar, git-delta, neovim
 - **Implementation**: Symlinks managed by toggle-theme.sh with validation and logging
 - **Automation**: LaunchAgent integration with dark-mode-notify binary for system detection
 - **State management**: Theme persistence in `~/.cache/system-theme.txt`
@@ -114,7 +104,7 @@ Sophisticated automated theme switching with cross-application coordination:
 
 - **Runtime management**: mise configuration in `dot_config/mise/config.toml.tmpl`
 - **Shell**: Fish with custom functions and theme integration
-- **Terminal**: Multiple terminal configurations (kitty, wezterm, ghostty)
+- **Terminal**: Ghostty
 - **Git**: Environment-specific signing keys and configurations
 
 ### System Integration
@@ -124,7 +114,7 @@ Sophisticated automated theme switching with cross-application coordination:
 - **Teams call PiP**: `rift-pip-auto` runs on Rift's `workspace_changed`/`windows_changed` CLI subscriptions. It finds a Microsoft Teams call window (any Teams window whose title is not a main-window section like `Chat | …`) and mirrors it with [rift-pip](https://github.com/acsandmann/rift-pip) while its workspace is hidden; the PiP closes when the workspace is active again or the call ends. rift-pip is built by `install-rift-pip.sh` with a local patch (`dot_bin/private_src/rift-pip-window-option.patch`) adding `--window <id>`, since upstream only mirrors the focused window. State and log live in `~/.cache/rift-pip/`. Needs Screen Recording permission for the launching app (rift).
 - **Network type item**: `dot_bin/sketchybar-network-watcher.swift` (built into an `.app` by `compile-network-watcher`; needs Location Services permission to read the SSID on macOS Sequoia+) triggers the SketchyBar `network_info_change` event with `NETWORK_TYPE`, `NETWORK_SSID`, `NETWORK_SSID_HASH` and `NETWORK_SIGNAL` (WiFi signal level 0-4 from the RSSI; CoreWLAN link quality events re-trigger only when the level changes). On WiFi the item icon shows the level as bars. The SketchyBar item only shows the SSID when it is neither one of the device's default networks nor one of the device's known hotspots, both listed per hostname by HMAC-SHA256 hash (keyed by the `hash_salt` secret rendered to `~/.config/dotfiles/hash-salt`) in `dot_config/sketchybar/lib/known_networks.lua` so network names never enter the repo. Generate hashes with `sketchybar-ssid-hash`. Hovering opens a details popup (signal/noise/SNR, Tx rate, channel, Wi-Fi standard, security, IP, router, connected VPNs): `network_type.lua` sends the watcher `SIGUSR1` on open and `SIGUSR2` on close, and only in between does the watcher gather details and trigger `network_details_change` on every link quality event.
 - **Tailscale item**: `dot_config/sketchybar/items/tailscale.lua` only loads where a Tailscale CLI exists (app bundle, `/usr/local/bin` or Homebrew). The LaunchAgent `earth.gru.sketchybar-tailscale-watch` (`dot_bin/sketchybar-tailscale-watch`, installed by `install-sketchybar-tailscale-watch.sh`) streams `tailscale debug watch-ipn`, filters out the per-second engine stats with jq and triggers `tailscale_change` only on state/prefs/netmap/health changes; the item then reads `tailscale status --json`. Icons: dot grid = connected, globe arrow = exit node in use, muted dot square = off. The hover popup shows tailnet, own IP/MagicDNS name, exit node (direct or DERP) with its traffic, peers, home relay, key expiry, health warnings and version. Clicking does nothing.
-- **Package management**: Comprehensive Brewfile (260+ work packages, 290+ home packages) with custom taps, MAS automation, and environment-specific tool sets
+- **Package management**: Comprehensive Brewfile (~200 work packages, ~225 home packages) with custom taps, MAS automation, and environment-specific tool sets
 - **Karabiner**: Custom keyboard modifications in `private_karabiner/`
 - **LaunchAgent automation**: Automated theme switching and system integration services
 
@@ -143,10 +133,10 @@ is_home = (hostname == "yobuko")
 #### Package Organization
 
 - **Custom taps**: Specialized repositories for tools not in homebrew-core
-  - `domt4/autoupdate`: Automatic Homebrew updates via launchd background service
+  - `strayer/tap`: Personal tap (patched sketchybar, dock-badge-counter)
 - **Fonts**: Nerd fonts and typography packages for terminal/editor use
 - **Linters/formatters/LSPs**: Development tools for code quality and IDE integration
-- **Terminal entertainment**: Fun terminal applications (asciiquarium, cbonsai, lolcat, pipes-sh)
+- **Terminal entertainment**: Fun terminal applications (cowsay, lolcat)
 - **Various tools**: General CLI utilities (should be split into more specific categories)
 - **Neovim-related**: Editor-specific dependencies
 - **Git tools**: Enhanced Git workflow utilities
@@ -155,7 +145,7 @@ is_home = (hostname == "yobuko")
 
 #### Environment-Specific Packages
 
-- **Work machine** (`is_work`): Enterprise tools (Azure CLI, Heroku, Terraform utilities, browser testing)
+- **Work machine** (`is_work`): Enterprise tools (Azure CLI, Terraform utilities, browser testing)
 - **Home machine** (`is_home`): Personal tools (gaming, 3D printing, home automation, creative software)
 
 #### Mac App Store Integration
@@ -230,7 +220,7 @@ Usage: `mcp__deepwiki__ask_question` with `repoName` set to the GitHub repo (e.g
 - Common scopes based on repository files:
   - `Brewfile`: Package management updates
   - `fish`: Fish shell configurations
-  - `kitty`, `alacritty`, `wezterm`, `ghostty`: Terminal emulator configs
+  - `ghostty`: Terminal emulator config
   - `sketchybar`: Status bar configuration
   - `mise`: Runtime version management
   - `git`, `gitconfig`: Git configuration
@@ -241,7 +231,7 @@ Usage: `mcp__deepwiki__ask_question` with `repoName` set to the GitHub repo (e.g
   - `atuin`: Command history settings
   - `chezmoi`: Dotfiles management
   - `bin`: Custom scripts in ~/.bin/
-  - `raycast`: Raycast launcher scripts
+  - `raycast`: Launcher scripts in `~/.bin/raycast-scripts` (imported by Tinycast)
 - Type usage patterns:
   - `feat`: New features or additions (most common)
   - `fix`: Bug fixes or corrections
