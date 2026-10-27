@@ -18,9 +18,6 @@ sbar.bar({
   color = colors.transparent,
   padding_left = settings.layout.bar_padding_h,
   padding_right = settings.layout.bar_padding_h,
-  -- macOS 27 keeps a transparent MenuBarAgent window over the hidden menu bar
-  -- strip that swallows clicks; only a topmost bar sits above it (SketchyBar#852).
-  topmost = "on",
 })
 
 -- Size the notch-display bar strip so pills center between the display edge
