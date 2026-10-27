@@ -75,7 +75,8 @@ local function fetch_mealplan_data(date_str, callback)
     if type(result) == "table" then
       callback(result)
     else
-      -- Non-JSON response (e.g. 404 error page) — treat as no data
+      -- Non-JSON response — treat as no data. Days without a plan return
+      -- 404 {"detail": ...}, which parses to a table without day entries.
       callback({})
     end
   end)
