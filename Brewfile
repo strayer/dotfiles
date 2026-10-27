@@ -189,10 +189,15 @@ if OS.mac?
   # homebrew autoupdate (launchd-based)
   tap "domt4/autoupdate", trusted: { command: "autoupdate" }
 
-  # felixkratz tools (status bar + window borders)
+  # felixkratz tools (window borders)
   tap "felixkratz/formulae"
   brew "felixkratz/formulae/borders", trusted: true
-  brew "felixkratz/formulae/sketchybar", trusted: true
+
+  # personal tap
+  tap "strayer/tap"
+  # patched sketchybar for the macOS 27 topmost fix (FelixKratz/SketchyBar#852);
+  # switch back to felixkratz/formulae/sketchybar once the fix is released
+  brew "strayer/tap/sketchybar", trusted: true
 
   # rift (BSP tiling window manager)
   # currently disabled because usually compiled as local fork
