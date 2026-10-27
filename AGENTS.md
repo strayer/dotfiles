@@ -79,13 +79,39 @@ brew bundle cleanup --file Brewfile  # Show packages installed but missing from 
 - **Home machine**: `yobuko` - Full package access, personal configurations
 - Templates use `{{ .chezmoi.hostname }}` for conditional logic
 
-### Template Variables
+### Encrypted Secrets
 
-The repository prompts for sensitive configuration during initial setup:
+This repository is public. Sensitive or critical values go into the
+age-encrypted secrets file, never into plain source files, code comments
+or commit messages. That covers credentials and tokens, and also anything
+that points to private infrastructure or people: URLs and hostnames of
+private or self-hosted services, internal endpoints, IP addresses,
+network names, personal email addresses.
 
-- Email address (Git configuration)
-- Atuin sync server URL
-- Claude Code Vertex AI settings (base URL, project ID, location)
+- **Storage**: `.chezmoisecrets.age` holds YAML encrypted with age
+  (Secure Enclave identity in `~/.config/chezmoi/age-identity.txt`).
+  chezmoi reads it through the `[secret]` command
+  `dot_bin/executable_chezmoi-secrets`.
+- **Use in templates**: `{{ (secret | fromYaml).<key> }}`, e.g.
+  `atuin_sync_server`, `mealplan_url`, `hash_salt`. The file needs the
+  `.tmpl` suffix.
+- **An existing `secret` lookup is deliberate.** When its value changes,
+  update the secret, not the template. Never replace a lookup with a
+  literal or drop the `.tmpl` suffix to "simplify" a file, even when the
+  new value looks public. A value the user pastes into the chat is not
+  permission to put it in the repo. Ask first.
+- **Changing a value**: agents don't decrypt the file or print its
+  contents. Tell the user which key to set to which value and have them
+  run `! chezmoi-secrets edit`. Afterwards, `chezmoi apply` the affected
+  target and check that the rendered file has the new value.
+- **New values**: if a value might be sensitive, default to a secret and
+  say so. If the repo only needs to compare against a private string,
+  store an HMAC hash keyed with `hash_salt` instead (see Security &
+  Privacy).
+- **Before committing**: check `git diff --cached` and the commit
+  message for plain-text values. Once a value has been pushed, treat it
+  as leaked: rotate or replace it, because reverting the commit doesn't
+  remove it.
 
 ### Theme Management System
 
@@ -174,9 +200,8 @@ Uses `mas` command for App Store applications with specific app IDs, also enviro
 When editing `.tmpl` files, common patterns include:
 
 - `{{ if eq .chezmoi.hostname "CO-MBP-KC9KQV64V3" }}` - Work-specific configuration
-- `{{ .email }}` - User-provided email address
-- `{{ .atuin_sync_server }}` - Atuin sync server URL
-- `{{ .vertex_ai.base_url }}` - Claude Code Vertex AI configuration
+- `{{ (secret | fromYaml).<key> }}` - Value from the encrypted secrets (see Encrypted Secrets)
+- `{{ $id := get .git.identities .chezmoi.hostname }}` - Per-host Git email and signing key from `.chezmoidata/git.yaml`
 - `{{ env "HOME" }}` - Environment variable access
 - `{{- if eq .chezmoi.hostname "work" }}` - Conditional blocks with whitespace control
 
