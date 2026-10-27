@@ -36,6 +36,7 @@ git apply --verbose "$PATCH"
 
 echo "Building and installing rift-pip (this takes a minute)..."
 cargo install --quiet --locked --path . --root "$HOME/.cargo"
+rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/rift-pip/rift-pip-missing"  # let rift-pip-auto log again if it goes missing
 
 echo
 echo "Installed: $(command -v rift-pip || echo "$HOME/.cargo/bin/rift-pip")"

@@ -41,10 +41,17 @@ TEAMS_BUNDLE="com.microsoft.teams2"
 NOT_CALL='^(Activity|Aktivität|Chat|Teams|Calendar|Kalender|Calls|Anrufe|Files|Dateien|Apps|OneDrive|Copilot|Planner|Viva Engage|Microsoft Teams)( \||$)'
 
 mkdir -p "$STATE_DIR"
+# Machines without rift-pip (no Teams there) still receive every Rift event:
+# note the absence once, then stay quiet. install-rift-pip.sh clears the marker.
+MISSING_MARK="$STATE_DIR/rift-pip-missing"
 [ -x "$RIFT_PIP" ] || RIFT_PIP=$(command -v rift-pip) || {
-  echo "$(date '+%F %T') rift-pip not installed; run install-rift-pip.sh" >>"$LOG"
-  exit 1
+  [ -e "$MISSING_MARK" ] || {
+    echo "$(date '+%F %T') rift-pip not installed; run install-rift-pip.sh (logged once)" >>"$LOG"
+    : >"$MISSING_MARK"
+  }
+  exit 0
 }
+rm -f "$MISSING_MARK"
 
 log() { echo "$(date '+%F %T') $*" >>"$LOG"; }
 
