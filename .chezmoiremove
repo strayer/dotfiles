@@ -8,3 +8,6 @@
 .config/sketchybar/items/package_updates.lua
 .config/kitty
 .config/wezterm
+.config/omniwm
+.aria2
+.aider.conf.yml
