@@ -8,6 +8,7 @@
 #   Alt + Shift      = move things (windows, columns, to workspaces)
 #   Alt + Ctrl       = secondary (displays, window height, fullscreen, unjoin, center)
 #   Ctrl + Shift     = move window to display
+#   Alt + Ctrl + Shift = move workspace to display
 #   Alt + , / .      = consume/expel window left/right (niri's Mod+[ / Mod+])
 #   with Shift / Ctrl on , / . = resize column width / stack height (< narrower, > wider)
 
@@ -67,6 +68,10 @@ fingers = 3
 propagate_to_workspace_swipe = true # overscroll past the strip's end rolls into next/prev workspace
 
 [virtual_workspaces]
+# global: one set of workspaces across all displays. Each lives on one display
+# at a time; switching to it focuses that display. Needs a build with
+# acsandmann/rift#603; older builds reject the key.
+mode = "global"
 enabled = true
 default_workspace_count = 16
 default_workspace = 0
@@ -75,6 +80,10 @@ preserve_focus_per_workspace = true
 
 # Index 0-8: numeric workspaces "1"-"9"
 # Index 9-15: named workspaces C, M, O, P, T, W, D
+# Index 16 ("Workspace 17", on Alt+0) is not created at startup. Shared mode
+# appends it when a display is left without a workspace (e.g. after moving all
+# of them to another display). It can't get a name here: rift rejects more
+# workspace_names than default_workspace_count.
 workspace_names = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "M", "O", "P", "T", "W", "D"]
 
 # App rules - windows that should float instead of being tiled
@@ -141,6 +150,7 @@ app_rules = [
 "Alt + 7" = { switch_to_workspace = 6 }
 "Alt + 8" = { switch_to_workspace = 7 }
 "Alt + 9" = { switch_to_workspace = 8 }
+"Alt + 0" = { switch_to_workspace = 16 } # only exists once shared mode appended it
 
 # Workspace switching - named (C, M, O, P, T, W, D)
 "Alt + C" = { switch_to_workspace = 9 }
@@ -161,6 +171,7 @@ app_rules = [
 "Alt + Shift + 7" = { move_window_to_workspace = 6 }
 "Alt + Shift + 8" = { move_window_to_workspace = 7 }
 "Alt + Shift + 9" = { move_window_to_workspace = 8 }
+"Alt + Shift + 0" = { move_window_to_workspace = 16 }
 
 # Move window to workspace - named (C, M, O, P, T, W, D)
 "Alt + Shift + C" = { move_window_to_workspace = 9 }
@@ -171,7 +182,7 @@ app_rules = [
 "Alt + Shift + W" = { move_window_to_workspace = 14 }
 "Alt + Shift + D" = { move_window_to_workspace = 15 }
 
-# Displays: focus on Alt+Ctrl, move window on Ctrl+Shift
+# Displays: focus on Alt+Ctrl, move window on Ctrl+Shift, move workspace on Alt+Ctrl+Shift
 "Alt + Ctrl + H" = { focus_display = "left" }
 "Alt + Ctrl + J" = { focus_display = "down" }
 "Alt + Ctrl + K" = { focus_display = "up" }
@@ -180,6 +191,10 @@ app_rules = [
 "Ctrl + Shift + J" = { move_window_to_display = { selector = "down" } }
 "Ctrl + Shift + K" = { move_window_to_display = { selector = "up" } }
 "Ctrl + Shift + L" = { move_window_to_display = { selector = "right" } }
+"Alt + Ctrl + Shift + H" = { move_workspace_to_display = { selector = "left" } }
+"Alt + Ctrl + Shift + J" = { move_workspace_to_display = { selector = "down" } }
+"Alt + Ctrl + Shift + K" = { move_workspace_to_display = { selector = "up" } }
+"Alt + Ctrl + Shift + L" = { move_workspace_to_display = { selector = "right" } }
 
 # Floating (niri Mod+V / Mod+Shift+V)
 "Alt + V" = "toggle_window_floating"
