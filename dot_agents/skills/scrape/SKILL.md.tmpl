@@ -25,7 +25,7 @@ If `$ARGUMENTS` is provided, treat it as the URL (or a URL with extra context) a
 ## Tool
 
 ```bash
-${CLAUDE_SKILL_DIR}/scripts/scrape.py "<url>" [flags]
+{{ .chezmoi.homeDir }}/.agents/skills/scrape/scripts/scrape.py "<url>" [flags]
 ```
 
 Output: a small header (`# Title`, `URL:`, `Status:`), then `---`, then the page markdown. With `--include-links`, an extra `## Links` section.
