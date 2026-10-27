@@ -10,8 +10,7 @@ is_home = (hostname == "yobuko")                                   # personal (a
 
 # AI
 brew "agent-browser"
-brew "llm"
-brew "opencode"
+brew "herdr"
 cask "claude-code@latest"  # cask has linux binaries (x86_64 + arm64)
 cask "codex"               # same
 
@@ -25,6 +24,7 @@ brew "hadolint"
 brew "lua-language-server"
 brew "markdownlint-cli"
 brew "markdownlint-cli2"
+brew "mdformat"
 brew "prettierd"
 brew "ruff"
 brew "rust-analyzer"
@@ -35,37 +35,28 @@ brew "terraform-ls"
 brew "tofu-ls"
 brew "vtsls"
 brew "yaml-language-server"
-brew "yamllint"
 
 # terminal entertainment
-brew "asciiquarium"
-brew "cbonsai"
+brew "cowsay"
 brew "lolcat"
-brew "pipes-sh"
 
 # various tools (I should split this into sections...)
 brew "age"
 brew "age-plugin-yubikey"
-brew "aichat"
-brew "aria2"
-brew "asciinema"
 brew "atuin"
 brew "autossh"
 brew "awscli"
 brew "bat"
-brew "bgpq3"
 brew "bind" # for dig, nslookup and host
 brew "bottom"
 brew "chafa"
 brew "chezmoi"
 brew "cmake"
-brew "colordiff"
 brew "coreutils"
 brew "cosign" # used by mise
 brew "csvkit"
 brew "csvlens"
 brew "curl"
-brew "direnv"
 brew "doggo"
 brew "dos2unix"
 brew "dprint"
@@ -80,21 +71,15 @@ brew "glow"  # CLI markdown viewer
 brew "gnu-sed"
 brew "gnu-tar"
 brew "go"
-brew "gopass"
 brew "gotop"
 brew "gping"
 brew "grep"
 brew "gron"
 brew "htop"
-brew "httpie"
-brew "httping"
-brew "httpstat"
-brew "iperf"
 brew "iperf3"
 brew "jpegoptim"
 brew "jq"
 brew "just"
-brew "lftp"
 brew "lsd"
 brew "mise"
 brew "mosh"
@@ -104,24 +89,19 @@ brew "ncdu"
 brew "netcat"
 brew "openjdk"
 brew "openssh"
-brew "optipng"
 brew "oxipng"
 brew "p7zip"
 brew "pandoc"
 brew "parallel"
-brew "pass-otp"
 brew "pdf2svg"
 brew "pigz"
 brew "pipx"
 brew "pixz"
 brew "pnpm"
 brew "powershell"
-brew "pre-commit"
 brew "prek"
-brew "prettyping"
 brew "procs"
 brew "pwgen"
-brew "ranger"
 brew "rclone"
 brew "repomix"
 brew "restic"
@@ -135,17 +115,14 @@ brew "sops"
 brew "starship"
 brew "svgo"
 brew "taglib"
-brew "tealdeer"
-brew "testssl"
 brew "tmux"
 brew "trivy"
 brew "uv"
 brew "watch"
 brew "wget"
-brew "xh"
-brew "yazi"
 brew "yq"
 brew "yt-dlp"
+brew "ykman"
 brew "zbar"
 brew "zoxide"
 
@@ -155,7 +132,6 @@ brew "neovim"
 brew "tree-sitter-cli"
 
 # better git
-brew "diff-so-fancy"
 brew "gh"
 brew "git"
 brew "git-delta"
@@ -186,9 +162,6 @@ if OS.mac?
   # mas (Mac App Store CLI)
   brew "mas"
 
-  # homebrew autoupdate (launchd-based)
-  tap "domt4/autoupdate", trusted: { command: "autoupdate" }
-
   # felixkratz tools (window borders)
   tap "felixkratz/formulae"
   brew "felixkratz/formulae/borders", trusted: true
@@ -198,14 +171,17 @@ if OS.mac?
   # patched sketchybar for the macOS 27 topmost fix (FelixKratz/SketchyBar#852);
   # switch back to felixkratz/formulae/sketchybar once the fix is released
   brew "strayer/tap/sketchybar", trusted: true
+  # Dock notification badges, feeds the SketchyBar dock_badges item
+  brew "strayer/tap/dock-badge-counter", trusted: true
+
+  # tinycast (launcher, imports ~/.bin/raycast-scripts as custom commands)
+  tap "abue-ammar/tinycast", trusted: { cask: "tinycast" }
+  cask "tinycast"
 
   # rift (BSP tiling window manager)
   # currently disabled because usually compiled as local fork
   # tap "acsandmann/tap"
   # brew "acsandmann/tap/rift", trusted: true
-
-  # AI
-  brew "ollama"
 
   # sbx (Docker Sandboxes, agent sandbox launcher; arm64 macOS 14+ only)
   tap "docker/tap", trusted: { cask: "sbx" }
@@ -216,7 +192,6 @@ if OS.mac?
   brew "iproute2mac"
   brew "pinentry-mac"
   brew "pngpaste"
-  brew "telnet"  # the formula is macOS-only; Linux gets inetutils via apt
 
   # litra cli
   brew "litra"
@@ -237,9 +212,7 @@ if OS.mac?
   cask "font-symbols-only-nerd-font"
 
   # casks
-  cask "android-studio"
   cask "app-tamer"
-  cask "avidemux"
   cask "brave-browser@beta"
   cask "bruno"
   cask "chatgpt"  # replaces discontinued codex-app; Codex agent management lives here now
@@ -248,8 +221,6 @@ if OS.mac?
   cask "contexts"
   cask "coteditor"
   cask "daisydisk"
-  cask "db-browser-for-sqlite"
-  cask "dbeaver-community"
   cask "firefox@developer-edition"
   cask "gcloud-cli"
   cask "ghostty"
@@ -257,19 +228,16 @@ if OS.mac?
   cask "hex-fiend"
   cask "iina"
   cask "inkscape"
-  cask "iterm2"
   cask "karabiner-elements"
-  cask "kitty"
   cask "libreoffice"
   cask "lm-studio"
   cask "logitune"
+  cask "markedit"
   cask "mediainfo"
   cask "mitmproxy"
   cask "obsidian"
   cask "orbstack"
-  cask "p4v"
   cask "pgadmin4"
-  cask "raycast"
   cask "secretive"
   cask "shottr"
   cask "spotify"
@@ -279,8 +247,7 @@ if OS.mac?
   cask "utm"
   cask "visual-studio-code"
   cask "vlc"
-  cask "vnc-viewer"
-  cask "wezterm@nightly"
+  cask "realvnc-connect-viewer"
   cask "wireshark-app"
   cask "yubico-authenticator"
   cask "zen"
@@ -289,28 +256,19 @@ if OS.mac?
   mas "Balance Lock", id: 1019371109
   mas "Bitwarden", id: 1352778147
   mas "Brother P-touch Editor", id: 1453365242
-  mas "Color Picker", id: 1545870783
   mas "CrystalFetch", id: 6454431289 # Download Windows images from microsoft.com
-  mas "Discovery", id: 1381004916
-  mas "Microsoft Remote Desktop", id: 1295203466
+  mas "Windows App", id: 1295203466
   mas "Negative", id: 1378123825 # document/PDF reader with color inversion for reading in the dark
   mas "uBlock Origin Lite", id: 6745342698
-  # mas "Xcode", id: 497799835 # exclude for now, using beta because of beta macOS
+  mas "Xcode", id: 497799835
 
   # work GUI apps (macOS only)
   if is_work
     cask "anypointstudio"
-    cask "deepl"
-    cask "firefox@nightly"
     cask "google-chrome"
     cask "jabra-direct"
     cask "keepassxc"
-    cask "microsoft-azure-storage-explorer"
-    cask "microsoft-edge"
-    cask "miro"
-    cask "mongodb-compass"
-    cask "postman"
-    cask "slack"
+    cask "zoom"
   end
 
   # home (personal, always macOS)
@@ -318,7 +276,6 @@ if OS.mac?
     brew "ansible"
     brew "esptool"
     brew "hcloud"
-    brew "rclone"
     brew "spicetify-cli"
     brew "wireguard-tools"
 
