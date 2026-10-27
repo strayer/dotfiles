@@ -95,7 +95,6 @@ brew "pandoc"
 brew "parallel"
 brew "pdf2svg"
 brew "pigz"
-brew "pipx"
 brew "pixz"
 brew "pnpm"
 brew "powershell"
@@ -179,7 +178,7 @@ if OS.mac?
   cask "tinycast"
 
   # rift (BSP tiling window manager)
-  # currently disabled because usually compiled as local fork
+  # not installed via Homebrew: a local fork build is used instead (~/.bin/rift shim)
   # tap "acsandmann/tap"
   # brew "acsandmann/tap/rift", trusted: true
 
@@ -213,12 +212,12 @@ if OS.mac?
 
   # casks
   cask "app-tamer"
+  cask "betterdisplay"
   cask "brave-browser@beta"
   cask "bruno"
   cask "chatgpt"  # replaces discontinued codex-app; Codex agent management lives here now
   cask "claude"  # Claude desktop app (claude-code@latest above is the CLI)
   cask "clop"
-  cask "contexts"
   cask "coteditor"
   cask "daisydisk"
   cask "firefox@developer-edition"
@@ -231,7 +230,6 @@ if OS.mac?
   cask "karabiner-elements"
   cask "libreoffice"
   cask "lm-studio"
-  cask "logitune"
   cask "markedit"
   cask "mediainfo"
   cask "mitmproxy"
@@ -254,9 +252,7 @@ if OS.mac?
 
   mas "Amphetamine", id: 937984704
   mas "Balance Lock", id: 1019371109
-  mas "Bitwarden", id: 1352778147
   mas "Brother P-touch Editor", id: 1453365242
-  mas "CrystalFetch", id: 6454431289 # Download Windows images from microsoft.com
   mas "Windows App", id: 1295203466
   mas "Negative", id: 1378123825 # document/PDF reader with color inversion for reading in the dark
   mas "uBlock Origin Lite", id: 6745342698
@@ -268,47 +264,41 @@ if OS.mac?
     cask "google-chrome"
     cask "jabra-direct"
     cask "keepassxc"
+    cask "logitune"
     cask "zoom"
   end
 
   # home (personal, always macOS)
   if is_home
     brew "ansible"
-    brew "esptool"
-    brew "hcloud"
     brew "spicetify-cli"
-    brew "wireguard-tools"
 
     cask "1password"
     cask "1password-cli"
-    cask "android-platform-tools"
-    cask "balenaetcher"
     cask "bambu-connect"
-    cask "calibre"
     cask "discord"
     cask "freecad"
+    cask "jlcone"  # JLCPCB ordering client
+    cask "keyboardcleantool"
     cask "kicad"
-    cask "macfuse"
+    cask "little-snitch@nightly"
     cask "microsoft-auto-update"
     cask "microsoft-excel"
     cask "moonlight"
-    cask "mqtt-explorer"
     cask "openscad@snapshot"
     cask "orcaslicer"
-    cask "plex"
     cask "raspberry-pi-imager"
     cask "signal"
     cask "steam"
     cask "syncthing-app"
     cask "tailscale-app"
     cask "thunderbird@beta"
+    cask "tiptoi-manager"
     cask "tor-browser"
-    cask "veracrypt"
 
     mas "1Password for Safari", id: 1569813296
     mas "AusweisApp", id: 948660805
     mas "Microsoft Word", id: 462054704
-    mas "Goodnotes", id: 1444383602
     mas "Home Assistant", id: 1099568401
     mas "OneDrive", id: 823766827
     mas "Telegram", id: 747648890
