@@ -6,8 +6,9 @@
      in deliberately — it doubles as a canary: if Claude Code ever stops
      loading managed-settings.d, the missing statusline makes it obvious. */ -}}
 {{- $base := include "dot_bin/private_src/private_configure-claude/base-settings.json" | fromJson -}}
-{{- /* statusLine and subagentStatusLine run `claude-statusline` from PATH,
-     which is /usr/local/bin here and the Homebrew prefix on the host. */ -}}
+{{- /* statusLine and subagentStatusLine run `claude-statusline` from PATH:
+     the Homebrew prefix on the host, /usr/local/bin here (the prefixes the
+     command adds don't exist in the sandbox and are harmless). */ -}}
 {{- $prefs := omit $base "$schema" "permissions" -}}
 schemaVersion: "2"
 kind: mixin

@@ -24,12 +24,12 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "claude-statusline",
+    "command": "PATH=\"/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:$PATH\" claude-statusline",
     "padding": 0
   },
   "subagentStatusLine": {
     "type": "command",
-    "command": "claude-statusline --subagents"
+    "command": "PATH=\"/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:$PATH\" claude-statusline --subagents"
   },
   "tui": "fullscreen",
   "editorMode": "vim",
