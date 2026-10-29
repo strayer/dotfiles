@@ -13,6 +13,8 @@ brew "agent-browser"
 brew "herdr"
 cask "claude-code@latest"  # cask has linux binaries (x86_64 + arm64)
 cask "codex"               # same
+tap "strayer/tap"
+brew "strayer/tap/claude-code-statusline", trusted: true  # Claude Code statusline + subagent panel rows
 
 # linters, formatters, LSPs
 brew "ansible-lint"

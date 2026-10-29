@@ -24,8 +24,12 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "~/.claude/claude-statusline",
+    "command": "claude-statusline",
     "padding": 0
+  },
+  "subagentStatusLine": {
+    "type": "command",
+    "command": "claude-statusline --subagents"
   },
   "tui": "fullscreen",
   "editorMode": "vim",

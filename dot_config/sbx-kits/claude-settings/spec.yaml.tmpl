@@ -6,10 +6,9 @@
      in deliberately — it doubles as a canary: if Claude Code ever stops
      loading managed-settings.d, the missing statusline makes it obvious. */ -}}
 {{- $base := include "dot_bin/private_src/private_configure-claude/base-settings.json" | fromJson -}}
+{{- /* statusLine and subagentStatusLine run `claude-statusline` from PATH,
+     which is /usr/local/bin here and the Homebrew prefix on the host. */ -}}
 {{- $prefs := omit $base "$schema" "permissions" -}}
-{{- /* In the sandbox the binary lives on PATH (/usr/local/bin), not in
-     ~/.claude like on the host. */ -}}
-{{- $_ := set (get $prefs "statusLine") "command" "claude-statusline" -}}
 schemaVersion: "2"
 kind: mixin
 name: claude-settings
@@ -43,11 +42,11 @@ setup:
     # per-arch SHA256 from the release's checksums.txt.
     - command: |
         set -euo pipefail
-        VERSION=1.2.0
+        VERSION=1.4.0
         ARCH=$(dpkg --print-architecture)
         case "$ARCH" in
-          amd64) SHA256="42390ef65360c40b0271559f65fb1223c6593bf633e3b62dda470092996b74e6" ;;
-          arm64) SHA256="934d0a440bbdf03ec10ecb870a8c2b0adbba61f6a6ed2cbc2a90881b149e377b" ;;
+          amd64) SHA256="1fdcecba57e5aaa9d62d4dc58fc0dc825d1582a6b1caa53ddc8a90fc04a37365" ;;
+          arm64) SHA256="704cbabb2ea4e0c8265df54ccf104a71bd4fc32915dbddbfa8b526c5d835a8de" ;;
           *) echo "unsupported arch: $ARCH" >&2; exit 1 ;;
         esac
         URL="https://github.com/strayer/claude-code-statusline/releases/download/v${VERSION}/claude-statusline-linux-${ARCH}"
@@ -56,4 +55,4 @@ setup:
         chmod 0755 /usr/local/bin/claude-statusline
         echo '{}' | /usr/local/bin/claude-statusline >/dev/null
       user: "0"
-      description: "Install claude-statusline v1.2.0, version+digest pinned"
+      description: "Install claude-statusline v1.4.0, version+digest pinned"
