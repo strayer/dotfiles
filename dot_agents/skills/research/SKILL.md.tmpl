@@ -1,66 +1,94 @@
 ---
 name: research
-description: Research a topic on the live web with Linkup agentic search, returning a synthesized answer with inline numbered citations to live sources. Use when the user wants fresh, sourced web information — "research", "look up", "fact-check", recency cues like "latest" or "current", questions past the training cutoff, or answers that need cited sources. Not for pure code questions, files in the repo, or anything answerable from the conversation alone.
-allowed-tools: Bash({{ .chezmoi.homeDir }}/.agents/skills/research/scripts/search.py *)
+description: Research a topic on the live web (Linkup search, plus Hacker News for tech topics) in an isolated subagent that returns a finished answer with numbered citations. Use when the user wants fresh, sourced web information — "research", "look up", "fact-check", recency cues like "latest" or "current", questions past the training cutoff, or answers that need cited sources. Not for pure code questions, files in the repo, or anything answerable from the conversation alone.
+when_to_use: The researcher sees no conversation history, so pass a self-contained brief as the argument — the question plus any context, constraints, or prior findings it needs. Relay its answer with the [N] markers and the Sources list intact.
+context: fork
+agent: general-purpose
+model: sonnet
+effort: high
+background: false
+allowed-tools: Bash({{ .chezmoi.homeDir }}/.agents/skills/research/scripts/search.py *) Bash({{ .chezmoi.homeDir }}/.agents/skills/research/scripts/hn.py *) Bash({{ .chezmoi.homeDir }}/.agents/skills/scrape/scripts/scrape.py *)
 ---
 
-# Linkup Research
+# Web Research
 
-You research topics on the live web via Linkup's agentic search. Linkup does the retrieval *and* writes a synthesized answer with `[N]` citation markers. Your job is to craft the query, run the call, and present the answer with inline subject links woven in.
+You research a question on the live web and write the final answer yourself, citing the sources you retrieved. Your final message is relayed to the user as-is, so make it the finished answer, not a report about your process.
 
-If `$ARGUMENTS` is provided, treat it as the research question and start immediately. Otherwise ask the user what they want researched.
+The research brief: $ARGUMENTS
 
-## Tool
+If the brief is empty, reply only that no research question was given.
+
+## Tools
 
 ```bash
-{{ .chezmoi.homeDir }}/.agents/skills/research/scripts/search.py "<research brief>" --depth deep
+{{ .chezmoi.homeDir }}/.agents/skills/research/scripts/search.py "<query>" --depth standard
+{{ .chezmoi.homeDir }}/.agents/skills/research/scripts/hn.py "<keywords>" [--sort date] [--min-points 20] [--type comment]
+{{ .chezmoi.homeDir }}/.agents/skills/scrape/scripts/scrape.py "<url>" --max-chars 25000
 ```
 
-- `--depth`: `fast` | `standard` | `deep`. See depth selection below.
-- `--from-date` / `--to-date` (`YYYY-MM-DD`): date-window the results. Always use these instead of writing date ranges into the query text.
-- `--include-domains` / `--exclude-domains` (comma-separated): restrict or exclude sources, e.g. only official docs or vendor sites.
-- `--max-results N`: cap the source list (default 10). Raise only when the user explicitly asks for exhaustive sourcing — a bigger list mostly admits lower-quality sources.
-- `--include-images`: include image sources when the user wants visual content.
+Run each script as its own Bash call and read its stdout directly. Never redirect output to files, never use `&`/`wait`, never write temp files: for parallelism, issue several Bash tool calls in one message. One call per Bash invocation keeps each output under the tool's display limit.
 
-Output: the synthesized answer with `[1]`, `[2]`, … markers, followed by a `## Sources` section listing each source as `[N] [Title](URL)`.
+**search.py** (Linkup) prints numbered results: `[N] Title`, `URL:`, then a page excerpt. Numbering restarts at `[1]` in every call; it is not your citation numbering. Flags:
 
-## Depth selection
+- `--depth`: `fast` | `standard` | `deep` (see below).
+- `--from-date` / `--to-date` (`YYYY-MM-DD`): date window. Never write date ranges into the query text.
+- `--include-domains` / `--exclude-domains` (comma-separated, up to 100 includes): enforce source quality, e.g. official docs only, or `reddit.com` for community opinion (excerpts only; Reddit threads cannot be scraped).
+- `--max-results N` (default 10): raise only for exhaustive sourcing; more results mostly admit weaker sources.
+- `--answer`: Linkup's own cited answer instead of raw excerpts. Only for a quick atomic fact; never for real research.
 
-- **`deep`** — the default for real research: anything multi-faceted, open-ended, thorough, or requiring chained steps (find a URL then scrape it, scrape several pages, follow leads). Runs several agentic search iterations server-side (5–30 s) and returns one synthesized answer. Prefer one well-briefed `deep` call over fanning out several `standard` calls: every extra response costs significant context tokens to read and merge, while a deep call is only pennies more.
-- **`standard`** — narrow, single-facet questions that one well-targeted search pass answers (a fact, a status, one entity's recent news). 1–3 s. Can scrape exactly one URL provided in the query.
-- **`fast`** — keyword-only, no LLM, sub-second. Single atomic lookups ("current EUR/USD rate"). It ignores instructions entirely — pass a keyword string, nothing else.
+**hn.py** searches Hacker News (Algolia full-text). Every word must match, so use one to three distinctive keywords and quote multi-word names (`'"uptime kuma"'`); drop words if hits are few. Lists stories (or comments with `--type comment`) with points, comment count, date and item URL. Filters: `--min-points`, `--min-comments`, `--from-date`, `--to-date`, `--sort date`.
 
-Hard ceiling: 3 calls per request. Split into multiple calls only when facets are so unrelated that one brief would muddy both. When you do merge several answers, renumber the `[N]` markers consecutively and merge the source lists into a single `## Sources` block, keeping markers and entries in sync.
+**scrape.py** reads one URL in full. Always pass `--max-chars 25000` (larger output gets cut off by the tool); the output notes truncation. Hacker News item URLs render as a comment tree, busiest subthreads first. Other pages go through Firecrawl with automatic Linkup fallback. Reddit is refused: cite Reddit threads from search excerpts and say so.
 
-## Blocking vs. background
+## Depth selection (Linkup)
 
-If the user is waiting on this answer, run the script normally and wait — even a deep call is under a minute. If the research is a side task (asked mid-task, or you have other work to continue), run the script in the background, keep working, and weave the answer in when the result arrives.
+- **`standard`** (1–3 s) — the default. One agentic pass that can fan out parallel sub-searches. For breadth, add the literal phrase "Run several searches with adjacent keywords." Can scrape one URL named in the query.
+- **`deep`** (5–30 s, ~9× the cost) — when a step depends on an earlier result: find a URL then read it, read several pages, follow leads, or when requirements are open-ended and one pass is unlikely to find the answer.
+- **`fast`** (~1 s) — keyword-only, no LLM; ignores instructions. Atomic lookups.
 
-## Query crafting
+Budget: up to 4 search.py calls, 2 hn.py calls and 6 scrape.py calls per brief. A typical run uses most of it; finishing with half the budget unspent usually means verification was skipped. Run independent calls as parallel Bash tool calls. Split facets into separate calls only when they are unrelated.
 
-Linkup's agentic search (`standard` and `deep`) follows instructions literally. Write the query as a research brief, not keywords:
+## Query crafting (standard and deep)
 
-- **Scope** — where to look: kinds of sources, specific sites, source types.
-- **Method** — what to extract: the specific data points, per item found.
-- **Coverage** — for breadth, include the literal phrase "Run several searches with adjacent keywords."
-- **Source quality** — for quantitative or load-bearing claims, state both a preference and a rejection: "Prefer primary sources (vendor blogs, official announcements, standards bodies, filings). Do not use secondhand aggregator or SEO blog summaries." Preference alone loses to keyword-dense SEO content. When precision matters more than breadth, enforce it with `--include-domains`.
-- **Ordering** — for `deep` chains, name the steps: "First find X's pricing page. Then scrape it. Then extract plan names and prices."
+Linkup's agent follows instructions literally. Write a retrieval brief, not keywords:
 
-Ask for what to *retrieve*, not for conclusions — analysis and comparison are your job on the results. Put date constraints in `--from-date`/`--to-date`, never in the query text.
+- **Role** (optional) — the perspective: "You are a security engineer evaluating…"
+- **Scope** — where to look: source types, specific sites.
+- **Method** — what to extract, per item found.
+- **Coverage** — for breadth, "Run several searches with adjacent keywords."
+- **Source quality** — for load-bearing claims, state a preference *and* a rejection: "Prefer primary sources (vendor docs, official announcements, filings). Do not use SEO blog summaries or aggregators." Enforce with `--include-domains` when precision matters more than breadth.
+- **Ordering** (deep) — name the steps: "First find X's pricing page. Then scrape it. Then extract plan names and prices."
+
+Ask for what to *retrieve*, never for conclusions; analysis is your job. Never put guesses into a query: name products, versions, or events only once a result has confirmed they exist, and otherwise describe the category ("new UniFi gateways launched since August"), so the search can't be steered toward something invented.
 
 | Intent | Query | Depth |
 |---|---|---|
 | Atomic fact | `Current EUR/USD exchange rate` | fast |
-| Single facet | `Find {company}'s most recent funding round. Look at press releases, Crunchbase, and news coverage. Extract round size, valuation, lead investors, and announcement date.` (+ `--from-date`) | standard |
-| Broad coverage | `Find recent significant developments in AI agent frameworks and tools. Look at product announcements, research papers, and analysis from major tech publications. Run several searches with adjacent keywords.` | deep |
-| Chained steps | `First find {company}'s pricing page. Then scrape it. Then extract plan names, prices per tier, and included features for each plan.` | deep |
+| Single facet | `Find {company}'s most recent funding round. Look at press releases and news coverage. Extract round size, valuation, lead investors, and announcement date.` (+ `--from-date`) | standard |
+| Broad coverage | `Find recent significant developments in AI agent frameworks. Look at product announcements, research papers, and major tech publications. Run several searches with adjacent keywords.` | standard |
+| Chained steps | `First find {company}'s pricing page. Then scrape it. Then extract plan names, prices per tier, and included features.` | deep |
 
-## Presenting the answer
+## Hacker News
 
-Preserve Linkup's citation work: keep every `[N]` marker exactly where it sits, keep the full `## Sources` list at the bottom (including entries whose marker you didn't use), never invent citations, and never convert `[N]` to `[^N]` footnote syntax — it doesn't render in terminal markdown. If you rephrase a sentence, carry its markers along with the claims they support.
+Also query HN when the topic is something developers discuss: software, dev tools, infrastructure, self-hosting, AI models and services, startups, tech companies, or practitioner experience ("is X any good", "X vs Y", "problems with X"). Skip it for non-tech topics.
 
-On top of that, add **inline subject links** for discoverability: when a source title clearly matches a proper noun in the prose (a project, person, or product), wrap that entity's *first* mention in a markdown link to the source URL, using the entity's natural name as the link text. Only link clear matches, only use URLs from the `## Sources` list, and leave later mentions plain.
+Run hn.py in parallel with the first Linkup call, with a topic-specific query (product or problem keywords, not just the brand). Scrape every on-topic hit with 20+ comments, up to two threads, to read what practitioners actually say; the hit list alone is not HN research. Treat HN comments as experience reports and opinion, not as facts; attribute them ("HN commenters report…").
+
+## Working the results
+
+1. Read the excerpts to map the landscape and pick candidates. Skip SEO listicles, content farms, and undated pages; they are not evidence even when they match.
+2. **Verify before writing (required).** Excerpts are fragments chosen by keyword match; they miss qualifiers, dates, and context. Scrape the page behind every claim the reader would act on: prices, compatibility or version requirements, release dates, security status, and the headline conclusion. Prefer the primary page (vendor store, release notes, advisory) over a secondary write-up. Also scrape wherever sources conflict.
+3. **Close open questions.** Before writing, list the questions your findings raised that matter to the brief (e.g. "requires OS 6 — is OS 6 released?"). Answer each with a follow-up search or scrape while budget remains.
+4. Weigh sources: primary over secondary, recent over stale, independent over vendor claims about themselves. Say so when the only evidence is a vendor or a single source.
+
+## Writing the answer
+
+- Answer the brief directly, structured with headings, lists, or tables as the content warrants. Lead with the conclusion.
+- Cite every factual claim with `[N]` markers matching a single `## Sources` list at the end, numbered in order of first citation, formatted `[N] [Title](URL)`. Assign numbers by URL across all calls: one entry per URL, reuse its number when citing the same page again. Before finishing, check the list for duplicate URLs. Cite only sources you actually retrieved; never invent URLs. Do not use `[^N]` footnote syntax — it doesn't render in terminal markdown.
+- Link a project, product, or person's first mention to its source URL when a source clearly is about that entity.
+- Mark claims that still rest only on a search excerpt with "(excerpt)" after the citation, so the reader knows what was not read in full.
+- State gaps plainly and accurately: distinguish "searched, nothing found", "tried to read, failed" (only if you actually ran the call and it errored), and "not checked". Never describe an unattempted step as a failure. Don't pad with hedging about things you did find.
 
 ## Setup
 
-The script reads `LINKUP_API_KEY` from the environment. Get a key at https://app.linkup.so and export it before invoking the skill.
+search.py reads `LINKUP_API_KEY`; scrape.py also reads `FIRECRAWL_API_KEY`. hn.py needs no key.

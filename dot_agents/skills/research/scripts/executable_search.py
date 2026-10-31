@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Call Linkup /search with outputType=sourcedAnswer and emit ready-to-paste markdown.
+"""Call Linkup /search and emit numbered sources for the caller to reason over.
+
+Default outputType is searchResults (ranked sources with page excerpts), which
+Linkup recommends when an LLM reasons over the results. --answer switches to
+sourcedAnswer, Linkup's own cited answer, for quick lookups.
 
 IMPORTANT: only the synchronous /v1/search endpoint may be used here. Linkup's
 async endpoints (/research, /tasks, /extract) store every task and expose
@@ -30,7 +34,7 @@ def split_domains(value):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Linkup /search wrapper (sourcedAnswer)"
+        description="Linkup /search wrapper"
     )
     parser.add_argument(
         "query", help="Natural language query (write it as a research brief)"
@@ -70,6 +74,11 @@ def main():
     parser.add_argument(
         "--include-images", action="store_true", help="Include images in sources"
     )
+    parser.add_argument(
+        "--answer",
+        action="store_true",
+        help="Return Linkup's cited answer (sourcedAnswer) instead of raw sources",
+    )
     args = parser.parse_args()
 
     api_key = os.environ.get("LINKUP_API_KEY")
@@ -80,11 +89,12 @@ def main():
     body = {
         "q": args.query,
         "depth": args.depth,
-        "outputType": "sourcedAnswer",
-        "includeInlineCitations": True,
+        "outputType": "sourcedAnswer" if args.answer else "searchResults",
         "includeImages": args.include_images,
         "maxResults": args.max_results,
     }
+    if args.answer:
+        body["includeInlineCitations"] = True
     if args.from_date:
         body["fromDate"] = args.from_date
     if args.to_date:
@@ -114,7 +124,46 @@ def main():
         sys.stderr.write(f"Network error: {e.reason}\n")
         sys.exit(2)
 
-    print_sourced_answer(data)
+    if args.answer:
+        print_sourced_answer(data)
+    else:
+        print_search_results(data)
+
+
+def print_search_results(data):
+    results = data.get("results")
+    if results is None:
+        print(json.dumps(data, indent=2, ensure_ascii=False))
+        return
+    if not results:
+        print("No results.")
+        return
+
+    # Linkup can return the same URL several times with different excerpts;
+    # merge them so each page gets one number.
+    merged = {}
+    for res in results:
+        url = res.get("url", "")
+        content = (res.get("content") or "").strip()
+        if url in merged:
+            if content and content not in merged[url]["excerpts"]:
+                merged[url]["excerpts"].append(content)
+            continue
+        merged[url] = {"res": res, "excerpts": [content] if content else []}
+
+    for i, (url, entry) in enumerate(merged.items(), 1):
+        res = entry["res"]
+        name = (res.get("name") or "Source").strip().replace("\n", " ")
+        print(f"[{i}] {name}")
+        print(f"URL: {url}")
+        if res.get("type") == "image":
+            print("(image)")
+        else:
+            print()
+            print("\n…\n".join(entry["excerpts"]))
+        print()
+        print("---")
+        print()
 
 
 def print_sourced_answer(data):

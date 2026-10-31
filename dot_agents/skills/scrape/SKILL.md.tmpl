@@ -1,24 +1,30 @@
 ---
 name: scrape
-description: Scrape a single web page with Firecrawl and return clean markdown stripped of nav/header/footer/ads.
+description: Scrape a single web page and return clean markdown stripped of nav/header/footer/ads — Firecrawl with automatic Linkup fallback, and Hacker News threads as a full comment tree.
 when_to_use: |
   Trigger when the user wants the content of a specific URL extracted as readable markdown. Concrete signals:
   - Explicit verbs: "scrape", "extract", "read this page", "get the content of", "pull down", "save this article"
   - URL provided alongside an action verb that implies needing the page content
   - Documentation/article reading where the user pasted a link
-  - When a previous tool (linkup-research, search, MCP) returned a URL the user wants to dive into
+  - When a previous tool (research, search, MCP) returned a URL the user wants to dive into
   Do NOT trigger for:
-  - Open research questions without a specific URL (use linkup-research instead)
+  - Open research questions without a specific URL (use the research skill instead)
   - URLs to plain files (.md, .txt, JSON, OpenAPI specs) — use `curl -s` instead, no extraction needed
   - Multi-page crawls or domain mapping (out of scope for this skill)
   - Pages requiring login, form-fill, or click interactions (out of scope; would need /v2/interact)
+  - Reddit URLs — no engine can read them; the script refuses them
 argument-hint: <url>
 allowed-tools: Bash({{ .chezmoi.homeDir }}/.agents/skills/scrape/scripts/scrape.py *)
 ---
 
 # Scrape
 
-You scrape a single web page via Firecrawl's `/v2/scrape` endpoint and return clean markdown. Firecrawl strips nav/header/footer/ads at the HTML level, blocks cookie banners, and converts the main content to markdown.
+You scrape a single web page and return clean markdown. The script picks the engine per URL:
+
+- **Firecrawl** `/v2/scrape` for most pages: strips nav/header/footer/ads, blocks cookie banners. If it errors, gets an HTTP error status, or returns a block page, the script retries with **Linkup `/fetch`** automatically.
+- **Linkup `/fetch` first** for sites Firecrawl refuses (X/Twitter, LinkedIn, Instagram, Facebook, Threads, TikTok), with Firecrawl as fallback.
+- **Hacker News** item URLs (`news.ycombinator.com/item?id=…`) via the free Algolia API: the story plus its full comment tree, indented by reply depth, busiest subthreads first.
+- **Reddit** is refused with exit code 3: Firecrawl doesn't support it, Linkup gets a CAPTCHA, and old.reddit requires a login.
 
 If `$ARGUMENTS` is provided, treat it as the URL (or a URL with extra context) and run the scrape immediately. Otherwise ask the user for the URL.
 
@@ -28,27 +34,31 @@ If `$ARGUMENTS` is provided, treat it as the URL (or a URL with extra context) a
 {{ .chezmoi.homeDir }}/.agents/skills/scrape/scripts/scrape.py "<url>" [flags]
 ```
 
-Output: a small header (`# Title`, `URL:`, `Status:`), then `---`, then the page markdown. With `--include-links`, an extra `## Links` section.
+Output: a small header (`# Title`, `URL:`, `Engine:`, and `Status:` for Firecrawl; `Link:` and `Meta:` for Hacker News), then `---`, then the content. With `--include-links`, an extra `## Links` section. Fallbacks are reported on stderr.
 
 ## Flags — when to use which
 
-- **(none)** — the default. Just `<url>`. Markdown only, cached up to 2 days, auto proxy.
+- **(none)** — the default. Just `<url>`. Automatic engine routing and fallback; Firecrawl results cached up to 2 days.
 - **`--fresh`** — bypass the 2-day cache. Use when the user says "latest", "current", "today's", "just published", or you have any reason to think the page changed recently.
 - **`--wait-for 5000`** — extra 5s delay before grabbing content. Use as a **retry** when the first attempt comes back empty or just navigation (likely a JS-rendered SPA). Don't add it preemptively — it slows every scrape.
 - **`--mobile`** — emulate a mobile device. Use only when the user explicitly wants the mobile view or the page is known to be mobile-only.
 - **`--proxy enhanced`** — use enhanced anti-bot proxies. Use as a **retry** when the first attempt returned a 403 or anti-bot block. Costs more (up to 5 credits) — don't use preemptively.
-- **`--include-links`** — also list extracted links. Use when the user wants to follow up by scraping linked pages, or asks for "links on the page".
+- **`--include-links`** — also list extracted links (Firecrawl only). Use when the user wants to follow up by scraping linked pages, or asks for "links on the page".
+- **`--engine firecrawl|linkup`** — force one engine, no fallback. Use only when the user asks for a specific engine or to compare them.
+- **`--max-chars N`** — cap on the content length (default 80000), for pages and Hacker News trees alike. Raise when the user wants the whole of a huge page or thread; the output says when it truncated.
+
+`--fresh`, `--wait-for`, `--mobile` and `--proxy` only affect Firecrawl.
 
 ## Workflow
 
 1. **Scrape** — call the script with just the URL.
-2. **Inspect** — if the markdown is empty or contains only navigation/menu text, retry once with `--wait-for 5000`. If the call returned a 403-style error, retry with `--proxy enhanced`. Otherwise proceed.
-3. **Present** — paste the markdown verbatim by default. Keep the header block (title/URL/status) so the user can see what was scraped. Only summarize if the user asked for a summary.
+2. **Inspect** — engine fallback is automatic. If a Firecrawl result is empty or only navigation/menu text, retry once with `--wait-for 5000`. If every engine failed with a 403-style block, retry once with `--proxy enhanced`. Otherwise proceed.
+3. **Present** — paste the markdown verbatim by default. Keep the header block (title/URL/engine/status) so the user can see what was scraped. Only summarize if the user asked for a summary.
 
 ## Output discipline
 
 - **Default to verbatim.** The user invoked `/scrape` because they want the content. Don't paraphrase, summarize, or trim unless asked.
-- **Preserve the header block** (title, URL, status) — it's the audit trail.
+- **Preserve the header block** (title, URL, engine, status) — it's the audit trail.
 - **Markdown is large.** A typical page is 5–50 KB; long-form articles can hit several hundred KB. If the page is huge and the user's intent looks like "I want to know X about this page", you may summarize the answer to X and offer the full markdown on request.
 - **Never fabricate URLs or content.** The script's output is the source of truth.
 
@@ -61,5 +71,6 @@ Output: a small header (`# Title`, `URL:`, `Status:`), then `---`, then the page
 
 ## Setup
 
-The script reads `FIRECRAWL_API_KEY` from the environment. Get a key at
-https://firecrawl.dev and export it before invoking the skill.
+The script reads `FIRECRAWL_API_KEY` (https://firecrawl.dev) and `LINKUP_API_KEY`
+(https://app.linkup.so) from the environment. Either alone works with fewer
+fallbacks; Hacker News threads need no key.
