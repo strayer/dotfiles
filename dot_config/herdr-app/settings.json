@@ -1,0 +1,10 @@
+{
+  "zoom": 1,
+  "sounds": {
+    "enabled": false
+  },
+  "minimum_contrast": 1,
+  "font": "PragmataPro",
+  "telemetry": false,
+  "appearance": "dark"
+}
