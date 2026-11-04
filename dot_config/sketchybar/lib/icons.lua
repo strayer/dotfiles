@@ -11,7 +11,6 @@ local custom_icons = {
   ["Brave Browser Beta"] = ":brave_browser:",
   ["Element X"] = ":element:",
   ["Thunderbird Beta"] = ":thunderbird:",
-  ["Zed Preview"] = ":zed:",
 }
 
 -- Merge custom icons into app_icons (custom takes precedence)
