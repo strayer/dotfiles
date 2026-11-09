@@ -175,10 +175,6 @@ if OS.mac?
   # Dock notification badges, feeds the SketchyBar dock_badges item
   brew "strayer/tap/dock-badge-counter", trusted: true
 
-  # tinycast (launcher, imports ~/.bin/raycast-scripts as custom commands)
-  tap "abue-ammar/tinycast", trusted: { cask: "tinycast" }
-  cask "tinycast"
-
   # rift (BSP tiling window manager)
   # not installed via Homebrew: a local fork build is used instead (~/.bin/rift shim)
   # tap "acsandmann/tap"
@@ -243,6 +239,7 @@ if OS.mac?
   cask "spotify"
   cask "steermouse"
   cask "swiftdefaultappsprefpane"
+  cask "tinycast"  # launcher, imports ~/.bin/raycast-scripts as custom commands
   cask "upscayl"
   cask "utm"
   cask "visual-studio-code"
