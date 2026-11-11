@@ -48,6 +48,7 @@ install-sketchybar-tailscale-watch.sh  # Install LaunchAgent feeding the Sketchy
 compile-display-refresh-fixer        # Build ~/.bin/display-refresh-fixer.app from display-refresh-fixer.swift
 compile-network-watcher              # Build ~/.bin/sketchybar-network-watcher.app from sketchybar-network-watcher.swift
 sketchybar-ssid-hash [SSID|--current|--preferred]  # Print salted SSID hashes (HMAC-SHA256) for sketchybar/lib/known_networks.lua
+rift-debug-log clear|last [MIN]|full|status  # Clear or snapshot rift's debug log (/tmp/rift_$USER.*.log) to ~/tmp/rift-debug-logs as folder + zip; -a redacts PII via `claude -p` (Sonnet)
 secretive-ssh-keygen [args]          # SSH key generation using Secretive app
 restart-gpg-agent.fish               # GPG agent management for multi-user conflicts
 tinycast-sync-commands [-n]          # Sync Tinycast custom commands with ~/.bin/raycast-scripts (macOS only)
