@@ -44,8 +44,10 @@ install-sbarlua.sh                   # Install SbarLua for SketchyBar configurat
 install-rift-pip.sh                  # Build + install rift-pip (~/.cargo/bin) with the local --window patch from ~/.bin/src/
 rift-pip-auto [toggle]               # Rift event hook: auto-PiP for hidden Teams calls; `toggle` mirrors the focused window (Alt+Ctrl+P); without rift-pip it logs once and stays quiet
 install-display-refresh-fixer.sh     # Build + install LaunchAgent keeping the Dell G3223Q on 144 Hz (needs BetterDisplay)
+install-display-profile-fixer.sh     # Build + install LaunchAgent replacing the malformed ICC profiles Dell's DDPM assigns
 install-sketchybar-tailscale-watch.sh  # Install LaunchAgent feeding the SketchyBar Tailscale item (no-op without Tailscale)
 compile-display-refresh-fixer        # Build ~/.bin/display-refresh-fixer.app from display-refresh-fixer.swift
+compile-display-profile-fixer        # Build ~/.bin/display-profile-fixer.app from display-profile-fixer.swift
 compile-network-watcher              # Build ~/.bin/sketchybar-network-watcher.app from sketchybar-network-watcher.swift
 sketchybar-ssid-hash [SSID|--current|--preferred]  # Print salted SSID hashes (HMAC-SHA256) for sketchybar/lib/known_networks.lua
 rift-debug-log clear|last [MIN]|full|status  # Clear or snapshot rift's debug log (/tmp/rift_$USER.*.log) to ~/tmp/rift-debug-logs as folder + zip; -a redacts PII via `claude -p` (Sonnet)
@@ -216,10 +218,13 @@ Always test template changes with `chezmoi diff` before applying to avoid syntax
 install-dark-mode-notify.sh         # Install automated theme switching
 launchctl load ~/Library/LaunchAgents/com.user.darkmode.plist
 install-display-refresh-fixer.sh    # Install earth.gru.display-refresh-fixer (compiles the Swift daemon first; macOS only)
+install-display-profile-fixer.sh    # Install earth.gru.display-profile-fixer (compiles the Swift daemon first; macOS only)
 install-sketchybar-tailscale-watch.sh  # Install earth.gru.sketchybar-tailscale-watch (only where Tailscale is installed)
 ```
 
 The display-refresh-fixer re-applies BetterDisplay's "unexposed" 3008x1692 HiDPI @ 144 Hz mode on the Dell G3223Q after display reconfiguration or wake, because macOS 15.1+ never persists that mode. Target display/mode are plist arguments (`--display`, `--refresh`); log at `~/Library/Logs/display-refresh-fixer.log`; `kill -USR1 <pid>` forces a check. Re-run the install script after editing the `.swift` source. The compiled `.app` bundle is a build artifact and not managed by chezmoi.
+
+The display-profile-fixer undoes what Dell Display and Peripheral Manager (DDPM) does on every start: it assigns its own ICC files from `~/Applications/DDPM/Profiles/` to Dell monitors. Those files are malformed (the primaries don't add up to the declared white point), so Chromium, Firefox and Electron apps draw white with a cyan cast, and screenshots, which embed the display profile, turn pink in those apps. The daemon reacts to colour profile changes, display changes and wake; it replaces DDPM's sRGB file with the built-in "sRGB IEC61966-2.1" profile, any other DDPM file with the display's default macOS profile, and posts a notification. Profiles picked by hand in System Settings are left alone, and after three replacements within a minute it backs off instead of fighting DDPM in a loop. `--match` changes which profile paths count as unwanted; log at `~/Library/Logs/display-profile-fixer.log`; `kill -USR1 <pid>` forces a check. Notifications only work when launchd (or `open`) starts the bundle; started from a shell, macOS refuses them. Build and reinstall work like the display-refresh-fixer.
 
 ### Development Workflows
 
