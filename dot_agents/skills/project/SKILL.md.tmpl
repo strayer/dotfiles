@@ -1,0 +1,44 @@
+{{- $vault := joinPath .chezmoi.homeDir (get .obsidian.vaults .chezmoi.hostname) -}}
+---
+name: project
+description: Agent-managed project tracking in the user's Obsidian vault (`Agent/Projects/`). Use when the user declares a session project work or wants it tracked — "this is a project", "track this", "make this a project", "new project", "link this to <project>", "this is part of <project>" — when they ask where they were with a project or what projects exist ("recap X", "where were we with X", "what am I working on"), when a tracked session reaches a milestone or is about to be compacted or closed ("review", "wrap up", "make sure everything is documented", "close this session"), or when tracking should stop ("unlink"). Not for the user's own notes: drafts and log entries in human-owned notes go through /vault.
+argument-hint: "[new <name> | new <project>/<task> | link [<name>] | review | close | unlink | recap [<name>]]"
+---
+
+Tracks projects in `{{ $vault }}/Agent/Projects/` from any Claude Code session. This skill only knows the mechanics. The model, the constraints and what a good note looks like are in `{{ $vault }}/Agent/AGENTS.md`: read it first, understand it, and act from that understanding rather than from this file.
+
+<setup>
+1. Check that `{{ $vault }}/Agent/AGENTS.md` exists. If not: stop and tell the user that the vault path for this host must be set in `.chezmoidata/obsidian.yaml` of the dotfiles, or that the `Agent/` zone is missing. Do not guess another path and do not create the zone.
+2. Read `{{ $vault }}/Agent/AGENTS.md` completely.
+3. Session facts for log headers: `echo "$CLAUDE_CODE_SESSION_ID"; hostname -s`; cwd is where Claude Code was launched, written with `~`.
+4. Mode from `$ARGUMENTS`: `new`, `link`, `review`, `close`, `unlink`, `recap`. Without arguments ("this is a project"): look up what exists and propose the best matching project or a new one, then wait for the user.
+</setup>
+
+<after_compaction>
+This skill's text is put back into context after a compaction and is inherited by a forked or resumed session. `AGENTS.md` is not: at best a summary keeps one line of it, and that line is not the rules. So in any session that was compacted, forked or resumed since `AGENTS.md` was last read in full, before the next write to the vault:
+1. Read `{{ $vault }}/Agent/AGENTS.md` completely again.
+2. Run the session facts from setup step 3 again. A fork or a resume can have a new session ID, and the log header must name the session that can actually be resumed.
+3. Read the project note as well as the sub-task you were working in. A summary that says "we were working on sub-task X" does not make X the home of everything that follows.
+</after_compaction>
+
+<lookup>
+To find projects: every `{{ $vault }}/Agent/Projects/*.md` with its `status` and the first line of `## State` (or of `## Why` for an idea with empty State). Read only those lines; files inside a project's `<Name>/` folder are not projects. Also glance at `{{ $vault }}/Projekte/` (user-owned projects) and `{{ $vault }}/Inbox/AI/` (unreviewed drafts) for a note on the same topic and mention it; never create a duplicate silently. Match by topic, not file name; if several fit, ask.
+</lookup>
+
+<modes>
+- **new <name>**: the `## Why` must be the user's own words. Quote what they said in this conversation and confirm it, or ask in one sentence. Create the note from the template in AGENTS.md with the first log entry. The session is now project work.
+- **new <project>/<task>**: a sub-task, created only with the user's say-so. The same rule for `## Why`; `## Spec` holds only what the user agreed. Create `<project>/<task>.md` and add its one-line link to the project's State.
+- **link [<name>]**: declares the session project work. With a name, read that project's frontmatter, State, Next and newest few log entries, plus the status and first State line of each sub-task in its folder, and give a 2–4 line "where we were". With `<project>/<task>`, read that sub-task the same way, and open evidence files only when the work needs them. From here on, update any project the conversation concerns at checkpoints, each note read before it is touched, with a short chat summary naming what was touched. If context was compacted and it is unclear whether the session was declared project work, ask before writing.
+- **review**: at a milestone or before a compaction, on the user's word or after an offer they accepted. Read the Review section of AGENTS.md again unless it is still in context in full, then the project note and every sub-task this session touched, and do what that section says. The session stays project work.
+- **close**: `review` first. Then tell the user host, cwd and `claude --resume <id>` for this session, and stop treating the session as project work.
+- **unlink**: stop treating the session as project work without a review. Offer a final checkpoint if there is unwritten progress.
+- **recap [<name>]**: read as in `link`, answer in chat, write nothing. Mention host and cwd of the last session; `claude --resume <id>` only works there. If the user then keeps working on that project here, ask once whether to track the session. Without a name: one line per project from the lookup.
+</modes>
+
+<never>
+- Write anywhere in the vault except `Agent/Projects/` under this skill. `/vault` is the way into human-owned notes.
+- Write as a subagent; return findings to the caller instead.
+- Rewrite an evidence file; newer data goes in a new dated file.
+- Rename, move or delete project files or `Inbox/AI/` drafts. If the user wants a file gone, `trash`, never `rm`.
+- Write before the user has declared the session project work, or create a project without their say-so.
+</never>

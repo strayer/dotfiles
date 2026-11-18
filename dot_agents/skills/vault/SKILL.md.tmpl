@@ -1,7 +1,7 @@
 {{- $vault := joinPath .chezmoi.homeDir (get .obsidian.vaults .chezmoi.hostname) -}}
 ---
 name: vault
-description: Capture results of the current session in the user's Obsidian vault, either as a new draft note or as a dated log entry appended to an existing note. Triggers on phrases like "write this to the vault", "put it in Obsidian", "keep this as a note", "add a log entry", "add this to the project note", "I want to remember this" (and their German equivalents). Not for editing arbitrary vault notes and not for creating tasks.
+description: Capture results of the current session in the user's Obsidian vault, either as a new draft note or as a dated log entry appended to an existing note. Triggers on phrases like "write this to the vault", "put it in Obsidian", "keep this as a note", "add a log entry to <note>", "I want to remember this" (and their German equivalents). Not for editing arbitrary vault notes, not for creating tasks, and not for agent-managed projects (those go through /project).
 argument-hint: "[note <topic> | log <note name>] [optional: what to capture]"
 ---
 
@@ -25,7 +25,7 @@ Writes into the Obsidian vault at `{{ $vault }}` from any Claude Code session. T
 </mode_note>
 
 <mode_log>
-- Find the target note: `fd -i -e md '<name>' '{{ $vault }}' --exclude '.*'`, then drop hits in the folders the vault's AGENTS.md declares off-limits for log entries. Exactly one hit → use it. Several → list them and ask. None → ask whether it should become a draft in the drafts folder instead. **Never** create a new note outside the drafts folder.
+- Find the target note: `fd -i -e md '<name>' '{{ $vault }}' --exclude '.*'`, then drop hits in the folders the vault's AGENTS.md declares off-limits for log entries. A hit in the agent-managed projects zone is not a target either: tell the user that note belongs to `/project` and stop. Exactly one hit → use it. Several → list them and ask. None → ask whether it should become a draft in the drafts folder instead. **Never** create a new note outside the drafts folder.
 - Do not load the whole note into context. Read only the headings (`rg -n '^#' <file>` or `grep -n '^#'`) and the tail (`tail -n 80`) to learn heading level, date format, ordering and language of the existing entries, and follow them. The vault's AGENTS.md says which ordering is common.
 - Draft the entry in the same form as the existing ones, in the language the note is written in. Keep it short: what changed or was learned, why, what is open.
 - **Show the finished entry and wait for an explicit ok.** Nothing is written without it.

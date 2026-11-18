@@ -30,6 +30,7 @@ Library/Preferences/pnpm/config.yaml
 {{- end }}
 
 {{ if not (hasKey .obsidian.vaults .chezmoi.hostname) -}}
-{{/* /vault skill only where .chezmoidata/obsidian.yaml knows the vault path */ -}}
+{{/* /vault and /project skills only where .chezmoidata/obsidian.yaml knows the vault path */ -}}
 .agents/skills/vault
+.agents/skills/project
 {{- end }}
