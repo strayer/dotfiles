@@ -110,6 +110,12 @@ app_rules = [
   { app_id = "md.obsidian", workspace = "O" },
 ]
 
+# Overview of all workspaces (rift's own, not macOS Mission Control), opened
+# with Alt+Ctrl+M. Inside it the focus, move and workspace keys below work.
+# Turning it on needs a rift restart.
+[settings.ui.mission_control]
+enabled = true
+
 [keys]
 # Activate/deactivate rift on current space (REQUIRED to start managing windows)
 "Alt + Z" = "toggle_space_activated"
@@ -228,3 +234,6 @@ app_rules = [
 # Picture-in-picture: close the PiP that is showing, else mirror the focused window
 # into a floating PiP via rift-pip. Teams calls get a PiP automatically, see run_on_start.
 "Alt + Ctrl + P" = { exec = ["sh", "-c", "\"$HOME/.bin/rift-pip-auto\" toggle"] }
+
+# Overview of all workspaces
+"Alt + Ctrl + M" = "show_mission_control_all"

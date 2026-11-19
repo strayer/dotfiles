@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Rift: Overview
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon 🪟
+# @tinycast.icon rectangle.grid.3x2
+# @raycast.packageName Rift
+
+# Documentation:
+# @raycast.description Show all workspaces in Rift's overview (needs settings.ui.mission_control enabled)
+
+"$HOME/.bin/rift-cli" execute mission-control show-all
