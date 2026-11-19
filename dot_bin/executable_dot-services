@@ -25,6 +25,10 @@
 # `brew bundle`, no Tailscale, …) is skipped with a warning; one that was
 # named on the command line fails instead.
 #
+# On a terminal, output is coloured and `status` shows a compact overview
+# with a "Needs attention" list of fixes. Piped, or with NO_COLOR set, it
+# prints plain "NAME: text" lines and a plain status table.
+#
 # Adding a component: add its name to COMPONENTS and define functions named
 # after it (dashes become underscores). All but _desc are optional:
 #   NAME_desc         one-line description
@@ -61,11 +65,39 @@ FORCE=0
 # launchd and chezmoi may run this with a PATH that lacks Homebrew.
 PATH="$PATH:/opt/homebrew/bin"
 
+# Colours and symbols only on a terminal. A pipe, NO_COLOR or TERM=dumb get
+# plain "NAME: text" lines and the plain status table instead.
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-dumb}" != dumb ]; then
+  STYLE=1
+  S_RESET=$'\033[0m' S_BOLD=$'\033[1m' S_DIM=$'\033[2m'
+  S_RED=$'\033[31m' S_GREEN=$'\033[32m' S_YELLOW=$'\033[33m' S_CYAN=$'\033[36m'
+else
+  STYLE=0
+  S_RESET="" S_BOLD="" S_DIM="" S_RED="" S_GREEN="" S_YELLOW="" S_CYAN=""
+fi
+
+NAME_W=0
+for _c in $COMPONENTS; do
+  [ "${#_c}" -le "$NAME_W" ] || NAME_W=${#_c}
+done
+unset _c
+
 log() { printf '%s\n' "$*"; }
 warn() { printf '%s\n' "$*" >&2; }
 die() {
   warn "error: $*"
   exit 1
+}
+
+# report FD GLYPH COLOUR NAME TEXT: one result line of install, restart or
+# uninstall, on stdout (1) or stderr (2).
+report() {
+  local fd=$1 glyph=$2 colour=$3 name=$4 text=$5
+  if [ "$STYLE" = 1 ] && [ -t "$fd" ]; then
+    printf '  %s%s%s %-*s  %s\n' "$colour" "$glyph" "$S_RESET" "$NAME_W" "$name" "$text" >&"$fd"
+  else
+    printf '%s: %s\n' "$name" "$text" >&"$fd"
+  fi
 }
 
 # Empty for a missing file, so "absent" is a state like any other.
@@ -635,7 +667,7 @@ install_one() {
 
   reason=$(missing_reason "$c")
   if [ -n "$reason" ]; then
-    warn "$c: skipped, $reason"
+    report 2 "⊘" "$S_YELLOW" "$c" "skipped, $reason"
     return "$RC_SKIPPED"
   fi
   mkdir -p "$STATE_DIR"
@@ -645,7 +677,7 @@ install_one() {
     want_build=$(build_id "$c")
     if [ "$FORCE" = 1 ] || ! artifact_ok "$c" ||
       [ "$want_build" != "$(cat "$STATE_DIR/$c.build" 2>/dev/null)" ]; then
-      log "$c: building"
+      report 1 "↻" "$S_CYAN" "$c" "building"
       do_build "$c"
       printf '%s\n' "$want_build" >"$STATE_DIR/$c.build"
       build_changed=1
@@ -684,7 +716,11 @@ install_one() {
   if [ -n "$want_run" ]; then
     printf '%s\n' "$want_run" >"$STATE_DIR/$c.run"
   fi
-  log "$c: ${actions:-up to date}"
+  if [ -n "$actions" ]; then
+    report 1 "✓" "$S_GREEN" "$c" "$actions"
+  else
+    report 1 "✓" "$S_DIM" "$c" "${S_DIM}up to date${S_RESET}"
+  fi
 }
 
 cmd_install() {
@@ -729,7 +765,7 @@ cmd_install() {
     if [ "$rc" = "$RC_SKIPPED" ]; then
       skipped="$skipped $c"
     elif [ "$rc" != 0 ]; then
-      warn "$c: FAILED"
+      report 2 "✗" "$S_RED" "$c" "FAILED"
       failed="$failed $c"
     fi
   done
@@ -755,11 +791,11 @@ restart_one() {
     else
       die "$c is not installed (run: dot-services install $c)"
     fi
-    log "$c: restarted"
+    report 1 "✓" "$S_GREEN" "$c" "restarted"
   elif has "$c" restart; then
-    log "$c: $(call "$c" restart)"
+    report 1 "✓" "$S_GREEN" "$c" "$(call "$c" restart)"
   else
-    log "$c: nothing to restart, it is started on demand"
+    report 1 "–" "$S_DIM" "$c" "nothing to restart, it is started on demand"
   fi
 }
 
@@ -778,7 +814,7 @@ uninstall_one() {
   "$HOME"/?*) rm -rf -- "$artifact" ;;
   esac
   rm -f "$STATE_DIR/$c.build" "$STATE_DIR/$c.run"
-  log "$c: uninstalled"
+  report 1 "✓" "$S_GREEN" "$c" "uninstalled"
 }
 
 cmd_each() {
@@ -847,7 +883,167 @@ is_installed() {
   [ -n "$artifact" ] && [ -e "$artifact" ]
 }
 
+plist_value() { plutil -extract "$2" raw -o - "$1" 2>/dev/null || true; }
+
+human_interval() {
+  if [ $(($1 % 3600)) = 0 ]; then
+    echo "$(($1 / 3600))h"
+  elif [ $(($1 % 60)) = 0 ]; then
+    echo "$(($1 / 60))m"
+  else
+    echo "${1}s"
+  fi
+}
+
+# Sets ROW_GLYPH, ROW_COLOUR, ROW_STATE, ROW_DETAIL and, when something needs
+# attention, ROW_PROBLEM and ROW_FIX for one enabled component.
+status_eval() {
+  local c=$1 reason label plist pid interval logfile
+  ROW_GLYPH="●" ROW_COLOUR=$S_GREEN ROW_STATE="" ROW_DETAIL="" ROW_PROBLEM="" ROW_FIX=""
+
+  reason=$(missing_reason "$c")
+  if [ -n "$reason" ]; then
+    ROW_GLYPH="⊘" ROW_COLOUR=$S_YELLOW ROW_STATE="skipped"
+    ROW_PROBLEM="cannot install: $reason"
+    return
+  fi
+
+  if has "$c" label; then
+    label=$(call "$c" label)
+    plist="$AGENTS_DIR/$label.plist"
+    if [ ! -f "$plist" ]; then
+      ROW_GLYPH="✗" ROW_COLOUR=$S_RED ROW_STATE="missing"
+      ROW_PROBLEM="LaunchAgent not installed" ROW_FIX="dot-services install $c"
+    elif ! agent_loaded "$label"; then
+      ROW_GLYPH="✗" ROW_COLOUR=$S_RED ROW_STATE="stopped"
+      ROW_PROBLEM="LaunchAgent not loaded" ROW_FIX="dot-services install $c"
+    else
+      pid=$(agent_pid "$label")
+      interval=$(plist_value "$plist" StartInterval)
+      if [ -n "$pid" ]; then
+        ROW_STATE="running" ROW_DETAIL="pid $pid"
+      elif [ -n "$interval" ]; then
+        ROW_GLYPH="◌" ROW_COLOUR=$S_CYAN ROW_STATE="idle"
+        ROW_DETAIL="every $(human_interval "$interval")"
+      else
+        ROW_GLYPH="◌" ROW_COLOUR=$S_YELLOW ROW_STATE="waiting"
+        ROW_PROBLEM="not running, launchd keeps restarting it"
+        logfile=$(plist_value "$plist" StandardErrorPath)
+        if [ -n "$logfile" ] && [ "$logfile" != /dev/null ]; then
+          ROW_FIX="tail ${logfile/#$HOME/\~}"
+        fi
+      fi
+    fi
+  elif has "$c" pid; then
+    pid=$(call "$c" pid || true)
+    if [ -n "$pid" ]; then
+      ROW_STATE="running" ROW_DETAIL="pid $pid"
+    else
+      ROW_GLYPH="✗" ROW_COLOUR=$S_RED ROW_STATE="stopped"
+      ROW_PROBLEM="not running" ROW_FIX="dot-services restart $c"
+    fi
+  else
+    ROW_STATE="ready" ROW_DETAIL="on demand"
+  fi
+
+  # A build problem outranks the run state: installing fixes both.
+  case "$(build_state "$c")" in
+  missing)
+    ROW_GLYPH="✗" ROW_COLOUR=$S_RED ROW_STATE="not built" ROW_DETAIL=""
+    ROW_PROBLEM="not built" ROW_FIX="dot-services install $c"
+    ;;
+  stale)
+    ROW_GLYPH="↻" ROW_COLOUR=$S_YELLOW ROW_STATE="stale"
+    ROW_PROBLEM="inputs changed since the last build" ROW_FIX="dot-services install $c"
+    ;;
+  esac
+}
+
+# status_line GLYPH COLOUR NAME STATE DETAIL DESC WIDTH
+status_line() {
+  local glyph=$1 colour=$2 name=$3 state=$4 detail=$5 desc=$6 width=$7 room state_colour=$2
+  [ "$colour" != "$S_GREEN" ] || state_colour=""
+  room=$((width - NAME_W - 28))
+  if [ "$room" -lt 8 ]; then
+    desc=""
+  elif [ "${#desc}" -gt "$room" ]; then
+    desc="${desc:0:$((room - 1))}…"
+  fi
+  printf '  %s%s%s %-*s  %s%-9s%s %s%-11s%s %s%s%s\n' \
+    "$colour" "$glyph" "$S_RESET" "$NAME_W" "$name" \
+    "$state_colour" "$state" "$S_RESET" "$S_DIM" "$detail" "$S_RESET" \
+    "$S_DIM" "$desc" "$S_RESET"
+}
+
+status_styled() {
+  local c width left right pad n_enabled=0 n_problems=0 rows="" problems="" others=""
+  width=$(tput cols 2>/dev/null || echo 80)
+  [ "$width" -le 100 ] || width=100
+
+  for c in $COMPONENTS; do
+    if is_enabled "$c"; then
+      n_enabled=$((n_enabled + 1))
+      status_eval "$c"
+    elif is_installed "$c"; then
+      ROW_GLYPH="!" ROW_COLOUR=$S_YELLOW ROW_STATE="leftover" ROW_DETAIL=""
+      ROW_PROBLEM="installed, but not enabled for this host"
+      ROW_FIX="dot-services uninstall $c"
+    else
+      others="${others:+$others, }$c"
+      continue
+    fi
+    rows="$rows$(status_line "$ROW_GLYPH" "$ROW_COLOUR" "$c" "$ROW_STATE" "$ROW_DETAIL" \
+      "$(call "$c" desc)" "$width")"$'\n'
+    if [ -n "$ROW_PROBLEM" ]; then
+      n_problems=$((n_problems + 1))
+      problems="$problems  ${ROW_COLOUR}${ROW_GLYPH}${S_RESET} $c: $ROW_PROBLEM"
+      [ -z "$ROW_FIX" ] || problems="$problems  ${S_DIM}→${S_RESET} ${S_BOLD}$ROW_FIX${S_RESET}"
+      problems="$problems"$'\n'
+    fi
+  done
+
+  left="dot-services · $(hostname -s)"
+  if [ "$n_enabled" = 0 ]; then
+    right="nothing enabled"
+  else
+    right="$n_enabled enabled"
+  fi
+  if [ "$n_problems" = 1 ]; then
+    right="$right · 1 needs attention"
+  elif [ "$n_problems" -gt 1 ]; then
+    right="$right · $n_problems need attention"
+  elif [ "$n_enabled" -gt 0 ]; then
+    right="$right · all healthy"
+  fi
+  pad=$((width - ${#left} - ${#right}))
+  [ "$pad" -ge 2 ] || pad=2
+  if [ "$n_problems" = 0 ]; then
+    right="${S_DIM}$right${S_RESET}"
+  else
+    right="${S_YELLOW}$right${S_RESET}"
+  fi
+  printf '%s%s%s%*s%s\n\n' "$S_BOLD" "$left" "$S_RESET" "$pad" "" "$right"
+
+  if [ -n "$rows" ]; then
+    printf '%s\n' "$rows"
+  else
+    printf '  %sNo components enabled for this host (see .chezmoidata/services.yaml).%s\n\n' "$S_DIM" "$S_RESET"
+  fi
+  if [ -n "$problems" ]; then
+    printf '%sNeeds attention%s\n%s\n' "$S_BOLD" "$S_RESET" "$problems"
+  fi
+  [ -z "$others" ] || printf '  %snot on this host: %s%s\n' "$S_DIM" "$others" "$S_RESET"
+}
+
 cmd_status() {
+  if [ "$STYLE" = 1 ]; then
+    status_styled
+  else
+    status_plain
+  fi
+}
+
+status_plain() {
   local c enabled note reason
   printf '%-28s %-8s %-8s %s\n' "COMPONENT" "ENABLED" "BUILD" "STATE"
   for c in $COMPONENTS; do
