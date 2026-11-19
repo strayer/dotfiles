@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Rift: Next Column Width
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon 🪟
+# @tinycast.icon arrow.left.and.right.square
+# @raycast.packageName Rift
+
+# Documentation:
+# @raycast.description Cycle the focused column to the next preset width (scrolling only)
+
+"$HOME/.bin/rift-cli" execute layout switch-preset-column-width

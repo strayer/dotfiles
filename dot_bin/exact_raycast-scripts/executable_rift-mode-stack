@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Rift: Mode Stack
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon 🪟
+# @tinycast.icon square.stack
+# @raycast.packageName Rift
+
+# Documentation:
+# @raycast.description Switch active workspace to stack layout (one container, windows as tabs)
+
+"$HOME/.bin/rift-cli" execute workspace set-layout stack

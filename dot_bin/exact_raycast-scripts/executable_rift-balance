@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Rift: Balance
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon 🪟
+# @tinycast.icon equal.square
+# @raycast.packageName Rift
+
+# Documentation:
+# @raycast.description Even out split sizes along each axis (bsp and traditional only)
+
+"$HOME/.bin/rift-cli" execute layout balance

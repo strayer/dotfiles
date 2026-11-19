@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Rift: Mode Floating
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon 🪟
+# @tinycast.icon macwindow.on.rectangle
+# @raycast.packageName Rift
+
+# Documentation:
+# @raycast.description Switch active workspace to floating layout (no tiling)
+
+"$HOME/.bin/rift-cli" execute workspace set-layout floating

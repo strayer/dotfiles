@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Rift: Settings
+# @raycast.mode silent
+
+# Optional parameters:
+# @raycast.icon 🪟
+# @tinycast.icon gearshape
+# @raycast.packageName Rift
+
+# Documentation:
+# @raycast.description Open Rift's native Settings window
+
+"$HOME/.bin/rift-cli" settings
