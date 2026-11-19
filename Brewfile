@@ -176,9 +176,8 @@ if OS.mac?
   brew "strayer/tap/dock-badge-counter", trusted: true
 
   # rift (BSP tiling window manager)
-  # not installed via Homebrew: a local fork build is used instead (~/.bin/rift shim)
-  # tap "acsandmann/tap"
-  # brew "acsandmann/tap/rift", trusted: true
+  tap "acsandmann/tap"
+  brew "acsandmann/tap/rift", trusted: true
 
   # sbx (Docker Sandboxes, agent sandbox launcher; arm64 macOS 14+ only)
   tap "docker/tap", trusted: { cask: "sbx" }
