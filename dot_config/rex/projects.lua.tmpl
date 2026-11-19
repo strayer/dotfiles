@@ -1,0 +1,160 @@
+-- Project picker: a palette list of the directories in ~/dev plus a few
+-- fixed ones. Goes to the session labelled like the chosen entry, or creates
+-- that session in its directory first. `rex do project_open name=<label>`
+-- skips the question.
+--
+-- Actions always run on the home server. When the focused pane is on a remote
+-- host, ctx.server names it and rex.call goes there, but rex.exec still runs
+-- here, so the remote's own project_dirs action (this same file, rendered for
+-- that host by chezmoi) lists its directories.
+
+local home = os.getenv("HOME")
+
+-- Shown before ~/dev when the directory exists.
+local extras = {
+  { name = "chezmoi", path = {{ .chezmoi.sourceDir | quote }}, icon = "gear" },
+{{- if hasKey .obsidian.vaults .chezmoi.hostname }}
+  { name = "vault", path = {{ joinPath .chezmoi.homeDir (get .obsidian.vaults .chezmoi.hostname) | quote }}, icon = "document" },
+{{- end }}
+  { name = "claude-tmp", path = home .. "/tmp/claude-tmp", icon = "clock" },
+}
+
+-- Prints each argument that is a directory, then each directory in ~/dev
+-- (the glob skips hidden ones), NUL-separated.
+local list_dirs = [[
+dev=$1; shift
+for d in "$@" "$dev"/*/; do
+  [ -d "$d" ] && printf '%s\0' "${d%/}"
+done
+exit 0
+]]
+
+local function local_projects()
+  local argv = { "/bin/sh", "-c", list_dirs, "sh", home .. "/dev" }
+  local by_path = {}
+  for _, e in ipairs(extras) do
+    argv[#argv + 1] = e.path
+    by_path[e.path] = e
+  end
+  local r = assert(rex.exec(argv))
+  assert(r.ok, r.stderr)
+
+  local projects, seen = {}, {}
+  for path in r.stdout:gmatch("[^%z]+") do
+    local e = by_path[path] or { name = path:match("[^/]+$"), path = path }
+    if not seen[e.name] then
+      seen[e.name] = true
+      projects[#projects + 1] = { name = e.name, path = path, icon = e.icon }
+    end
+  end
+  return { home = home, projects = projects }
+end
+
+rex.action({
+  name = "project_dirs",
+  title = "List Project Directories",
+  description = "Return this server's project directories. Open Project… uses it on remote hosts.",
+  category = "Projects",
+  run = local_projects,
+})
+
+-- The projects on the server that holds the focused session.
+local function projects(ctx)
+  if ctx.server == nil then
+    return local_projects()
+  end
+  local r, err = rex.call("client.action", { action = "project_dirs" })
+  if err ~= nil then
+    error(ctx.server .. ": " .. err .. " (is this init.lua deployed there?)", 0)
+  end
+  return r.result
+end
+
+local function pick_project(ctx, found, sessions)
+  local list = found.projects
+  -- Open sessions first, then the extras, then alphabetical.
+  local function rank(p)
+    return (sessions[p.name] and 0 or 2) + (p.icon and 0 or 1)
+  end
+  table.sort(list, function(a, b)
+    if rank(a) ~= rank(b) then
+      return rank(a) < rank(b)
+    end
+    return a.name:lower() < b.name:lower()
+  end)
+
+  local items = {}
+  for _, p in ipairs(list) do
+    local open = sessions[p.name] ~= nil
+    local shown = p.path:sub(1, #found.home + 1) == found.home .. "/"
+        and "~" .. p.path:sub(#found.home + 1)
+      or p.path
+    items[#items + 1] = {
+      id = p.name,
+      subtitle = shown,
+      icon = open and "terminal" or p.icon or "folder",
+      detail = open and "open" or nil,
+    }
+  end
+
+  local name, why, detail = rex.ui.pick({
+    title = "Open project" .. (ctx.server and (" on " .. ctx.server) or ""),
+    placeholder = "Filter projects",
+    confirm = "Open",
+    items = items,
+  })
+  if name == nil and why ~= "cancelled" then
+    error("project picker: " .. why .. (detail and (": " .. detail) or ""), 0)
+  end
+  return name
+end
+
+rex.action({
+  name = "project_open",
+  title = "Open Project…",
+  description = "Pick a project and go to its session, creating it if needed.",
+  keywords = "dev session switch project chezmoi vault",
+  category = "Projects",
+  args = { name = "string?" },
+  run = function(ctx, args)
+    local sessions = {}
+    for _, s in ipairs(assert(rex.call("session.list")).sessions) do
+      sessions[s.label] = s.session_id
+    end
+
+    local name, found = args.name, nil
+    if name == nil then
+      found = projects(ctx)
+      name = pick_project(ctx, found, sessions)
+      if name == nil then
+        return
+      end
+    end
+
+    local session_id = sessions[name]
+    if session_id == nil then
+      found = found or projects(ctx)
+      local path
+      for _, p in ipairs(found.projects) do
+        if p.name == name then
+          path = p.path
+        end
+      end
+      if path == nil then
+        error("no project named " .. name, 0)
+      end
+      session_id = assert(rex.call("session.create", {
+        label = name,
+        initial_windows = {
+          {
+            layout = rex.layout.block({
+              flavor = "com.superlogical.terminal.shell",
+              options = { cwd = path },
+            }),
+          },
+        },
+      })).session_id
+    end
+    rex.client.queue("session.select", { session_id = session_id })
+  end,
+})
