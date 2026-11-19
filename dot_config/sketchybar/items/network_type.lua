@@ -1,6 +1,6 @@
 -- items/network_type.lua - Network connection type indicator
 -- Shows current network type (ethernet, wifi, hotspot, disconnected)
--- Uses a long-running Swift daemon that watches SCDynamicStore for changes
+-- Fed by a long-running Swift daemon (LaunchAgent) that watches SCDynamicStore
 --
 -- The SSID label is only shown when the network is not a known one:
 -- - wifi on one of this device's default networks          -> icon only
@@ -86,12 +86,10 @@ for _, key in ipairs(ROW_ORDER) do
   })
 end
 
--- Kill any existing watcher and start a new one. The daemon re-sends its
--- initial state after 2 s because this runs before SbarLua commits the
--- item's subscriptions, so its first trigger could otherwise be lost.
-local watcher_bin = os.getenv("HOME")
-  .. "/.bin/sketchybar-network-watcher.app/Contents/MacOS/sketchybar-network-watcher"
-sbar.exec("sh -c 'pkill -x sketchybar-network-watcher; " .. watcher_bin .. " &'")
+-- The watcher runs as the LaunchAgent earth.gru.sketchybar-network-watcher
+-- (installed by dot-services). SIGHUP makes it re-send the current state, so
+-- a fresh or reloaded bar doesn't wait for the next network change.
+sbar.exec("pkill -HUP -x sketchybar-network-watcher")
 
 -- Last received network state, re-rendered on theme changes
 local last_net_type = "disconnected"

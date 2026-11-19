@@ -212,9 +212,20 @@ agent_reload() {
   launchctl bootstrap "$DOMAIN" "$AGENTS_DIR/$1.plist"
 }
 
-# daemon_plist LABEL LOGFILE ARG…: a KeepAlive background agent.
+# daemon_plist [--homebrew-path] LABEL LOGFILE ARG…: a KeepAlive background
+# agent. --homebrew-path puts Homebrew on its PATH (launchd's default lacks it).
 daemon_plist() {
-  local label=$1 logfile=$2 arg
+  local env="" label logfile arg
+  if [ "$1" = --homebrew-path ]; then
+    env="    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+"
+    shift
+  fi
+  label=$1 logfile=$2
   shift 2
   cat <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -229,8 +240,8 @@ PLIST
   for arg in "$@"; do
     printf '        <string>%s</string>\n' "$arg"
   done
+  printf '    </array>\n%s' "$env"
   cat <<PLIST
-    </array>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
@@ -335,13 +346,14 @@ display_profile_fixer_plist() {
 
 # ---------------------------------------------------------------------------
 # sketchybar-network-watcher
-# No LaunchAgent: items/network_type.lua kills and respawns the watcher on
-# every SketchyBar (re)load, so a rebuilt binary is started by reloading the
-# bar.
+# The bundle id stays com.user.…: Location Services permission is tied to it.
+# items/network_type.lua sends SIGHUP on every SketchyBar (re)load to get the
+# current state re-sent.
 # ---------------------------------------------------------------------------
 
-sketchybar_network_watcher_desc() { echo "feeds the SketchyBar network item (spawned by SketchyBar)"; }
+sketchybar_network_watcher_desc() { echo "feeds the SketchyBar network item with change events"; }
 sketchybar_network_watcher_frameworks() { echo "AppKit CoreLocation CoreWLAN SystemConfiguration"; }
+sketchybar_network_watcher_label() { echo "earth.gru.sketchybar-network-watcher"; }
 
 sketchybar_network_watcher_info_plist() {
   cat <<'PLIST'
@@ -366,18 +378,12 @@ sketchybar_network_watcher_info_plist() {
 PLIST
 }
 
-sketchybar_network_watcher_pid() { pgrep -x sketchybar-network-watcher | head -n 1; }
-
-sketchybar_network_watcher_restart() {
-  if pgrep -x sketchybar >/dev/null; then
-    sketchybar --reload
-    echo "restarted by reloading SketchyBar"
-  else
-    echo "SketchyBar is not running and starts it on launch"
-  fi
+# --homebrew-path: the watcher runs `sketchybar --trigger`.
+sketchybar_network_watcher_plist() {
+  daemon_plist --homebrew-path "earth.gru.sketchybar-network-watcher" \
+    "$LOGS_DIR/sketchybar-network-watcher.log" \
+    "$BIN/sketchybar-network-watcher.app/Contents/MacOS/sketchybar-network-watcher"
 }
-
-sketchybar_network_watcher_uninstall() { pkill -x sketchybar-network-watcher || true; }
 
 # ---------------------------------------------------------------------------
 # sketchybar-tailscale-watch

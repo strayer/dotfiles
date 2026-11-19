@@ -28,6 +28,10 @@
 //   NETWORK_SECURITY   e.g. "WPA3 Personal"
 // Outside detail mode none of this is gathered or sent.
 //
+// Runs as the LaunchAgent earth.gru.sketchybar-network-watcher (built and
+// installed by dot-services). SIGHUP re-sends the current state:
+// network_type.lua sends it whenever SketchyBar (re)loads its config.
+//
 // Salt: read once at startup from ~/.config/dotfiles/hash-salt (deployed by chezmoi from
 // an encrypted secret), UTF-8, leading/trailing whitespace+newlines trimmed. If the file
 // is missing or empty, a warning is printed to stderr and every hash is empty.
@@ -555,8 +559,10 @@ signal(SIGINT) { _ in
 }
 
 // Detail mode toggles from the SketchyBar popup (USR1 on open, USR2 on close)
+// and state re-send requests from a SketchyBar (re)load (HUP)
 signal(SIGUSR1, SIG_IGN)
 signal(SIGUSR2, SIG_IGN)
+signal(SIGHUP, SIG_IGN)
 let detailOnSource = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: debounceQueue)
 detailOnSource.setEventHandler {
   debug("Detail mode on")
@@ -570,21 +576,21 @@ detailOffSource.setEventHandler {
   detailModeUntil = nil
 }
 detailOffSource.resume()
+// Debounced like a network change: network_type.lua sends HUP from inside
+// SbarLua's config transaction, which buffers the item's event subscriptions
+// until its event loop starts, so an immediate trigger could be lost.
+let resendSource = DispatchSource.makeSignalSource(signal: SIGHUP, queue: debounceQueue)
+resendSource.setEventHandler {
+  debug("Re-send requested")
+  scheduleDetection(store: store)
+}
+resendSource.resume()
 
 // Initial detection and trigger
 debug("WiFi interface: \(wifiInterface)")
 debug("Location auth: \(locationManager.authorizationStatus.rawValue)")
 debounceQueue.sync {
   detectAndTrigger(store: store)
-}
-
-// Re-send the state once more after 2 s. network_type.lua starts this daemon
-// from inside SbarLua's config transaction, and SbarLua buffers item creation
-// and event subscriptions until its event loop starts, so the first trigger
-// above can race the item's subscription and be lost (leaving the item on
-// "disconnected" until the next network change).
-DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-  scheduleDetection(store: store)
 }
 
 // Run the event loop
