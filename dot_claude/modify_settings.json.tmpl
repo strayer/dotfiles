@@ -1,0 +1,31 @@
+#!/bin/sh
+# Overlays .chezmoitemplates/claude-settings.json on the live
+# ~/.claude/settings.json (stdin). Keys the repo doesn't own stay as Claude
+# Code and other tools wrote them (model, theme, hooks, plugins, ...).
+#
+# The owned paths are recorded in the target under _chezmoi_managed: a
+# top-level key, or key.subkey when the repo value is a non-empty object (so
+# env.FOO is owned while runtime env entries are not). A path owned last time
+# but gone from the repo is deleted. Before the first marker exists,
+# permissions.allow counts as owned: the repo used to ship that list.
+#
+# jq keeps the live file's key order and Claude Code's formatting (2-space
+# indent), so `chezmoi status` stays clean after Claude Code rewrites it.
+set -eu
+repo=$(cat <<'JSON'
+{{ include ".chezmoitemplates/claude-settings.json" | fromJson | toJson }}
+JSON
+)
+exec jq -n --argjson repo "$repo" '
+  ([inputs] | first // {}) as $live
+  | [ $repo | to_entries[]
+      | if (.value | type) == "object" and (.value | length) > 0
+        then .key as $k | .value | keys_unsorted[] | [$k, .]
+        else [.key] end ] as $owned
+  | ($live._chezmoi_managed // ["permissions.allow"] | map(split("."))) as $prev
+  | ($prev - $owned) as $gone
+  | reduce $gone[] as $p ($live | delpaths($gone);
+      if ($p | length) > 1 and getpath($p[:-1]) == {} then delpaths([$p[:-1]]) else . end)
+  | . * $repo
+  | ._chezmoi_managed = ($owned | map(join(".")) | sort)
+'

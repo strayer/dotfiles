@@ -5,23 +5,6 @@
     "pr": ""
   },
   "includeCoAuthoredBy": false,
-  "permissions": {
-    "allow": [
-      "Bash(npx lint-staged:*)",
-      "Bash(npx prettier:*)",
-      "Bash(terraform fmt:*)",
-      "Bash(terraform validate:*)",
-      "Bash(tflint:*)",
-      "Bash(markdownlint:*)",
-      "Bash(shellcheck:*)",
-      "Bash(step ssh login)",
-      "Bash(gh issue list:*)",
-      "Bash(gh issue view:*)",
-      "Bash(git add:*)",
-      "Bash(brew info:*)",
-      "Bash(brew search:*)"
-    ]
-  },
   "statusLine": {
     "type": "command",
     "command": "PATH=\"/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:$PATH\" claude-statusline",
@@ -33,7 +16,6 @@
   },
   "tui": "fullscreen",
   "editorMode": "vim",
-  "autoCompactEnabled": false,
   "agentPushNotifEnabled": true,
   "env": {
     "DISABLE_FEEDBACK_COMMAND": "1",

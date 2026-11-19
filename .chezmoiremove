@@ -19,3 +19,5 @@
 .bin/install-rift-pip.sh
 .bin/install-sketchybar-tailscale-watch.sh
 .bin/install-ssh-agent-multiplexer.sh
+.bin/configure-claude
+.bin/src/configure-claude

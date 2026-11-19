@@ -130,6 +130,10 @@ Sophisticated automated theme switching with cross-application coordination:
 - **Terminal**: Ghostty
 - **Git**: Environment-specific signing keys and configurations
 
+### Claude Code Settings
+
+`.chezmoitemplates/claude-settings.json` holds the settings shared by all machines. `dot_claude/modify_settings.json.tmpl`, a jq modify script, overlays it on the live `~/.claude/settings.json` on every `chezmoi apply`: repo keys win, and lists are replaced rather than combined. Keys the repo doesn't own stay as Claude Code and other tools wrote them (`model`, `theme`, `hooks`, `enabledPlugins`, ...), so leave runtime-owned keys out of the repo file. The script records the paths it owns in the target under `_chezmoi_managed` (a top-level key, or `key.subkey` when the repo value is an object, so runtime `env` entries stay untouched); a path dropped from the repo file is deleted from the target on the next apply. Ownership is tracked two levels deep, and owned keys must not contain dots. jq keeps the live key order and Claude Code's 2-space formatting, so a rewrite by Claude Code doesn't show up in `chezmoi status`. The Docker Sandboxes kit (`dot_config/sbx-kits/claude-settings/`) renders the same file into a managed-settings drop-in. Machines use the Claude subscription; set Bedrock or Vertex env vars by hand in the shell when needed.
+
 ### System Integration
 
 - **SketchyBar**: Complete SbarLua configuration with modular architecture (`init.lua`, `bar.lua`, `default.lua`, items/\*). Includes window manager integration (Rift), custom items (battery, network, clock, volume, meal planning), and theme coordination. Coding agents can use the deepwiki mcp to retrieve information about [SketchyBar](https://deepwiki.com/FelixKratz/SketchyBar) and [SbarLua](https://deepwiki.com/FelixKratz/SbarLua).

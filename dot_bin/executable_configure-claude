@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-cd ~/.bin/src/configure-claude || exit
-exec uv run main.py "$@"

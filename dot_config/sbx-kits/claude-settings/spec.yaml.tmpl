@@ -1,11 +1,11 @@
 {{- /* Personal Claude Code preferences for Docker Sandboxes, generated from
-     configure-claude's base-settings.json (single source of truth — edit
+     .chezmoitemplates/claude-settings.json (single source of truth — edit
      that file, then `chezmoi apply` regenerates this kit).
      Stripped keys: $schema (schema pointer), permissions (sandboxes run in
      bypassPermissions mode, the allowlist is dead weight). statusLine stays
      in deliberately — it doubles as a canary: if Claude Code ever stops
      loading managed-settings.d, the missing statusline makes it obvious. */ -}}
-{{- $base := include "dot_bin/private_src/private_configure-claude/base-settings.json" | fromJson -}}
+{{- $base := include ".chezmoitemplates/claude-settings.json" | fromJson -}}
 {{- /* statusLine and subagentStatusLine run `claude-statusline` from PATH:
      the Homebrew prefix on the host, /usr/local/bin here (the prefixes the
      command adds don't exist in the sandbox and are harmless). */ -}}
