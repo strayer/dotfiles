@@ -1,0 +1,3 @@
+{{- range (get .services.hosts .chezmoi.hostname | default list) -}}
+{{ . }}
+{{ end -}}

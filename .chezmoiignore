@@ -17,6 +17,14 @@ Library/Preferences/pnpm/config.yaml
 .bin/tinycast-sync-commands
 {{- end }}
 
+{{ if ne .chezmoi.os "darwin" -}}
+{{/* macOS-only: dot-services and the Swift daemons it builds */ -}}
+.bin/dot-services
+.bin/display-profile-fixer.swift
+.bin/display-refresh-fixer.swift
+.bin/sketchybar-network-watcher.swift
+{{- end }}
+
 {{ if not (get . "headless") -}}
 {{/* per-user ssh-agent only on headless Linux boxes */ -}}
 .config/systemd/user/ssh-agent.service
@@ -24,7 +32,6 @@ Library/Preferences/pnpm/config.yaml
 
 {{ if ne .chezmoi.hostname "CO-MBP-KC9KQV64V3" -}}
 {{/* ssh-agent-multiplexer: only the work Mac needs Secretive + Smallstep cert behind one socket */ -}}
-.bin/install-ssh-agent-multiplexer.sh
 .config/ssh-agent-multiplexer
 .config/fish/functions/step.fish
 {{- end }}

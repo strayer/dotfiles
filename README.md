@@ -32,6 +32,8 @@ The age identity must exist at `~/.config/chezmoi/age-identity.txt` before apply
 
 5. Install packages: `brew bundle --file ~/.local/share/chezmoi/Brewfile`
 
+   On macOS, run `chezmoi apply` (or `dot-services install`) once more afterwards: the daemons and built tools this host runs (see `.chezmoidata/services.yaml`) are installed by `dot-services`, which skips those whose prerequisites weren't there yet during step 4.
+
 6. Set fish as login shell: `command -v fish | sudo tee -a /etc/shells && chsh -s "$(command -v fish)"`
 
 7. Select the `dot-secret` backend: `echo onepassword > ~/.config/dot-secret/backend` (see [Runtime secret access](#runtime-secret-access)).

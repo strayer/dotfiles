@@ -71,7 +71,7 @@ func currentRefresh() -> String? {
   return out
 }
 
-// Native notifications. Requires running from an .app bundle (see compile script);
+// Native notifications. Requires running from an .app bundle (built by dot-services);
 // the user approves the permission prompt once.
 final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
   func userNotificationCenter(

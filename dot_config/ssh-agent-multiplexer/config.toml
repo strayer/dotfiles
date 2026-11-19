@@ -1,6 +1,6 @@
 # ssh-agent-multiplexer — merges both SSH agents on the work Mac behind one
 # socket so agent forwarding (e.g. Docker Sandboxes) exposes both keys.
-# Installed by ~/.bin/install-ssh-agent-multiplexer.sh; work machine only
+# Installed by `dot-services install ssh-agent-multiplexer`; work machine only
 # (gated in .chezmoiignore).
 #
 # Both agents are read-only targets. Order no longer matters for signing —

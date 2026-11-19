@@ -1,0 +1,20 @@
+# Which dot-services components each Mac runs. Single source of truth:
+# rendered to ~/.config/dotfiles/services (read by ~/.bin/dot-services) and
+# hashed by .chezmoiscripts/run_onchange_after_30-dot-services.sh.tmpl.
+#
+# Component names are the ones `dot-services status` lists. Keyed by
+# hostname; a host with no entry runs none of them.
+services:
+  hosts:
+    CO-MBP-KC9KQV64V3:
+      - display-refresh-fixer
+      - display-profile-fixer
+      - sketchybar-network-watcher
+      - rift-log-rotate
+      - rift-pip
+      - ssh-agent-multiplexer
+    yobuko:
+      - display-refresh-fixer
+      - sketchybar-network-watcher
+      - sketchybar-tailscale-watch
+      - rift-log-rotate

@@ -57,7 +57,7 @@ hash_ssid() {
 
 show_current() {
   if [ ! -x "$WATCHER" ]; then
-    echo "Error: watcher binary not found at $WATCHER (run compile-network-watcher)" >&2
+    echo "Error: watcher binary not found at $WATCHER (run: dot-services install sketchybar-network-watcher)" >&2
     exit 1
   fi
 
@@ -82,7 +82,7 @@ show_current() {
     if [ -z "$watcher_hash" ]; then
       echo "Warning: watcher returned no hash (it found no salt file) - run chezmoi apply" >&2
     elif [ "$watcher_hash" != "$hash" ]; then
-      echo "Warning: watcher hash differs from helper hash (stale watcher binary or different salt file?) - run compile-network-watcher" >&2
+      echo "Warning: watcher hash differs from helper hash (stale watcher binary or different salt file?) - run: dot-services install --force sketchybar-network-watcher" >&2
     fi
   fi
   reminder

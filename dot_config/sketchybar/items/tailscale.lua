@@ -6,9 +6,9 @@
 -- warnings color the icon with the warning color.
 --
 -- Event-driven: the LaunchAgent earth.gru.sketchybar-tailscale-watch
--- (~/.bin/sketchybar-tailscale-watch, installed by
--- install-sketchybar-tailscale-watch.sh) streams Tailscale's IPN bus and
--- triggers tailscale_change only on state/prefs/netmap/health changes; the
+-- (~/.bin/sketchybar-tailscale-watch, installed by dot-services) streams
+-- Tailscale's IPN bus and triggers tailscale_change only on
+-- state/prefs/netmap/health changes; the
 -- item then reads `tailscale status --json` once, and once on load, so a
 -- reloaded bar needs no heartbeat. While the popup is
 -- open it also refreshes every few seconds for the traffic counters.
@@ -21,7 +21,7 @@ local M = { enabled = false }
 
 -- First existing CLI wins: the app's bundled CLI (Standalone/App Store
 -- variant, also what /usr/local/bin/tailscale wraps), then Homebrew.
--- Keep in sync with install-sketchybar-tailscale-watch.sh.
+-- Keep in sync with tailscale_cli in ~/.bin/dot-services.
 local TAILSCALE_CLIS = {
   "/Applications/Tailscale.app/Contents/MacOS/tailscale",
   "/usr/local/bin/tailscale",

@@ -8,7 +8,7 @@
 # real changes and then reads `tailscale status --json` itself.
 #
 # Runs as the LaunchAgent earth.gru.sketchybar-tailscale-watch (installed by
-# install-sketchybar-tailscale-watch.sh, only on machines with Tailscale).
+# dot-services, only on machines with Tailscale).
 # When Tailscale is not running the stream ends: the script triggers once (so
 # the item can show it) and exits; launchd restarts it after ThrottleInterval.
 

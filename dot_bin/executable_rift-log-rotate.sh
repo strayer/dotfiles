@@ -3,7 +3,8 @@
 #   - Keeps /tmp/rift_$USER.{out,err}.log capped at ~20 MB live, 10 gzipped generations.
 #   - Patches rift's installed plist to RUST_LOG=debug if it drifted back to defaults
 #     (rift service install regenerates the plist), and notifies once.
-#   - Designed to run from its own LaunchAgent (installed via `rift-log-rotate.sh install`).
+#   - Runs from its own LaunchAgent, com.grunewaldt.rift-log-rotate, every 5 minutes
+#     (installed by `dot-services install rift-log-rotate`).
 #
 # Note: `rift service restart` uses `launchctl kickstart -k`, which does NOT re-read
 # the plist. After a plist patch, you must `bootout` + `bootstrap` for launchd to
@@ -15,7 +16,7 @@
 # As root, `id -u` is 0 and launchctl targets gui/0, which does not exist
 # ("Bootstrap failed: 125: Domain does not support specified action").
 #
-# Subcommands: install | uninstall | rotate (default) | reload
+# Subcommands: rotate (default) | reload
 
 set -euo pipefail
 
@@ -26,14 +27,10 @@ if [[ "$(id -u)" -eq 0 || -n "${SUDO_USER:-}" ]]; then
 fi
 
 RIFT_PLIST="$HOME/Library/LaunchAgents/git.acsandmann.rift.plist"
-ROTATE_LABEL="com.grunewaldt.rift-log-rotate"
-ROTATE_PLIST="$HOME/Library/LaunchAgents/${ROTATE_LABEL}.plist"
-ROTATE_SCRIPT="$HOME/.bin/rift-log-rotate.sh"
 STATE_DIR="$HOME/.cache/rift-log-rotate"
 NOTIFIED_SENTINEL="$STATE_DIR/notified"
 LOCK_DIR="/tmp/rift-log-rotate.lock"
 
-ROTATE_INTERVAL=300
 SIZE_THRESHOLD=$((20 * 1024 * 1024))
 MAX_GENERATIONS=10
 
@@ -56,56 +53,6 @@ bootout_and_wait() {
     sleep 0.1
     i=$((i + 1))
   done
-}
-
-write_rotate_plist() {
-  mkdir -p "$(dirname "$ROTATE_PLIST")"
-  cat >"$ROTATE_PLIST" <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>${ROTATE_LABEL}</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>${ROTATE_SCRIPT}</string>
-        <string>rotate</string>
-    </array>
-    <key>StartInterval</key>
-    <integer>${ROTATE_INTERVAL}</integer>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>ProcessType</key>
-    <string>Background</string>
-    <key>LimitLoadToSessionType</key>
-    <string>Aqua</string>
-    <key>StandardOutPath</key>
-    <string>/dev/null</string>
-    <key>StandardErrorPath</key>
-    <string>/dev/null</string>
-</dict>
-</plist>
-EOF
-}
-
-cmd_install() {
-  if [[ ! -x "$ROTATE_SCRIPT" ]]; then
-    echo "error: $ROTATE_SCRIPT not present or not executable. Run 'chezmoi apply' first." >&2
-    exit 1
-  fi
-  mkdir -p "$STATE_DIR"
-  write_rotate_plist
-  bootout_and_wait "gui/$(id -u)/${ROTATE_LABEL}"
-  launchctl bootstrap "gui/$(id -u)" "$ROTATE_PLIST"
-  echo "installed ${ROTATE_LABEL} (every ${ROTATE_INTERVAL}s)"
-  "$ROTATE_SCRIPT" rotate
-}
-
-cmd_uninstall() {
-  launchctl bootout "gui/$(id -u)/${ROTATE_LABEL}" 2>/dev/null || true
-  rm -f "$ROTATE_PLIST"
-  echo "uninstalled ${ROTATE_LABEL}"
 }
 
 # Force launchd to re-read the rift plist (bootout + bootstrap). Required after
@@ -204,18 +151,17 @@ cmd_rotate() {
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") {install|uninstall|rotate|reload}
+Usage: $(basename "$0") {rotate|reload}
 
-  install     install the LaunchAgent that runs 'rotate' every ${ROTATE_INTERVAL}s
-  uninstall   stop and remove the LaunchAgent
   rotate      one rotation pass (patches rift plist if drifted, rotates logs)
   reload      bootout + bootstrap rift so launchd re-reads its plist (kills + restarts rift)
+
+The LaunchAgent that runs 'rotate' periodically is installed and removed with
+'dot-services install|uninstall rift-log-rotate'.
 EOF
 }
 
 case "${1:-rotate}" in
-install) cmd_install ;;
-uninstall) cmd_uninstall ;;
 rotate) cmd_rotate ;;
 reload) cmd_reload ;;
 -h | --help) usage ;;

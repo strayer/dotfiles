@@ -7,7 +7,7 @@ patch lets the caller name the window instead. The lookup searches every
 display's workspaces, so windows parked on inactive workspaces are found.
 
 Made against acsandmann/rift-pip commit 06e15a6 (2026-09). Applied by
-~/.bin/install-rift-pip.sh with `git apply`.
+~/.bin/dot-services (component rift-pip) with `git apply`.
 
 diff --git a/src/main.rs b/src/main.rs
 index a7ee601..eeff72a 100644

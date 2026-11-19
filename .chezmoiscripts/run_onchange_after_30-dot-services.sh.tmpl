@@ -1,0 +1,36 @@
+{{- $enabled := list -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{-   $enabled = get .services.hosts .chezmoi.hostname | default list -}}
+{{- end -}}
+{{- if $enabled -}}
+#!/bin/sh
+# Rebuild, reinstall and restart the dot-services components of this host
+# whenever one of their inputs changes. The hashes below only decide *when*
+# chezmoi runs this; dot-services keeps its own stamps and touches only the
+# component whose input actually changed, so a change to a tool this host
+# doesn't run is a no-op.
+# manager {{ include "dot_bin/executable_dot-services" | sha256sum }}
+# enabled {{ join " " $enabled }}
+{{- range list
+      "dot_bin/display-refresh-fixer.swift"
+      "dot_bin/display-profile-fixer.swift"
+      "dot_bin/sketchybar-network-watcher.swift"
+      "dot_bin/executable_sketchybar-tailscale-watch"
+      "dot_bin/private_src/rift-pip-window-option.patch"
+      "dot_config/ssh-agent-multiplexer/config.toml" }}
+# {{ . }} {{ include . | sha256sum }}
+{{- end }}
+# Prerequisites that may only appear after `brew bundle` on a fresh machine.
+# dot-services skips a component whose prerequisite is missing; hashing their
+# presence makes chezmoi run this again once they are installed.
+# cargo: {{ if lookPath "cargo" }}present{{ else }}missing{{ end }}
+{{- range list
+      "/Applications/Tailscale.app/Contents/MacOS/tailscale"
+      "/usr/local/bin/tailscale"
+      "/opt/homebrew/bin/tailscale" }}
+# {{ . }}: {{ if stat . }}present{{ else }}missing{{ end }}
+{{- end }}
+# A build or install error fails the apply, so chezmoi runs this again next
+# time instead of recording an install that never happened.
+exec "$HOME/.bin/dot-services" install
+{{ end -}}

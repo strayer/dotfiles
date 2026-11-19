@@ -24,7 +24,7 @@ if test $host = "CO-MBP-KC9KQV64V3"
     set_color yellow
     echo "WARNING: ssh-agent-multiplexer socket missing — agent forwarding won't see the git signing key."
     echo "  Installed? Check: launchctl list local.ssh-agent-multiplexer; log: ~/Library/Logs/ssh-agent-multiplexer.log"
-    echo "  New machine? Run: install-ssh-agent-multiplexer.sh"
+    echo "  New machine? Run: dot-services install ssh-agent-multiplexer"
     set_color normal
   end
 end

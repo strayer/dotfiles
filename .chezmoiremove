@@ -11,3 +11,11 @@
 .config/omniwm
 .aria2
 .aider.conf.yml
+.bin/compile-display-profile-fixer
+.bin/compile-display-refresh-fixer
+.bin/compile-network-watcher
+.bin/install-display-profile-fixer.sh
+.bin/install-display-refresh-fixer.sh
+.bin/install-rift-pip.sh
+.bin/install-sketchybar-tailscale-watch.sh
+.bin/install-ssh-agent-multiplexer.sh

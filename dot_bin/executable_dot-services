@@ -1,0 +1,911 @@
+#!/usr/bin/env bash
+# dot-services: builds, installs and restarts the daemons and helper programs
+# that ship with these dotfiles (macOS only).
+#
+#   dot-services [status]                   what is enabled, built and running
+#   dot-services install [--force] [NAME…]  build/install/restart what changed
+#   dot-services restart NAME…              restart a component
+#   dot-services uninstall NAME…            stop a component and remove what
+#                                           install created
+#
+# Without names, `install` covers the components enabled for this host: the
+# list in ~/.config/dotfiles/services, rendered by chezmoi from
+# .chezmoidata/services.yaml. chezmoi runs `dot-services install` itself when
+# an input changes (.chezmoiscripts/run_onchange_after_30-dot-services.sh.tmpl).
+#
+# `install` is idempotent. Each component has a build stamp (a hash of its
+# sources and build recipe) and/or a run stamp (inputs that only need a
+# restart) in ~/.cache/dot-services. A component is rebuilt when its build
+# stamp differs or its artifact is missing; its LaunchAgent is reloaded when
+# the generated plist differs from the installed one, and restarted when
+# something it runs changed. Everything else is left alone. --force rebuilds
+# and restarts regardless.
+#
+# A component of the host list whose prerequisite is missing (cargo before
+# `brew bundle`, no Tailscale, …) is skipped with a warning; one that was
+# named on the command line fails instead.
+#
+# Adding a component: add its name to COMPONENTS and define functions named
+# after it (dashes become underscores). All but _desc are optional:
+#   NAME_desc         one-line description
+#   NAME_missing      print why it can't be installed here; silent when it can
+#   NAME_frameworks   Swift app: frameworks to link. Builds ~/.bin/NAME.swift
+#                     into ~/.bin/NAME.app; needs NAME_info_plist as well
+#   NAME_info_plist   Swift app: print the bundle's Info.plist
+#   NAME_build_id     other builds: print what identifies the build inputs
+#   NAME_build        other builds: build and install the artifact
+#   NAME_artifact     other builds: print the artifact's path
+#   NAME_run_id       print what identifies inputs that only need a restart
+#   NAME_label        LaunchAgent label
+#   NAME_plist        print the LaunchAgent plist
+#   NAME_restart      restart something that is not a LaunchAgent and print
+#                     what was done, as a phrase for the status line
+#   NAME_pid          print the pid of something that is not a LaunchAgent
+#   NAME_uninstall    extra cleanup on uninstall
+#
+# Written for the bash 3.2 that macOS ships.
+
+set -euo pipefail
+
+COMPONENTS="display-refresh-fixer display-profile-fixer sketchybar-network-watcher sketchybar-tailscale-watch rift-log-rotate rift-pip ssh-agent-multiplexer"
+
+BIN="$HOME/.bin"
+AGENTS_DIR="$HOME/Library/LaunchAgents"
+LOGS_DIR="$HOME/Library/Logs"
+STATE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/dot-services"
+ENABLED_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles/services"
+DOMAIN="gui/$(id -u)"
+RC_SKIPPED=75
+FORCE=0
+
+# launchd and chezmoi may run this with a PATH that lacks Homebrew.
+PATH="$PATH:/opt/homebrew/bin"
+
+log() { printf '%s\n' "$*"; }
+warn() { printf '%s\n' "$*" >&2; }
+die() {
+  warn "error: $*"
+  exit 1
+}
+
+# Empty for a missing file, so "absent" is a state like any other.
+sha_file() { { shasum -a 256 "$1" 2>/dev/null || true; } | cut -d' ' -f1; }
+sha_stdin() { shasum -a 256 | cut -d' ' -f1; }
+
+# ---------------------------------------------------------------------------
+# Component dispatch
+# ---------------------------------------------------------------------------
+
+fn() { printf '%s_%s' "$(printf '%s' "$1" | tr - _)" "$2"; }
+has() { declare -F "$(fn "$1" "$2")" >/dev/null; }
+call() {
+  local f
+  f=$(fn "$1" "$2")
+  shift 2
+  "$f" "$@"
+}
+
+is_component() {
+  local c
+  for c in $COMPONENTS; do
+    [ "$c" = "$1" ] && return 0
+  done
+  return 1
+}
+
+enabled_components() {
+  [ -f "$ENABLED_FILE" ] || return 0
+  grep -v -E '^[[:space:]]*(#|$)' "$ENABLED_FILE" || true
+}
+
+is_enabled() {
+  local c
+  for c in $(enabled_components); do
+    [ "$c" = "$1" ] && return 0
+  done
+  return 1
+}
+
+is_swift_app() { has "$1" frameworks; }
+has_build() { is_swift_app "$1" || has "$1" build; }
+
+missing_reason() {
+  if is_swift_app "$1" && ! xcrun --find swiftc >/dev/null 2>&1; then
+    echo "swiftc not found (install Xcode or the Command Line Tools)"
+  elif has "$1" missing; then
+    call "$1" missing
+  fi
+}
+
+artifact_path() {
+  if is_swift_app "$1"; then
+    echo "$BIN/$1.app"
+  elif has "$1" artifact; then
+    call "$1" artifact
+  fi
+}
+
+artifact_ok() {
+  if is_swift_app "$1"; then
+    [ -x "$BIN/$1.app/Contents/MacOS/$1" ]
+  else
+    [ -e "$(artifact_path "$1")" ]
+  fi
+}
+
+build_id() {
+  if is_swift_app "$1"; then
+    printf 'source %s\ninfo %s\nframeworks %s\n' \
+      "$(sha_file "$BIN/$1.swift")" \
+      "$(call "$1" info_plist | sha_stdin)" \
+      "$(call "$1" frameworks)"
+  else
+    call "$1" build_id
+  fi
+}
+
+# Compiles ~/.bin/NAME.swift into the ad-hoc signed bundle ~/.bin/NAME.app.
+# A bundle (not a bare binary) is what gives the daemon a bundle id, which
+# native notifications and Location Services need. The binary is swapped in
+# only after a successful compile, so a broken source leaves the running
+# version in place.
+swift_build() {
+  local name=$1 fw
+  local bundle="$BIN/$name.app"
+  local binary="$bundle/Contents/MacOS/$name"
+  local args=()
+  [ -f "$BIN/$name.swift" ] || die "$BIN/$name.swift not found (run chezmoi apply first)"
+  for fw in $(call "$name" frameworks); do
+    args+=(-framework "$fw")
+  done
+  mkdir -p "$bundle/Contents/MacOS"
+  if ! swiftc -O "${args[@]}" "$BIN/$name.swift" -o "$binary.new"; then
+    rm -f "$binary.new"
+    return 1
+  fi
+  mv -f "$binary.new" "$binary"
+  call "$name" info_plist >"$bundle/Contents/Info.plist"
+  # codesign reports "replacing existing signature" on every rebuild; only
+  # show its output when it fails.
+  local output
+  if ! output=$(codesign --force --sign - "$bundle" 2>&1); then
+    warn "$output"
+    return 1
+  fi
+}
+
+do_build() {
+  if is_swift_app "$1"; then
+    swift_build "$1"
+  else
+    call "$1" build
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# launchd
+# ---------------------------------------------------------------------------
+
+agent_loaded() { launchctl print "$DOMAIN/$1" >/dev/null 2>&1; }
+
+agent_pid() {
+  # no early `exit` in awk: it would SIGPIPE launchctl and trip pipefail
+  launchctl print "$DOMAIN/$1" 2>/dev/null | awk '$1 == "pid" && $2 == "=" && !seen { print $3; seen = 1 }'
+}
+
+# bootout is asynchronous; bootstrapping while the old instance is still being
+# torn down fails with "Input/output error". Wait until it is gone.
+agent_bootout() {
+  local i=0
+  agent_loaded "$1" || return 0
+  launchctl bootout "$DOMAIN/$1" 2>/dev/null || true
+  while agent_loaded "$1" && [ "$i" -lt 50 ]; do
+    sleep 0.2
+    i=$((i + 1))
+  done
+}
+
+# Re-reads the plist. `kickstart -k` restarts with the plist launchd already
+# has, so a changed plist needs bootout + bootstrap.
+agent_reload() {
+  agent_bootout "$1"
+  launchctl bootstrap "$DOMAIN" "$AGENTS_DIR/$1.plist"
+}
+
+# daemon_plist LABEL LOGFILE ARG…: a KeepAlive background agent.
+daemon_plist() {
+  local label=$1 logfile=$2 arg
+  shift 2
+  cat <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>${label}</string>
+    <key>ProgramArguments</key>
+    <array>
+PLIST
+  for arg in "$@"; do
+    printf '        <string>%s</string>\n' "$arg"
+  done
+  cat <<PLIST
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>LimitLoadToSessionType</key>
+    <string>Aqua</string>
+    <key>StandardOutPath</key>
+    <string>${logfile}</string>
+    <key>StandardErrorPath</key>
+    <string>${logfile}</string>
+</dict>
+</plist>
+PLIST
+}
+
+# ---------------------------------------------------------------------------
+# display-refresh-fixer
+# ---------------------------------------------------------------------------
+
+DISPLAY_REFRESH_MATCH="DELL"
+DISPLAY_REFRESH_TARGET="143.96Hz"
+
+display_refresh_fixer_desc() { echo "keeps the Dell G3223Q on 144 Hz (needs BetterDisplay)"; }
+display_refresh_fixer_frameworks() { echo "AppKit UserNotifications"; }
+display_refresh_fixer_label() { echo "earth.gru.display-refresh-fixer"; }
+
+display_refresh_fixer_info_plist() {
+  cat <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>earth.gru.display-refresh-fixer</string>
+    <key>CFBundleName</key>
+    <string>Display Fixer</string>
+    <key>CFBundleDisplayName</key>
+    <string>Display Fixer</string>
+    <key>CFBundleExecutable</key>
+    <string>display-refresh-fixer</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSUIElement</key>
+    <true/>
+</dict>
+</plist>
+PLIST
+}
+
+display_refresh_fixer_plist() {
+  daemon_plist "earth.gru.display-refresh-fixer" "$LOGS_DIR/display-refresh-fixer.log" \
+    "$BIN/display-refresh-fixer.app/Contents/MacOS/display-refresh-fixer" \
+    --display "$DISPLAY_REFRESH_MATCH" \
+    --refresh "$DISPLAY_REFRESH_TARGET"
+}
+
+# ---------------------------------------------------------------------------
+# display-profile-fixer
+# ---------------------------------------------------------------------------
+
+display_profile_fixer_desc() { echo "replaces the malformed ICC profiles Dell's DDPM assigns"; }
+display_profile_fixer_frameworks() { echo "AppKit ColorSync UserNotifications"; }
+display_profile_fixer_label() { echo "earth.gru.display-profile-fixer"; }
+
+display_profile_fixer_info_plist() {
+  cat <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>earth.gru.display-profile-fixer</string>
+    <key>CFBundleName</key>
+    <string>Display Profile Fixer</string>
+    <key>CFBundleDisplayName</key>
+    <string>Display Profile Fixer</string>
+    <key>CFBundleExecutable</key>
+    <string>display-profile-fixer</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSUIElement</key>
+    <true/>
+</dict>
+</plist>
+PLIST
+}
+
+display_profile_fixer_plist() {
+  daemon_plist "earth.gru.display-profile-fixer" "$LOGS_DIR/display-profile-fixer.log" \
+    "$BIN/display-profile-fixer.app/Contents/MacOS/display-profile-fixer"
+}
+
+# ---------------------------------------------------------------------------
+# sketchybar-network-watcher
+# No LaunchAgent: items/network_type.lua kills and respawns the watcher on
+# every SketchyBar (re)load, so a rebuilt binary is started by reloading the
+# bar.
+# ---------------------------------------------------------------------------
+
+sketchybar_network_watcher_desc() { echo "feeds the SketchyBar network item (spawned by SketchyBar)"; }
+sketchybar_network_watcher_frameworks() { echo "AppKit CoreLocation CoreWLAN SystemConfiguration"; }
+
+sketchybar_network_watcher_info_plist() {
+  cat <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>com.user.sketchybar-network-watcher</string>
+    <key>CFBundleName</key>
+    <string>sketchybar-network-watcher</string>
+    <key>CFBundleExecutable</key>
+    <string>sketchybar-network-watcher</string>
+    <key>LSBackgroundOnly</key>
+    <true/>
+    <key>NSLocationUsageDescription</key>
+    <string>Displays the current WiFi network name in the status bar.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Displays the current WiFi network name in the status bar.</string>
+</dict>
+</plist>
+PLIST
+}
+
+sketchybar_network_watcher_pid() { pgrep -x sketchybar-network-watcher | head -n 1; }
+
+sketchybar_network_watcher_restart() {
+  if pgrep -x sketchybar >/dev/null; then
+    sketchybar --reload
+    echo "restarted by reloading SketchyBar"
+  else
+    echo "SketchyBar is not running and starts it on launch"
+  fi
+}
+
+sketchybar_network_watcher_uninstall() { pkill -x sketchybar-network-watcher || true; }
+
+# ---------------------------------------------------------------------------
+# sketchybar-tailscale-watch
+# ---------------------------------------------------------------------------
+
+# Same candidates and order as items/tailscale.lua.
+tailscale_cli() {
+  local candidate
+  for candidate in \
+    /Applications/Tailscale.app/Contents/MacOS/tailscale \
+    /usr/local/bin/tailscale \
+    /opt/homebrew/bin/tailscale; do
+    if [ -e "$candidate" ]; then
+      echo "$candidate"
+      return 0
+    fi
+  done
+}
+
+sketchybar_tailscale_watch_desc() { echo "feeds the SketchyBar Tailscale item with change events"; }
+sketchybar_tailscale_watch_label() { echo "earth.gru.sketchybar-tailscale-watch"; }
+sketchybar_tailscale_watch_run_id() { sha_file "$BIN/sketchybar-tailscale-watch"; }
+
+sketchybar_tailscale_watch_missing() {
+  if [ -z "$(tailscale_cli)" ]; then
+    echo "no Tailscale CLI found"
+  elif [ ! -x "$BIN/sketchybar-tailscale-watch" ]; then
+    echo "$BIN/sketchybar-tailscale-watch not found (run chezmoi apply first)"
+  fi
+}
+
+# PATH: launchd's default lacks Homebrew, where jq and sketchybar live.
+# ThrottleInterval: restart delay while Tailscale is not running.
+sketchybar_tailscale_watch_plist() {
+  local log="$LOGS_DIR/sketchybar-tailscale-watch.log"
+  cat <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>earth.gru.sketchybar-tailscale-watch</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>${BIN}/sketchybar-tailscale-watch</string>
+        <string>$(tailscale_cli)</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ThrottleInterval</key>
+    <integer>15</integer>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>LimitLoadToSessionType</key>
+    <string>Aqua</string>
+    <key>StandardOutPath</key>
+    <string>${log}</string>
+    <key>StandardErrorPath</key>
+    <string>${log}</string>
+</dict>
+</plist>
+PLIST
+}
+
+# ---------------------------------------------------------------------------
+# rift-log-rotate
+# Interval job, not a daemon: launchd starts ~/.bin/rift-log-rotate.sh every
+# RIFT_LOG_ROTATE_INTERVAL seconds, so a changed script needs no restart.
+# ---------------------------------------------------------------------------
+
+RIFT_LOG_ROTATE_INTERVAL=300
+
+rift_log_rotate_desc() { echo "rotates rift's logs and keeps its plist on RUST_LOG=debug"; }
+rift_log_rotate_label() { echo "com.grunewaldt.rift-log-rotate"; }
+
+rift_log_rotate_missing() {
+  [ -x "$BIN/rift-log-rotate.sh" ] || echo "$BIN/rift-log-rotate.sh not found (run chezmoi apply first)"
+}
+
+rift_log_rotate_plist() {
+  cat <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.grunewaldt.rift-log-rotate</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>${BIN}/rift-log-rotate.sh</string>
+        <string>rotate</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>${RIFT_LOG_ROTATE_INTERVAL}</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>LimitLoadToSessionType</key>
+    <string>Aqua</string>
+    <key>StandardOutPath</key>
+    <string>/dev/null</string>
+    <key>StandardErrorPath</key>
+    <string>/dev/null</string>
+</dict>
+</plist>
+PLIST
+}
+
+rift_log_rotate_uninstall() { rm -rf "$HOME/.cache/rift-log-rotate"; }
+
+# ---------------------------------------------------------------------------
+# rift-pip (https://github.com/acsandmann/rift-pip)
+# Rift plugin that mirrors a window into a floating picture-in-picture window,
+# built with the local `--window <id>` patch. No daemon: ~/.bin/rift-pip-auto
+# starts it on demand.
+# ---------------------------------------------------------------------------
+
+RIFT_PIP_REPO="https://github.com/acsandmann/rift-pip"
+RIFT_PIP_REV="06e15a62428dd142750185af3060df897855fc0a" # upstream commit the patch was written against
+RIFT_PIP_PATCH="$BIN/src/rift-pip-window-option.patch"
+
+rift_pip_desc() { echo "picture-in-picture for hidden Teams calls (started by rift-pip-auto)"; }
+rift_pip_artifact() { echo "$HOME/.cargo/bin/rift-pip"; }
+rift_pip_build_id() { printf 'rev %s\npatch %s\n' "$RIFT_PIP_REV" "$(sha_file "$RIFT_PIP_PATCH")"; }
+
+rift_pip_missing() {
+  local cmd
+  for cmd in git cargo; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+      echo "$cmd not found"
+      return 0
+    fi
+  done
+  [ -f "$RIFT_PIP_PATCH" ] || echo "$RIFT_PIP_PATCH not found (run chezmoi apply first)"
+}
+
+rift_pip_build() {
+  local temp_dir
+  temp_dir=$(mktemp -d)
+  # shellcheck disable=SC2064  # expand now: temp_dir is local
+  trap "rm -rf '$temp_dir'" EXIT
+  log "rift-pip: cloning at ${RIFT_PIP_REV:0:7}"
+  git clone --quiet "$RIFT_PIP_REPO" "$temp_dir/rift-pip"
+  git -C "$temp_dir/rift-pip" checkout --quiet "$RIFT_PIP_REV"
+  git -C "$temp_dir/rift-pip" apply "$RIFT_PIP_PATCH"
+  log "rift-pip: building (this takes a minute)"
+  cargo install --quiet --locked --path "$temp_dir/rift-pip" --root "$HOME/.cargo"
+  rm -rf "$temp_dir"
+  trap - EXIT
+  # let rift-pip-auto log again if it goes missing
+  rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/rift-pip/rift-pip-missing"
+  log "rift-pip: needs Screen Recording permission for the app that launches it (rift, or"
+  log "  your terminal when run by hand): System Settings > Privacy & Security > Screen &"
+  log "  System Audio Recording. A PiP that fails to start is not retried until the call's"
+  log "  workspace has been visible again; see ~/.cache/rift-pip/rift-pip.log."
+}
+
+# ---------------------------------------------------------------------------
+# ssh-agent-multiplexer (https://github.com/everpeace/ssh-agent-multiplexer)
+# Merges the Secretive agent (Secure Enclave git signing key) and the default
+# launchd ssh-agent (daily Smallstep certificate) behind a single socket, so
+# tools that forward one SSH agent (e.g. Docker Sandboxes) see both keys.
+# Config: ~/.config/ssh-agent-multiplexer/config.toml (managed by chezmoi).
+#
+# Pinned release, verified against the sha256 from the project's
+# checksums.txt. Bump both together when updating.
+# ---------------------------------------------------------------------------
+
+SSH_MUX_VERSION="0.6.0"
+SSH_MUX_SHA256="5ac8d79bdee436a0e6a8c8dbfa53cbfc3c061ac4b48d6de890e7780b53a64cc2" # darwin_arm64
+SSH_MUX_BIN="$HOME/.local/bin/ssh-agent-multiplexer"
+
+ssh_agent_multiplexer_desc() { echo "merges the Secretive and launchd SSH agents behind one socket"; }
+ssh_agent_multiplexer_label() { echo "local.ssh-agent-multiplexer"; }
+ssh_agent_multiplexer_artifact() { echo "$SSH_MUX_BIN"; }
+ssh_agent_multiplexer_build_id() { printf 'version %s\nsha256 %s\n' "$SSH_MUX_VERSION" "$SSH_MUX_SHA256"; }
+ssh_agent_multiplexer_run_id() { sha_file "${XDG_CONFIG_HOME:-$HOME/.config}/ssh-agent-multiplexer/config.toml"; }
+
+ssh_agent_multiplexer_missing() {
+  [ "$(uname -m)" = "arm64" ] || echo "pinned checksum is for darwin_arm64 only"
+}
+
+ssh_agent_multiplexer_build() {
+  local tarball="ssh-agent-multiplexer_${SSH_MUX_VERSION}_darwin_arm64.tar.gz"
+  local url="https://github.com/everpeace/ssh-agent-multiplexer/releases/download/v${SSH_MUX_VERSION}/${tarball}"
+  local temp_dir
+  temp_dir=$(mktemp -d)
+  # shellcheck disable=SC2064  # expand now: temp_dir is local
+  trap "rm -rf '$temp_dir'" EXIT
+  log "ssh-agent-multiplexer: downloading v${SSH_MUX_VERSION}"
+  curl -fsSL -o "$temp_dir/$tarball" "$url"
+  echo "${SSH_MUX_SHA256}  $temp_dir/$tarball" | shasum -a 256 -c - >/dev/null
+  tar -xzf "$temp_dir/$tarball" -C "$temp_dir" ssh-agent-multiplexer
+  mkdir -p "$(dirname "$SSH_MUX_BIN")"
+  install -m 755 "$temp_dir/ssh-agent-multiplexer" "$SSH_MUX_BIN"
+  rm -rf "$temp_dir"
+  trap - EXIT
+}
+
+# The upstream launchd agent socket path (/var/run/com.apple.launchd.*/Listeners)
+# changes every boot, so the config references ${SSH_AUTH_SOCK} and the
+# LaunchAgent resolves it from launchd's user environment at start.
+ssh_agent_multiplexer_plist() {
+  cat <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>local.ssh-agent-multiplexer</string>
+    <key>KeepAlive</key>
+    <true/>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>ProgramArguments</key>
+    <array>
+       <string>/bin/sh</string>
+       <string>-c</string>
+       <string>export SSH_AUTH_SOCK="\$(launchctl getenv SSH_AUTH_SOCK)"; exec "\$HOME/.local/bin/ssh-agent-multiplexer" run</string>
+    </array>
+    <key>StandardOutPath</key>
+    <string>${LOGS_DIR}/ssh-agent-multiplexer.log</string>
+    <key>StandardErrorPath</key>
+    <string>${LOGS_DIR}/ssh-agent-multiplexer.log</string>
+</dict>
+</plist>
+PLIST
+}
+
+ssh_agent_multiplexer_uninstall() { rm -f "$HOME/.ssh/ssh-agent-multiplexer.sock"; }
+
+# ---------------------------------------------------------------------------
+# Commands
+# ---------------------------------------------------------------------------
+
+# Returns 0 when the component is installed and current, RC_SKIPPED when a
+# prerequisite is missing; any other failure exits through `set -e`.
+install_one() {
+  local c=$1 reason build_changed=0 run_changed=0 want_run="" label plist new actions=""
+
+  reason=$(missing_reason "$c")
+  if [ -n "$reason" ]; then
+    warn "$c: skipped, $reason"
+    return "$RC_SKIPPED"
+  fi
+  mkdir -p "$STATE_DIR"
+
+  if has_build "$c"; then
+    local want_build
+    want_build=$(build_id "$c")
+    if [ "$FORCE" = 1 ] || ! artifact_ok "$c" ||
+      [ "$want_build" != "$(cat "$STATE_DIR/$c.build" 2>/dev/null)" ]; then
+      log "$c: building"
+      do_build "$c"
+      printf '%s\n' "$want_build" >"$STATE_DIR/$c.build"
+      build_changed=1
+      actions="built"
+    fi
+  fi
+
+  if has "$c" run_id; then
+    want_run=$(call "$c" run_id)
+    [ "$want_run" = "$(cat "$STATE_DIR/$c.run" 2>/dev/null)" ] || run_changed=1
+  fi
+  [ "$FORCE" = 1 ] && run_changed=1
+
+  if has "$c" label; then
+    label=$(call "$c" label)
+    plist="$AGENTS_DIR/$label.plist"
+    new=$(call "$c" plist)
+    mkdir -p "$AGENTS_DIR" "$LOGS_DIR"
+    if [ ! -f "$plist" ] || [ "$new" != "$(cat "$plist")" ]; then
+      printf '%s\n' "$new" >"$plist"
+      agent_reload "$label"
+      actions="${actions:+$actions, }LaunchAgent installed and started"
+    elif ! agent_loaded "$label"; then
+      launchctl bootstrap "$DOMAIN" "$plist"
+      actions="${actions:+$actions, }LaunchAgent loaded"
+    elif [ "$build_changed" = 1 ] || [ "$run_changed" = 1 ]; then
+      launchctl kickstart -k "$DOMAIN/$label" >/dev/null
+      actions="${actions:+$actions, }restarted"
+    fi
+  elif has "$c" restart && { [ "$build_changed" = 1 ] || [ "$run_changed" = 1 ]; }; then
+    local restarted
+    restarted=$(call "$c" restart)
+    actions="${actions:+$actions, }$restarted"
+  fi
+
+  if [ -n "$want_run" ]; then
+    printf '%s\n' "$want_run" >"$STATE_DIR/$c.run"
+  fi
+  log "$c: ${actions:-up to date}"
+}
+
+cmd_install() {
+  local explicit=0 names="" c rc failed="" skipped=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+    -f | --force) FORCE=1 ;;
+    -*) die "unknown option: $1" ;;
+    *)
+      is_component "$1" || die "unknown component: $1 (known: $COMPONENTS)"
+      names="$names $1"
+      explicit=1
+      ;;
+    esac
+    shift
+  done
+
+  if [ "$explicit" = 0 ]; then
+    for c in $(enabled_components); do
+      if is_component "$c"; then
+        names="$names $c"
+      else
+        warn "$ENABLED_FILE: unknown component '$c', ignored"
+      fi
+    done
+    if [ -z "$names" ]; then
+      log "No components enabled for this host (see .chezmoidata/services.yaml)."
+      return 0
+    fi
+  fi
+
+  for c in $names; do
+    # A subshell with its own `set -e`, outside any condition (where bash
+    # ignores errexit), so one broken component doesn't stop the others.
+    set +e
+    (
+      set -e
+      install_one "$c"
+    )
+    rc=$?
+    set -e
+    if [ "$rc" = "$RC_SKIPPED" ]; then
+      skipped="$skipped $c"
+    elif [ "$rc" != 0 ]; then
+      warn "$c: FAILED"
+      failed="$failed $c"
+    fi
+  done
+
+  if [ -n "$failed" ]; then
+    die "failed:$failed"
+  fi
+  # Skipping is fine for the host list (the prerequisite may still be on its
+  # way), but not for a component that was asked for by name.
+  if [ -n "$skipped" ] && [ "$explicit" = 1 ]; then
+    die "not installed:$skipped"
+  fi
+}
+
+restart_one() {
+  local c=$1 label
+  if has "$c" label; then
+    label=$(call "$c" label)
+    if agent_loaded "$label"; then
+      launchctl kickstart -k "$DOMAIN/$label" >/dev/null
+    elif [ -f "$AGENTS_DIR/$label.plist" ]; then
+      launchctl bootstrap "$DOMAIN" "$AGENTS_DIR/$label.plist"
+    else
+      die "$c is not installed (run: dot-services install $c)"
+    fi
+    log "$c: restarted"
+  elif has "$c" restart; then
+    log "$c: $(call "$c" restart)"
+  else
+    log "$c: nothing to restart, it is started on demand"
+  fi
+}
+
+uninstall_one() {
+  local c=$1 label artifact
+  if has "$c" label; then
+    label=$(call "$c" label)
+    agent_bootout "$label"
+    rm -f "$AGENTS_DIR/$label.plist"
+  fi
+  if has "$c" uninstall; then
+    call "$c" uninstall
+  fi
+  artifact=$(artifact_path "$c")
+  case "$artifact" in
+  "$HOME"/?*) rm -rf -- "$artifact" ;;
+  esac
+  rm -f "$STATE_DIR/$c.build" "$STATE_DIR/$c.run"
+  log "$c: uninstalled"
+}
+
+cmd_each() {
+  local action=$1 c
+  shift
+  [ $# -gt 0 ] || die "$action needs at least one component name (known: $COMPONENTS)"
+  for c in "$@"; do
+    is_component "$c" || die "unknown component: $c (known: $COMPONENTS)"
+  done
+  for c in "$@"; do
+    "${action}_one" "$c"
+  done
+}
+
+# Prints "current", "stale", "missing" or "-" (no build step).
+build_state() {
+  local c=$1
+  has_build "$c" || {
+    echo "-"
+    return
+  }
+  if ! artifact_ok "$c"; then
+    echo "missing"
+  elif [ "$(build_id "$c")" != "$(cat "$STATE_DIR/$c.build" 2>/dev/null)" ]; then
+    echo "stale"
+  else
+    echo "current"
+  fi
+}
+
+# Prints the state of the running part: LaunchAgent, spawned process or "-".
+run_state() {
+  local c=$1 label pid
+  if has "$c" label; then
+    label=$(call "$c" label)
+    if [ ! -f "$AGENTS_DIR/$label.plist" ]; then
+      echo "not installed"
+    elif ! agent_loaded "$label"; then
+      echo "not loaded"
+    else
+      pid=$(agent_pid "$label")
+      if [ -n "$pid" ]; then
+        echo "running (pid $pid)"
+      else
+        echo "loaded, idle"
+      fi
+    fi
+  elif has "$c" pid; then
+    pid=$(call "$c" pid || true)
+    if [ -n "$pid" ]; then
+      echo "running (pid $pid)"
+    else
+      echo "not running"
+    fi
+  else
+    echo "-"
+  fi
+}
+
+is_installed() {
+  local c=$1 artifact
+  if has "$c" label && [ -f "$AGENTS_DIR/$(call "$c" label).plist" ]; then
+    return 0
+  fi
+  artifact=$(artifact_path "$c")
+  [ -n "$artifact" ] && [ -e "$artifact" ]
+}
+
+cmd_status() {
+  local c enabled note reason
+  printf '%-28s %-8s %-8s %s\n' "COMPONENT" "ENABLED" "BUILD" "STATE"
+  for c in $COMPONENTS; do
+    note=""
+    if is_enabled "$c"; then
+      enabled="yes"
+      reason=$(missing_reason "$c")
+      [ -z "$reason" ] || note="cannot install: $reason"
+    else
+      enabled="no"
+      ! is_installed "$c" || note="installed, but not enabled for this host"
+    fi
+    if [ "$enabled" = "no" ] && ! is_installed "$c"; then
+      printf '%-28s %-8s %-8s %s\n' "$c" "$enabled" "-" "-"
+    else
+      printf '%-28s %-8s %-8s %s\n' "$c" "$enabled" "$(build_state "$c")" "$(run_state "$c")"
+    fi
+    printf '    %s\n' "$(call "$c" desc)"
+    [ -z "$note" ] || printf '    ! %s\n' "$note"
+  done
+}
+
+usage() {
+  cat <<USAGE
+Usage: dot-services [status]
+       dot-services install [--force] [NAME…]
+       dot-services restart NAME…
+       dot-services uninstall NAME…
+
+  status     what is enabled for this host, built and running (default)
+  install    build, install and restart whatever changed; without names, the
+             components enabled for this host. --force rebuilds and restarts
+             even when nothing changed
+  restart    restart a component
+  uninstall  stop a component and remove what install created
+
+Components: $COMPONENTS
+Host list:  $ENABLED_FILE (from .chezmoidata/services.yaml)
+USAGE
+}
+
+main() {
+  if [ "$(uname -s)" != "Darwin" ]; then
+    die "dot-services only manages macOS LaunchAgents and builds"
+  fi
+  # LaunchAgents live in the per-user gui/<uid> domain; as root, `id -u` is 0
+  # and launchctl would target gui/0, which does not exist.
+  if [ "$(id -u)" -eq 0 ] || [ -n "${SUDO_USER:-}" ]; then
+    die "do not run dot-services as root or with sudo"
+  fi
+
+  local cmd="${1:-status}"
+  [ $# -eq 0 ] || shift
+  case "$cmd" in
+  status) cmd_status ;;
+  install) cmd_install "$@" ;;
+  restart) cmd_each restart "$@" ;;
+  uninstall) cmd_each uninstall "$@" ;;
+  -h | --help | help) usage ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+  esac
+}
+
+main "$@"
