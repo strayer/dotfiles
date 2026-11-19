@@ -237,3 +237,16 @@ enabled = true
 
 # Overview of all workspaces
 "Alt + Ctrl + M" = "show_mission_control_all"
+
+# Resize mode: Alt+R, then H/L for width and J/K for height, Escape or Enter to leave
+"Alt + R" = { binding_mode = "resize" }
+
+# Binding modes replace the whole keymap while active. Keep every [keys] entry
+# above this line: anything below a [binding_modes.*] header belongs to that mode.
+[binding_modes.resize]
+"H" = { resize_window_shrink = "horizontal" }
+"L" = { resize_window_grow = "horizontal" }
+"J" = { resize_window_grow = "vertical" }
+"K" = { resize_window_shrink = "vertical" }
+"Escape" = { binding_mode = "default" }
+"Enter" = { binding_mode = "default" }
