@@ -38,8 +38,7 @@ chezmoi update         # Pull and apply changes from remote repository
 
 ```bash
 tm <session>                         # tmux session manager (attach or create)
-toggle-theme.sh [theme]              # System-wide theme switching with automation
-install-dark-mode-notify.sh          # Setup automated theme switching via LaunchAgent
+toggle-theme.sh [dark|light]         # Switch the terminal tools' theme; no argument toggles
 install-sbarlua.sh                   # Install SbarLua for SketchyBar configuration
 dot-services [status|install|restart|uninstall] [NAME…]  # Build, install and restart this repo's daemons and built tools per host (see dot-services below)
 rift-pip-auto [toggle]               # Rift event hook: auto-PiP for hidden Teams calls; `toggle` mirrors the focused window (Alt+Ctrl+P); without rift-pip it logs once and stays quiet
@@ -112,12 +111,11 @@ network names, personal email addresses.
 
 ### Theme Management System
 
-Sophisticated automated theme switching with cross-application coordination:
+`toggle-theme.sh` switches the terminal tools between a dark and a light theme. It runs only when called by hand; nothing follows the macOS appearance automatically.
 
-- **Supported themes**: tokyonight (day/storm/night)
-- **Applications**: bat, fish, lsd, sketchybar, git-delta, neovim
-- **Implementation**: Symlinks managed by toggle-theme.sh with validation and logging
-- **Automation**: LaunchAgent integration with dark-mode-notify binary for system detection
+- **Themes**: dark is tokyonight storm, light is Catppuccin Latte
+- **Applications**: bat, fish, lsd, git-delta, neovim (running instances get `SIGUSR1` and re-read the state file)
+- **Implementation**: fish universal variables, `fish_config theme save` and the lsd colors symlink, with validation and logging
 - **State management**: Theme persistence in `~/.cache/system-theme.txt`
 - **Logging**: Comprehensive logging with rotation in `~/toggle-theme.log`
 
@@ -143,7 +141,7 @@ Sophisticated automated theme switching with cross-application coordination:
 - **Tailscale item**: `dot_config/sketchybar/items/tailscale.lua` only loads where a Tailscale CLI exists (app bundle, `/usr/local/bin` or Homebrew). The LaunchAgent `earth.gru.sketchybar-tailscale-watch` (`dot_bin/sketchybar-tailscale-watch`, installed by `dot-services`) streams `tailscale debug watch-ipn`, filters out the per-second engine stats with jq and triggers `tailscale_change` only on state/prefs/netmap/health changes; the item then reads `tailscale status --json`. Icons: dot grid = connected, globe arrow = exit node in use, muted dot square = off. The hover popup shows tailnet, own IP/MagicDNS name, exit node (direct or DERP) with its traffic, peers, home relay, key expiry, health warnings and version. Clicking does nothing.
 - **Package management**: Comprehensive Brewfile (~200 work packages, ~215 home packages) with custom taps, MAS automation, and environment-specific tool sets
 - **Karabiner**: Custom keyboard modifications in `private_karabiner/`
-- **LaunchAgent automation**: Automated theme switching and system integration services
+- **LaunchAgents**: the daemons in this repo are built and loaded by `dot-services` (see below)
 
 ### Brewfile Structure & Management
 
@@ -234,7 +232,7 @@ dot-services uninstall NAME…          # stop it and remove plist, artifact and
 - **Per host**: `.chezmoidata/services.yaml` lists the components each hostname runs; chezmoi renders the list to `~/.config/dotfiles/services`. `status` flags a component that is installed but no longer listed; removing it is a manual `dot-services uninstall`.
 - **Idempotent**: a component is rebuilt only when its build stamp (hash of sources and build recipe, kept in `~/.cache/dot-services/`) differs or its artifact is missing. A LaunchAgent is reloaded when the generated plist differs from the installed one and restarted when something it runs changed. Everything else is left alone.
 - **Triggered by chezmoi**: `.chezmoiscripts/run_onchange_after_30-dot-services.sh.tmpl` runs `dot-services install` when `dot-services` itself, the host list or a component input changes, so editing a `.swift` source and running `chezmoi apply` rebuilds and restarts just that daemon. A new input file must be added to the list in that template. A build error fails the apply, which makes chezmoi retry on the next one. A missing prerequisite (cargo, Tailscale) only skips that component; the hook hashes their presence and runs again once they exist. `chezmoi apply <target>` and `--exclude scripts` don't run the hook: use `dot-services install` then.
-- **Not covered**: SbarLua (`install-sbarlua.sh`, part of the SketchyBar setup), dark-mode-notify (`install-dark-mode-notify.sh`), rift itself (`rift service install`) and Homebrew services.
+- **Not covered**: SbarLua (`install-sbarlua.sh`, part of the SketchyBar setup), rift itself (`rift service install`) and Homebrew services.
 
 The display-refresh-fixer re-applies BetterDisplay's "unexposed" 3008x1692 HiDPI @ 144 Hz mode on the Dell G3223Q after display reconfiguration or wake, because macOS 15.1+ never persists that mode. Target display/mode are plist arguments (`--display`, `--refresh`, set in `dot-services`); log at `~/Library/Logs/display-refresh-fixer.log`; `kill -USR1 <pid>` forces a check. After editing the `.swift` source, `chezmoi apply` rebuilds and restarts it. The compiled `.app` bundle is a build artifact and not managed by chezmoi.
 
@@ -243,7 +241,6 @@ The display-profile-fixer undoes what Dell Display and Peripheral Manager (DDPM)
 ### Development Workflows
 
 - **Environment bootstrapping**: Use `chezmoi init` with template variable prompts
-- **Theme automation**: LaunchAgent responds to system dark mode changes automatically
 - **GPG agent conflicts**: Use `restart-gpg-agent.fish` when multiple users conflict
 - **SSH key management**: Use `secretive-ssh-keygen` for Secretive app integration
 

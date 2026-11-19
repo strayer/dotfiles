@@ -21,3 +21,6 @@
 .bin/install-ssh-agent-multiplexer.sh
 .bin/configure-claude
 .bin/src/configure-claude
+.bin/dark-mode-notify
+.bin/install-dark-mode-notify.sh
+Library/LaunchAgents/earth.gru.dark-mode-notify.plist

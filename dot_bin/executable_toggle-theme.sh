@@ -46,42 +46,31 @@ log_message "Starting..."
 theme=""
 theme_source=""
 
-if [ -z "${DARKMODE+x}" ]; then
-  if [ $# -gt 0 ]; then
-    if [ "$1" == "dark" ]; then
-      theme="dark"
-      theme_source="parameter"
-    elif [ "$1" == "light" ]; then
-      theme="light"
-      theme_source="parameter"
-    else
-      echo "Invalid argument. Use 'dark' or 'light'."
-      exit 1
-    fi
+if [ $# -gt 0 ]; then
+  if [ "$1" == "dark" ]; then
+    theme="dark"
+    theme_source="parameter"
+  elif [ "$1" == "light" ]; then
+    theme="light"
+    theme_source="parameter"
   else
-    if [ -f "$SYSTEM_THEME_FILE" ]; then
-      current_theme=$(cat "$SYSTEM_THEME_FILE")
-      if [ "$current_theme" == "dark" ]; then
-        theme="light"
-      else
-        theme="dark"
-      fi
-      theme_source="auto-toggle"
-    else
-      # Default to dark mode if no file exists
-      theme="dark"
-      theme_source="auto-toggle"
-    fi
+    echo "Invalid argument. Use 'dark' or 'light'."
+    exit 1
   fi
 else
-  if [ "$DARKMODE" = "1" ]; then
-    theme="dark"
+  if [ -f "$SYSTEM_THEME_FILE" ]; then
+    current_theme=$(cat "$SYSTEM_THEME_FILE")
+    if [ "$current_theme" == "dark" ]; then
+      theme="light"
+    else
+      theme="dark"
+    fi
+    theme_source="auto-toggle"
   else
-    # Do not auto-switch to light theme
-    log_message "System environment indicates light theme. Exiting without changes."
-    exit 0
+    # Default to dark mode if no file exists
+    theme="dark"
+    theme_source="auto-toggle"
   fi
-  theme_source="environment variable"
 fi
 
 if [ "$theme" == "dark" ]; then
