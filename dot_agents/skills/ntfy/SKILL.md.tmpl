@@ -1,0 +1,44 @@
+{{- /* Renders empty, and so isn't deployed, on a host without an ntfy_hosts
+     entry in the encrypted secrets (see scripts/executable_ntfy.sh.tmpl). */ -}}
+{{- $secrets := secret | fromYaml -}}
+{{- $host := dig "ntfy_hosts" .chezmoi.hostname dict $secrets -}}
+{{- if $host -}}
+---
+name: ntfy
+description: Send a push notification to the user's phone/desktop through the self-hosted ntfy server. Use it to report that a long-running or unattended task finished, failed, or is blocked and needs a decision — especially when the user said they are away or asked to be notified.
+when_to_use: |
+  Trigger when the user asks to be notified, pinged, messaged or told "when it's done / if something breaks", mentions ntfy, or leaves for a while during a long task. Also use it on your own initiative inside workflows whose docs/skills say to notify (e.g. infra update runs) at these moments: task finished, task failed, blocked on a user decision.
+  Do NOT trigger for routine progress chatter: one message per meaningful state change, not per step. Never put secrets, tokens or full logs into a notification; summarize and point to where details are.
+argument-hint: "[-t topic] [-p priority] [-g tags] -T \"title\" \"message\""
+allowed-tools: Bash({{ .chezmoi.homeDir }}/.agents/skills/ntfy/scripts/ntfy.sh *)
+---
+
+# ntfy
+
+Pushes a message to the user's self-hosted ntfy server. On this host the defaults are user `{{ $host.user }}` and topic `{{ $host.topic }}`; they come from the `ntfy_hosts` key in the encrypted secrets of the dotfiles. The script reads the password from the `NTFY_PASSWORD` environment variable. If it reports that `NTFY_PASSWORD` is not set, tell the user and stop: don't look for the password anywhere else.
+
+```bash
+{{ .chezmoi.homeDir }}/.agents/skills/ntfy/scripts/ntfy.sh [-t TOPIC] [-p PRIORITY] [-g TAGS] [-T TITLE] [-c URL] "message"
+```
+
+- `-p`: `min` | `low` | `default` | `high` | `urgent`. Use `high` when the user must act (blocked, failed), `default` for success, `low` for FYI.
+- `-g`: comma-separated emoji shortcodes shown as icons. Conventions: `white_check_mark` success, `warning` blocked/needs decision, `x` failure, `hourglass_flowing_sand` started/long-running, `rotating_light` security.
+- `-T`: short title (what task, which state), e.g. `Infra updates: blocked, need you`.
+- `-c`: optional URL opened on tap (a PR, a dashboard).
+- Message `-` reads the body from stdin for multi-line text.
+
+The script prints `sent to <server>/<topic> (200)` on success and exits non-zero with the HTTP code otherwise. A `401` means user/password are wrong for this host; a `403` means the user may not publish to that topic — report that to the user rather than retrying with other credentials.
+
+## Writing the message
+
+The user reads these on a phone, often while away. One glance must answer "do I need to come back right now?"; the details live in the session.
+
+- **Title** (`-T`): under 40 characters, states the task and its state. The emoji (`-g`) and priority (`-p`) already carry the severity, so the body must not repeat it.
+- **Body**: at most 2 short lines, about 150 characters. Counts instead of names ("4/4 merged, 7 held"), names only for the one thing the user must act on or decide about. No version numbers unless the user has to type them.
+- **Blocked**: end with the recommended reply so a one-word answer works ("Recommend: merge security + easy"). Alternatives only when the recommendation is not obvious.
+- **Done**: did it work, what the user still has to do. Nothing else.
+- **Cadence**: one message when blocked, one at the end. Never one per step.
+
+Bad: "Merged 4/4 easy PRs: nginx 1.27.3 (live, verified), postgres 17.2 (migration ran, not verifiable from outside), redis 7.4.1 and grafana 11.4.0 (both answer again on the host). Left open: ..."
+Good: "4/4 merged, all up. Open: 2 security, 7 held. redis needs a manual pull on 3 hosts."
+{{ end -}}

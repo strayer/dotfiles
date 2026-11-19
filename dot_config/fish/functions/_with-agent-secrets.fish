@@ -1,6 +1,6 @@
 function _with-agent-secrets --no-scope-shadowing --description "Export coding-agent API keys into the caller's scope"
-    # Coding-agent skills (research, scrape) need API keys at runtime —
-    # LINKUP_API_KEY and FIRECRAWL_API_KEY. We resolve them on the host with
+    # Coding-agent skills (research, scrape, ntfy) need secrets at runtime —
+    # LINKUP_API_KEY, FIRECRAWL_API_KEY and NTFY_PASSWORD. We resolve them on the host with
     # dot-secret and export them into the caller's function scope, instead of
     # mounting dot-secret + its impls into the sandbox. Two reasons:
     #
@@ -32,6 +32,10 @@ function _with-agent-secrets --no-scope-shadowing --description "Export coding-a
     if set __agent_secret (dot-secret get linkup_api_key 2>/dev/null)
             and test -n "$__agent_secret"
         set -fx LINKUP_API_KEY $__agent_secret
+    end
+    if set __agent_secret (dot-secret get ntfy_password 2>/dev/null)
+            and test -n "$__agent_secret"
+        set -fx NTFY_PASSWORD $__agent_secret
     end
     set -e __agent_secret
 end

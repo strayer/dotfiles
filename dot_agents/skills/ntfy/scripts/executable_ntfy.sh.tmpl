@@ -1,0 +1,59 @@
+{{- /* Server and per-host user/topic come from the encrypted secrets
+     (ntfy_server, ntfy_hosts.<hostname>.{user,topic}). On a host without an
+     ntfy_hosts entry this renders empty, so chezmoi doesn't deploy the file. */ -}}
+{{- $secrets := secret | fromYaml -}}
+{{- $host := dig "ntfy_hosts" .chezmoi.hostname dict $secrets -}}
+{{- if $host -}}
+#!/usr/bin/env bash
+# Send a push notification through ntfy.
+#
+# usage: ntfy.sh [-t TOPIC] [-p PRIORITY] [-g TAGS] [-T TITLE] [-c CLICK_URL] MESSAGE
+#        echo MESSAGE | ntfy.sh [...] -
+#
+# PRIORITY: min | low | default | high | urgent     TAGS: comma-separated emoji
+# shortcodes (white_check_mark, warning, x, rotating_light, hourglass_flowing_sand)
+#
+# The password comes from the NTFY_PASSWORD environment variable. Server, user
+# and topic come from the dotfiles' encrypted secrets (ntfy_server, ntfy_hosts)
+# and can be overridden with NTFY_SERVER, NTFY_USER and NTFY_TOPIC.
+set -euo pipefail
+
+server="${NTFY_SERVER:-{{ $secrets.ntfy_server }}}"
+user="${NTFY_USER:-{{ $host.user }}}"
+topic="${NTFY_TOPIC:-{{ $host.topic }}}"
+password="${NTFY_PASSWORD:-}"
+priority=default
+tags=""
+title=""
+click=""
+
+while getopts 't:p:g:T:c:h' opt; do
+  case "$opt" in
+    t) topic=$OPTARG ;;
+    p) priority=$OPTARG ;;
+    g) tags=$OPTARG ;;
+    T) title=$OPTARG ;;
+    c) click=$OPTARG ;;
+    h) sed -n '2,12p' "$0"; exit 0 ;;
+    *) exit 2 ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+[ $# -ge 1 ] || { echo "ntfy.sh: message missing (use '-' to read stdin)" >&2; exit 2; }
+if [ "$1" = "-" ]; then message=$(cat); else message="$*"; fi
+
+[ -n "$password" ] || { echo "ntfy.sh: NTFY_PASSWORD is not set; export it in the environment before invoking this script" >&2; exit 1; }
+
+headers=(-H "Priority: $priority")
+[ -n "$title" ] && headers+=(-H "Title: $title")
+[ -n "$tags" ] && headers+=(-H "Tags: $tags")
+[ -n "$click" ] && headers+=(-H "Click: $click")
+
+code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 \
+  -u "$user:$password" "${headers[@]}" --data-binary "$message" "$server/$topic")
+case "$code" in
+  2*) echo "sent to $server/$topic ($code)" ;;
+  *) echo "ntfy.sh: $server/$topic answered HTTP $code" >&2; exit 1 ;;
+esac
+{{ end -}}
