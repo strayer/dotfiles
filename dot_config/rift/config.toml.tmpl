@@ -18,14 +18,17 @@ mouse_follows_focus = false
 hot_reload = true
 default_disable = false
 
-# Startup commands - set up SketchyBar integration
+# Startup commands - set up SketchyBar integration. Rift execs these without a
+# shell, with launchd's PATH (no /opt/homebrew/bin, no ~/.bin), so every binary
+# needs an absolute path. rift-cli goes through the ~/.bin shim so a dev build
+# gets its matching CLI.
 run_on_start = [
-  "rift-cli subscribe cli --event workspace_changed --command sh --args -c --args 'sketchybar --trigger rift_workspace_change RIFT_SPACE_ID=\"$RIFT_SPACE_ID\" RIFT_DISPLAY_UUID=\"$RIFT_DISPLAY_UUID\" RIFT_WORKSPACE_NAME=\"$RIFT_WORKSPACE_NAME\"'",
-  "rift-cli subscribe cli --event windows_changed --command sh --args -c --args 'sketchybar --trigger rift_windows_change RIFT_SPACE_ID=\"$RIFT_SPACE_ID\" RIFT_DISPLAY_UUID=\"$RIFT_DISPLAY_UUID\" RIFT_WORKSPACE_NAME=\"$RIFT_WORKSPACE_NAME\"'",
+  "{{ .chezmoi.homeDir }}/.bin/rift-cli subscribe cli --event workspace_changed --command sh --args -c --args '/opt/homebrew/bin/sketchybar --trigger rift_workspace_change RIFT_SPACE_ID=\"$RIFT_SPACE_ID\" RIFT_DISPLAY_UUID=\"$RIFT_DISPLAY_UUID\" RIFT_WORKSPACE_NAME=\"$RIFT_WORKSPACE_NAME\"'",
+  "{{ .chezmoi.homeDir }}/.bin/rift-cli subscribe cli --event windows_changed --command sh --args -c --args '/opt/homebrew/bin/sketchybar --trigger rift_windows_change RIFT_SPACE_ID=\"$RIFT_SPACE_ID\" RIFT_DISPLAY_UUID=\"$RIFT_DISPLAY_UUID\" RIFT_WORKSPACE_NAME=\"$RIFT_WORKSPACE_NAME\"'",
   # Teams call auto-PiP: mirror a call window via rift-pip while its workspace is
   # hidden, close the PiP when it is visible again or the call ends (~/.bin/rift-pip-auto)
-  "rift-cli subscribe cli --event workspace_changed --command sh --args -c --args '\"$HOME/.bin/rift-pip-auto\"'",
-  "rift-cli subscribe cli --event windows_changed --command sh --args -c --args '\"$HOME/.bin/rift-pip-auto\"'",
+  "{{ .chezmoi.homeDir }}/.bin/rift-cli subscribe cli --event workspace_changed --command sh --args -c --args '\"$HOME/.bin/rift-pip-auto\"'",
+  "{{ .chezmoi.homeDir }}/.bin/rift-cli subscribe cli --event windows_changed --command sh --args -c --args '\"$HOME/.bin/rift-pip-auto\"'",
 ]
 
 [settings.layout]

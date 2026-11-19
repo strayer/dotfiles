@@ -26,7 +26,7 @@ SBarLua      ──(sbar.set, batched)──────────────
 
 Today the Rift integration in this config works like this:
 
-1. **Event push (crude):** Rift's config (`~/.config/rift/config.toml`, chezmoi source `dot_config/rift/config.toml`, `startup_commands`) registers two *CLI subscriptions* inside Rift:
+1. **Event push (crude):** Rift's config (`~/.config/rift/config.toml`, chezmoi source `dot_config/rift/config.toml.tmpl`, `startup_commands`) registers two *CLI subscriptions* inside Rift:
    ```
    rift-cli subscribe cli --event workspace_changed --command sh --args -c --args 'sketchybar --trigger rift_workspace_change RIFT_SPACE_ID="$RIFT_SPACE_ID" ...'
    rift-cli subscribe cli --event windows_changed  --command sh ... (same pattern)
@@ -114,7 +114,7 @@ Build step: document `cargo build --release` in the crate README; optionally add
 
 ### 5.5 Cleanup after cutover
 
-1. Remove the two `rift-cli subscribe cli ...` lines from `startup_commands` in `dot_config/rift/config.toml`.
+1. Remove the two `rift-cli subscribe cli ...` lines from `startup_commands` in `dot_config/rift/config.toml.tmpl`.
 2. Delete `lib/rift.lua` and `~/.local/share/rift.lua/` (unused PoC, §3).
 3. Remove the now-dead `rift_workspace_change`/`rift_windows_change` event registrations if nothing else consumes them.
 4. Update `CLAUDE.md`/`AGENTS.md` in this repo (they document the old CLI-subscription integration, lines ~271, ~340, ~349-354).

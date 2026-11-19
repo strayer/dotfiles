@@ -9,9 +9,9 @@
 # restores the Homebrew version with no extra steps.
 #
 # This is the single source of truth for rift resolution. Every consumer routes
-# through it: the interactive shell (~/.bin is first on PATH), Raycast scripts
-# and SketchyBar (which call it by absolute path), and the rift launchd agent
-# (`rift service install` bakes this shim's path into the plist via PATH lookup).
+# through it: the interactive shell (~/.bin is first on PATH), Raycast scripts,
+# SketchyBar and rift's run_on_start commands (which call it by absolute path:
+# rift's launchd PATH contains neither ~/.bin nor /opt/homebrew/bin).
 dev="$HOME/dev/rift/target/release/rift-cli"
 if [ -x "$dev" ]; then
   exec "$dev" "$@"

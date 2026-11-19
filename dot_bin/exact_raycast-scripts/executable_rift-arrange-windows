@@ -42,7 +42,7 @@ MOVE_DELAY = 0.3
 TIMEOUT = 10
 
 # bundle_id -> target virtual-workspace INDEX (0-based).
-# Index mapping comes from `workspace_names` in dot_config/rift/config.toml:
+# Index mapping comes from `workspace_names` in dot_config/rift/config.toml.tmpl:
 #   0:"1" 1:"2" 2:"3" 3:"4" 4:"5" 5:"6" 6:"7" 7:"8" 8:"9"
 #   9:"C" 10:"M" 11:"O" 12:"P" 13:"T" 14:"W" 15:"D"
 #
