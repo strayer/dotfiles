@@ -9,6 +9,7 @@ services:
     CO-MBP-KC9KQV64V3:
       - display-refresh-fixer
       - display-profile-fixer
+      - clipboard-image-fixer
       - sketchybar-network-watcher
       - rift-log-rotate
       - rift-pip

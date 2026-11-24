@@ -36,7 +36,10 @@
 #   NAME_frameworks   Swift app: frameworks to link. Builds ~/.bin/NAME.swift
 #                     into ~/.bin/NAME.app; needs NAME_info_plist as well
 #   NAME_info_plist   Swift app: print the bundle's Info.plist
-#   NAME_build_id     other builds: print what identifies the build inputs
+#   NAME_icon         Swift app: print "SYMBOL RRGGBB", the SF Symbol and
+#                     colour ~/.bin/make-app-icon draws the bundle icon from;
+#                     the Info.plist then needs CFBundleIconFile AppIcon
+#   NAME_build_id    other builds: print what identifies the build inputs
 #   NAME_build        other builds: build and install the artifact
 #   NAME_artifact     other builds: print the artifact's path
 #   NAME_run_id       print what identifies inputs that only need a restart
@@ -51,7 +54,7 @@
 
 set -euo pipefail
 
-COMPONENTS="display-refresh-fixer display-profile-fixer sketchybar-network-watcher sketchybar-tailscale-watch rift-log-rotate rift-pip ssh-agent-multiplexer"
+COMPONENTS="display-refresh-fixer display-profile-fixer clipboard-image-fixer sketchybar-network-watcher sketchybar-tailscale-watch rift-log-rotate rift-pip ssh-agent-multiplexer"
 
 BIN="$HOME/.bin"
 AGENTS_DIR="$HOME/Library/LaunchAgents"
@@ -171,6 +174,9 @@ build_id() {
       "$(sha_file "$BIN/$1.swift")" \
       "$(call "$1" info_plist | sha_stdin)" \
       "$(call "$1" frameworks)"
+    if has "$1" icon; then
+      printf 'icon %s %s\n' "$(call "$1" icon)" "$(sha_file "$BIN/make-app-icon")"
+    fi
   else
     call "$1" build_id
   fi
@@ -197,6 +203,17 @@ swift_build() {
   fi
   mv -f "$binary.new" "$binary"
   call "$name" info_plist >"$bundle/Contents/Info.plist"
+  # Notification icon: a white SF Symbol on a coloured tile. It is cosmetic:
+  # if it cannot be drawn (unknown symbol on an older macOS), warn and keep
+  # the generic app icon.
+  if has "$name" icon; then
+    local symbol color
+    read -r symbol color <<<"$(call "$name" icon)"
+    mkdir -p "$bundle/Contents/Resources"
+    if ! "$BIN/make-app-icon" "$symbol" "$color" "$bundle/Contents/Resources/AppIcon.icns"; then
+      warn "$name: could not build the app icon; notifications keep the generic one"
+    fi
+  fi
   # codesign reports "replacing existing signature" on every rebuild; only
   # show its output when it fails.
   local output
@@ -204,6 +221,14 @@ swift_build() {
     warn "$output"
     return 1
   fi
+  touch "$bundle" # makes LaunchServices notice a new icon
+  # Register the bundle with LaunchServices. launchd starts the binary
+  # directly, and macOS refuses the notification permission request of a
+  # bundle it has never seen: without this the very first start logs
+  # "Notifications are not allowed" and the prompt only shows up after a
+  # restart.
+  /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$bundle" ||
+    warn "$name: could not register the bundle with LaunchServices"
 }
 
 do_build() {
@@ -301,6 +326,7 @@ DISPLAY_REFRESH_TARGET="143.96Hz"
 display_refresh_fixer_desc() { echo "keeps the Dell G3223Q on 144 Hz (needs BetterDisplay)"; }
 display_refresh_fixer_frameworks() { echo "AppKit UserNotifications"; }
 display_refresh_fixer_label() { echo "earth.gru.display-refresh-fixer"; }
+display_refresh_fixer_icon() { echo "arrow.trianglehead.2.clockwise.rotate.90 1F9D6B"; }
 
 display_refresh_fixer_info_plist() {
   cat <<'PLIST'
@@ -322,6 +348,8 @@ display_refresh_fixer_info_plist() {
     <string>1.0</string>
     <key>CFBundleVersion</key>
     <string>1</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>LSUIElement</key>
     <true/>
 </dict>
@@ -343,6 +371,7 @@ display_refresh_fixer_plist() {
 display_profile_fixer_desc() { echo "replaces the malformed ICC profiles Dell's DDPM assigns"; }
 display_profile_fixer_frameworks() { echo "AppKit ColorSync UserNotifications"; }
 display_profile_fixer_label() { echo "earth.gru.display-profile-fixer"; }
+display_profile_fixer_icon() { echo "paintpalette.fill 8E4EC6"; }
 
 display_profile_fixer_info_plist() {
   cat <<'PLIST'
@@ -364,6 +393,8 @@ display_profile_fixer_info_plist() {
     <string>1.0</string>
     <key>CFBundleVersion</key>
     <string>1</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>LSUIElement</key>
     <true/>
 </dict>
@@ -374,6 +405,51 @@ PLIST
 display_profile_fixer_plist() {
   daemon_plist "earth.gru.display-profile-fixer" "$LOGS_DIR/display-profile-fixer.log" \
     "$BIN/display-profile-fixer.app/Contents/MacOS/display-profile-fixer"
+}
+
+# ---------------------------------------------------------------------------
+# clipboard-image-fixer
+# Makes images copied from ChatGPT (and other sites that serve pictures under
+# blob: URLs) pasteable in Microsoft Teams. Idle on machines without Teams.
+# ---------------------------------------------------------------------------
+
+clipboard_image_fixer_desc() { echo "makes blob: images (ChatGPT) pasteable in Teams"; }
+clipboard_image_fixer_frameworks() { echo "AppKit UserNotifications"; }
+clipboard_image_fixer_label() { echo "earth.gru.clipboard-image-fixer"; }
+clipboard_image_fixer_icon() { echo "photo.badge.checkmark.fill 2F6FE4"; }
+
+clipboard_image_fixer_info_plist() {
+  cat <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>earth.gru.clipboard-image-fixer</string>
+    <key>CFBundleName</key>
+    <string>Clipboard Image Fixer</string>
+    <key>CFBundleDisplayName</key>
+    <string>Clipboard Image Fixer</string>
+    <key>CFBundleExecutable</key>
+    <string>clipboard-image-fixer</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>LSUIElement</key>
+    <true/>
+</dict>
+</plist>
+PLIST
+}
+
+clipboard_image_fixer_plist() {
+  daemon_plist "earth.gru.clipboard-image-fixer" "$LOGS_DIR/clipboard-image-fixer.log" \
+    "$BIN/clipboard-image-fixer.app/Contents/MacOS/clipboard-image-fixer"
 }
 
 # ---------------------------------------------------------------------------

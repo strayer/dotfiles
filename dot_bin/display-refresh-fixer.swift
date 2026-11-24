@@ -88,6 +88,20 @@ func setupNotifications() {
   center.delegate = notificationDelegate
   center.requestAuthorization(options: [.alert, .sound]) { granted, error in
     log("notification permission: granted=\(granted)\(error.map { " error=\($0)" } ?? "")")
+    if granted { notifyReady() }
+  }
+}
+
+/// Posted once per start, silently: shows the daemon is up and, on the very
+/// first start, follows the permission prompt.
+func notifyReady() {
+  let content = UNMutableNotificationContent()
+  content.title = "Display Fixer"
+  content.body = "Bereit."
+  let request = UNNotificationRequest(
+    identifier: "display-refresh-fixer-ready", content: content, trigger: nil)
+  UNUserNotificationCenter.current().add(request) { error in
+    if let error { log("notification failed: \(error)") }
   }
 }
 
