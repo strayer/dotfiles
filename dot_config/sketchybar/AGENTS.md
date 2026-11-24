@@ -348,6 +348,7 @@ sketchybar --animate ease_out 0.3 --set right.clock label.color=0xffff0000
 - **cjson**: JSON encoding/decoding
 - **simdjson**: Fast JSON parsing (with fallback to cjson)
 - **sketchybar-app-font**: App icon font for workspace indicators
+- **SwitchAudioSource** (Homebrew `switchaudio-osx`): device list and switching for the volume item's popup; optional, without it the popup is absent
 
 ## Window Manager Integration
 

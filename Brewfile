@@ -174,6 +174,8 @@ if OS.mac?
   brew "strayer/tap/sketchybar", trusted: true
   # Dock notification badges, feeds the SketchyBar dock_badges item
   brew "strayer/tap/dock-badge-counter", trusted: true
+  # Audio device switching, used by the SketchyBar volume item's device popup
+  brew "switchaudio-osx"
 
   # rift (BSP tiling window manager)
   tap "acsandmann/tap"

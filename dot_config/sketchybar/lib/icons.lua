@@ -28,6 +28,12 @@ M.system = {
     low = "󰕿",
     muted = "󰖁",
   },
+  -- Audio device selector popup (items/volume.lua)
+  audio = {
+    output = "󰓃", -- nf-md-speaker
+    input = "󰍬", -- nf-md-microphone
+    current = "󰄬", -- nf-md-check
+  },
   battery = {
     charging = "󰂄",
     full = "󰁹",

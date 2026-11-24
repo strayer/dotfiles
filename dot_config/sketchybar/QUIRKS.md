@@ -129,6 +129,17 @@ and `~/dev-explore/SbarLua`.
 - **Rule:** Always call binaries by absolute path: `settings.sketchybar_bin`,
   the `~/.bin/rift-cli` shim, `~/.bin/*` helpers.
 
+### `sbar.exec` hands line-delimited JSON over as its first object only
+
+- **Symptom:** A command printing one JSON object per line arrives in the
+  callback as a table holding just the first line's fields.
+- **Cause:** SbarLua runs `cJSON_Parse` on the whole output
+  (`json_to_lua_table` in src/parsing.c), which stops after the first
+  complete value and ignores the rest. Only output that fails to parse
+  arrives as a string.
+- **Rule:** Make such output start with a non-JSON line (`echo devices; …`)
+  and split the string yourself (see `LIST_COMMAND` in `items/volume.lua`).
+
 ### Item names travel through shells and regexes
 
 - **Symptom:** A dynamic name containing a space or metacharacter breaks the
@@ -163,6 +174,35 @@ and `~/dev-explore/SbarLua`.
   module may not have refreshed yet. `items/system_theme.lua` refreshes the
   palette on `theme_change` and then triggers `theme_colors_updated`.
 - **Rule:** All visual items subscribe to `theme_colors_updated`.
+
+### A hover popup you can move into needs `mouse.exited.global` and no gap
+
+- **Symptom:** A popup opened on `mouse.entered` closes the moment the
+  pointer leaves the item, so its rows can never be reached or clicked.
+- **Cause:** `event_mouse_exited` (src/event.c) only swallows the item's
+  exit event when the item subscribes to `mouse.exited.global` *and* the
+  pointer is already over that item's popup. The popup starts at the item
+  window's bottom edge plus `popup.y_offset`; with an offset above 0 the
+  pointer crosses a strip that belongs to neither window.
+- **Rule:** Interactive popups subscribe the host item to `mouse.entered`,
+  `mouse.exited` and `mouse.exited.global`, and keep `popup.y_offset = 0`
+  (see `items/volume.lua`). Popup rows have their own windows, so they get
+  `mouse.clicked`, `mouse.entered` and `mouse.exited` like bar items.
+  Read-only popups (network, Tailscale) may keep a gap.
+
+### `width = "dynamic"` depends on the order of properties in a `set`
+
+- **Symptom:** After `item:set({ label = { string = s, width = "dynamic" } })`
+  the item's bounding rect sometimes still has the width of the *previous*
+  string; it differs from one bar reload to the next.
+- **Cause:** `dynamic` first pins the width to the natural length of the
+  string the text has at that moment and only releases it on the next
+  animator frame (src/text.c, `PROPERTY_WIDTH`). SbarLua emits a table's
+  properties in Lua's hash order, which changes per Lua state, so the width
+  may be handled before the new string.
+- **Rule:** When the geometry is read right away, set the string first and
+  `width = "dynamic"` in a second `set` (see `render_popup` in
+  `items/volume.lua`). A later numeric width cancels the pending release.
 
 ### `icon`/`label` have their own backgrounds; item backgrounds make underlines
 
